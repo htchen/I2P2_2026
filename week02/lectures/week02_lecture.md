@@ -46,13 +46,17 @@ The definition provides the implementation:
 
 double mean(const int values[], size_t count)
 {
-    long long total = 0;
+    double total = 0.0;
     for (size_t i = 0; i < count; ++i) {
         total += values[i];
     }
-    return count == 0 ? 0.0 : (double)total / count;
+    return count == 0 ? 0.0 : total / count;
 }
 ```
+
+Using `double` for the running total avoids signed-integer overflow, but floating-
+point addition can round. If an application requires an exact integer sum, give
+the input a checked range or use a checked wider integer representation.
 
 Keep the declaration and definition identical. A prototype placed in a header
 allows multiple source files to share the same contract.
@@ -403,7 +407,7 @@ bool statistics(const int values[], size_t count, struct Statistics *out)
         return false;
     }
 
-    long long total = values[0];
+    double total = values[0];
     out->minimum = values[0];
     out->maximum = values[0];
     for (size_t i = 1; i < count; ++i) {
@@ -411,7 +415,7 @@ bool statistics(const int values[], size_t count, struct Statistics *out)
         if (values[i] > out->maximum) out->maximum = values[i];
         total += values[i];
     }
-    out->mean = (double)total / count;
+    out->mean = total / count;
     return true;
 }
 ```
@@ -435,3 +439,10 @@ that `count > 0`.
 - C arrays are contiguous and have no run-time length metadata.
 - A C string is an array convention: characters followed by `\0`.
 - Pair every array with its length and every output buffer with its capacity.
+
+## References and legacy sources
+
+- [Functions](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/function/function.md>)
+- [Arrays](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/array/array.md>)
+- [C strings](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Printf%20and%20Scanf/String%20type.md>)
+- [Input and output](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Input%20and%20output/Input%20and%20output.md>)

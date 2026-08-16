@@ -332,3 +332,9 @@ testability, number of affected files, and migration risk before choosing.
 - Polymorphic bases need a deliberate destruction policy.
 - `override`, private state, and ownership-aware containers prevent common bugs.
 - Prefer composition unless run-time substitutability provides real value.
+
+## References and legacy sources
+
+- [Classes III](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20III/README.md>)
+- [2025 Week 7 notebook (Colab)](https://colab.research.google.com/drive/1oHBcNeAXt4ZeQJsdG2q4RU5m9Yu_9CCw)
+- [2025 Week 14 notebook: `optional`, `variant`, and modern C++ (Colab)](https://colab.research.google.com/drive/1CEwhynoePTk_ZG6pgAxJH4mMqsQsZyzu)

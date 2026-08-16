@@ -388,3 +388,10 @@ Useful properties include “inorder output of a BST is strictly increasing” a
 - Traversal order describes when the root is processed relative to children.
 - Ownership determines destruction order.
 - Complexity depends on tree height as well as node count.
+
+## References and legacy sources
+
+- [Recursion](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Recursive/README.md>)
+- [Binary trees](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/4-binary_tree.md>)
+- [2025 Week 3 notebook (Colab)](https://colab.research.google.com/drive/1QnjMWtqSx2WqZ2AUDUln_Na3LxJ4YX2m)
+- [2025 Week 4, part 1 notebook (Colab)](https://colab.research.google.com/drive/1FfWMQCxEjI-K9m7qJJw1OTiiDMhLFf2c)

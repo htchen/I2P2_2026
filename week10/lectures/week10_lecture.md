@@ -58,13 +58,15 @@ is a design tool, not a demand to write trivial setters for every field.
 
 ```cpp
 #include <numeric>
+#include <limits>
 #include <stdexcept>
 
 Rational::Rational(int numerator, int denominator)
     : numerator_{numerator}, denominator_{denominator}
 {
-    if (denominator_ == 0) {
-        throw std::invalid_argument{"zero denominator"};
+    if (denominator_ == 0 || numerator_ == std::numeric_limits<int>::min() ||
+        denominator_ == std::numeric_limits<int>::min()) {
+        throw std::invalid_argument{"unsupported rational representation"};
     }
     normalize();
 }
@@ -87,6 +89,8 @@ for references, `const` members, and members without a default constructor.
 
 A constructor with usable default arguments also serves as a default
 constructor here: `Rational value;` creates `0/1`.
+The teaching representation rejects `INT_MIN`, whose magnitude cannot be stored
+in an `int`; a production numeric class needs a deliberate wider or checked model.
 
 ### Delegating and converting constructors
 
@@ -156,6 +160,10 @@ Make observer functions `const` by default. This is different from returning a
 ### 4. The implicit object and `this`
 
 Within a non-static member function, `this` points to the current object.
+
+The following compact teaching implementation has a precondition: every
+intermediate multiplication and addition, and every magnitude used during
+normalization, must be representable as `int`.
 
 ```cpp
 Rational& Rational::operator+=(const Rational& other)
@@ -350,3 +358,8 @@ it, then add the smallest regression case.
 - `const` member functions expose safe observation.
 - Public interfaces should be smaller and more stable than representations.
 - Operator overloads should preserve invariants and conventional meaning.
+
+## References and legacy sources
+
+- [Classes I](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20I/README.md>)
+- [2025 Week 7 notebook (Colab)](https://colab.research.google.com/drive/1oHBcNeAXt4ZeQJsdG2q4RU5m9Yu_9CCw)

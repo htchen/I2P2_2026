@@ -59,6 +59,7 @@ enum TokenKind {
 struct Token {
     enum TokenKind kind;
     int value;
+    char identifier; /* simplified project subset: one-character names */
     size_t position;
 };
 ```
@@ -107,7 +108,7 @@ passing a negative plain `char` other than `EOF` is undefined behavior.
 
 ### Hour 1 lexer lab
 
-For input `" 12 + 3*foo"`, write every token with `[start,end)`, kind, and
+For input `" 12 + 3*x"`, write every token with `[start,end)`, kind, and
 value/lexeme. Then test empty input, every operator, `INT_MAX`, one overflowing
 integer, an invalid byte between valid tokens, and repeated calls after end.
 The parser should never need to inspect raw characters or repeat overflow logic.
@@ -148,6 +149,7 @@ enum AstKind {
 struct Ast {
     enum AstKind kind;
     int value;
+    char identifier;
     struct Ast *left;
     struct Ast *right;
 };
@@ -156,6 +158,7 @@ struct Ast {
 Representation rules:
 
 - `AstInteger` stores its number in `value` and has no children.
+- `AstIdentifier` stores a one-character name in `identifier` and has no children.
 - `AstNegate` uses `left` as its operand and has no right child.
 - Binary nodes own both child trees.
 
@@ -269,6 +272,12 @@ static struct Ast *parse_primary(struct Parser *parser)
         return ast_integer(value);
     }
 
+    if (parser->current.kind == TokenIdentifier) {
+        char identifier = parser->current.identifier;
+        advance(parser);
+        return ast_identifier(identifier);
+    }
+
     if (parser->current.kind == TokenLeftParen) {
         advance(parser);
         struct Ast *inside = parse_expression(parser);
@@ -331,6 +340,8 @@ int ast_evaluate(const struct Ast *node, int *result)
 
 Production code must also define and check overflow behavior. Semantic analysis
 can reject invalid constructs before code generation.
+This evaluator fragment covers numeric trees; evaluating `AstIdentifier`
+requires an environment that maps each identifier to its current value.
 
 ### Semantic checks are not parsing
 
@@ -421,3 +432,11 @@ and compare evaluation results.
 - Recursive-descent functions mirror grammar nonterminals.
 - AST edges express ownership as well as syntax.
 - Evaluation, destruction, and simple code generation are tree traversals.
+
+## References and legacy sources
+
+- [Syntax trees](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/5-syntax_tree.md>)
+- [A simple computer model](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/6-Computer.md>)
+- [Assembly language](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/7-Assembly.md>)
+- [2025 Week 4, part 2 notebook (Colab)](https://colab.research.google.com/drive/1ELmeNLoaZT6f7DGXwAXbk72O83E2Hbn7)
+- [2025 Week 5 notebook (Colab)](https://colab.research.google.com/drive/1cqxmTwoWv7E8g3sxzyEPYNL9a0K1fnfb)

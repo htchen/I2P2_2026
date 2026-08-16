@@ -27,15 +27,16 @@ By the end of this lecture, you should be able to:
 
 ```cpp
 template <typename T>
-const T& maximum(const T& left, const T& right)
+T maximum(const T& left, const T& right)
 {
     return left < right ? right : left;
 }
 ```
 
 The compiler instantiates a version for each used type. The type must support
-the expressions required by the template—here, comparison with `<` and a return
-compatible with `const T&`.
+the expressions required by the template—here, comparison with `<` and copying
+the selected result. Returning by value avoids handing the caller a reference
+that could outlive a temporary argument.
 
 ```cpp
 int largest_int = maximum(3, 8);
@@ -90,6 +91,9 @@ std::sort(values.begin(), values.end(), absolute_less);
 
 The lambda's call operator is a template. Its comparator must provide a strict
 weak ordering; returning `<=` instead of `<` violates the sorting contract.
+For signed integers, `std::abs(INT_MIN)` is not representable. Restrict the input
+domain or compare magnitudes through a checked, wider representation when that
+value is possible.
 
 ### Hour 1 template studio
 
@@ -281,3 +285,9 @@ from one machine.
 - Iterators generalize positions and half-open ranges.
 - Algorithms expose intent and reduce repeated traversal code.
 - Mutation can invalidate iterators; complexity and lifetime remain correctness concerns.
+
+## References and legacy sources
+
+- [Classes III: templates and related material](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20III/README.md>)
+- [Standard library](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/week%2012%20Standard%20library/week%2012%20Standard%20library.md>)
+- [2025 Week 11 notebook (Colab)](https://colab.research.google.com/drive/1RjtHSu-82v1dQt-p2teRmKwjV9bLlQsK)

@@ -345,3 +345,9 @@ or `unique_ptr` improvement and describe its integration risk.
 - Special member functions collectively define value and ownership semantics.
 - The Rule of Zero delegates resource management to proven member types.
 - Smart pointers express ownership; references and raw pointers commonly borrow.
+
+## References and legacy sources
+
+- [Classes II](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20II/README.md>)
+- [2025 Week 8 notebook (Colab)](https://colab.research.google.com/drive/1qkDyeCDzzislM1BN8XSoUJxiomuT3cv8)
+- [2025 Week 10 notebook (Colab)](https://colab.research.google.com/drive/1WzsdyfHgyjojg6DsJm_NH5pANk2GB18t)
