@@ -1,340 +1,335 @@
-# Lecture 11 — Inheritance and Runtime Polymorphism
+# Lecture 11 — Templates, Containers, Iterators, and Algorithms
 
-> November 24, 2026 · Source lineage: the legacy Classes III material and the
-> class-hierarchy section of the 2025 Week 7 notebook
+> November 24, 2026 · Source lineage: the legacy template and standard-library
+> notes plus the 2025 Week 11 and Week 14 notebooks
 
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
 
-1. Define an abstract interface with virtual functions.
-2. Override behavior safely through references and pointers.
-3. Explain why a polymorphic base needs a virtual destructor.
-4. Avoid object slicing and unsafe downcasts.
-5. Decide between inheritance, composition, and `std::variant`.
+1. Write a small function or class template.
+2. Select a standard container from its operations and complexity.
+3. Use iterators as a range abstraction.
+4. Compose algorithms with lambdas instead of rewriting loops.
+5. Represent an expected missing result with `std::optional`.
+6. Recognize iterator invalidation and accidental insertion into a map.
 
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
 |------|---------------|---------------------|
-| 1 | What contract makes derived objects genuinely substitutable? | Implement and test a Shape hierarchy |
-| 2 | How do dispatch, destruction, and ownership interact? | Trace polymorphic calls and container lifetimes |
-| 3 | When should a design use inheritance, composition, or variants? | Refactor one final-project hierarchy and defend the choice |
+| 1 | How do templates state operations required from a type? | Generalize concrete functions and diagnose instantiation errors |
+| 2 | Which container and iterator guarantees fit a workload? | Select representations and trace invalidation |
+| 3 | How do algorithms, maps, and optional results form a solution? | Implement and benchmark a frequency/ranking pipeline |
 
-## Hour 1 — Abstract interfaces and substitutable overrides
+## Hour 1 — Compile-time genericity and template requirements
 
-### 1. Substitutability, not code reuse, is the starting point
+Earlier lectures used `vector<int>` and `unique_ptr<Node>` as library clients.
+Now that classes and move semantics are established, we can explain the template
+mechanism behind the angle brackets and write generic abstractions ourselves.
 
-Use public inheritance when every derived object can be used wherever the base
-interface is expected without violating its contract.
-
-```cpp
-struct Point {
-    double x;
-    double y;
-};
-
-class Shape {
-public:
-    virtual Point center() const = 0;
-    virtual void translate(Point offset) = 0;
-    virtual double area() const = 0;
-    virtual ~Shape() = default;
-};
-```
-
-A pure virtual function (`= 0`) makes `Shape` abstract. It describes an
-interface; `Shape shape;` is ill-formed because no complete base behavior exists.
-
-### 2. Override the contract
+### 1. Templates describe families of code
 
 ```cpp
-class Circle final : public Shape {
-public:
-    Circle(Point center, double radius)
-        : center_{center}, radius_{radius}
-    {
-        if (radius < 0.0) {
-            throw std::invalid_argument{"negative radius"};
-        }
-    }
-
-    Point center() const override { return center_; }
-
-    void translate(Point offset) override
-    {
-        center_.x += offset.x;
-        center_.y += offset.y;
-    }
-
-    double area() const override
-    {
-        constexpr double pi = 3.141592653589793;
-        return pi * radius_ * radius_;
-    }
-
-private:
-    Point center_;
-    double radius_;
-};
-```
-
-`override` asks the compiler to verify that a base virtual function is actually
-being overridden. It catches parameter, `const`, and spelling mismatches.
-`final` prevents further derivation when the design intends a leaf class.
-
-### Strengthen neither preconditions nor surprises
-
-If `Shape::translate` accepts every finite offset, `Circle::translate` cannot
-silently reject negative offsets. A derived operation may guarantee more in its
-result but must not demand more from callers using the base contract.
-
-Create contract tests that run against a `Shape&` and reuse them for every
-derived type. This catches behavioral incompatibility that `override` syntax
-alone cannot detect.
-
-### Non-virtual interface pattern
-
-```cpp
-class GameObject {
-public:
-    void update(double seconds)
-    {
-        if (seconds < 0.0) throw std::invalid_argument{"negative time"};
-        before_update();
-        do_update(seconds);
-        after_update();
-    }
-    virtual ~GameObject() = default;
-
-private:
-    virtual void do_update(double seconds) = 0;
-    void before_update();
-    void after_update();
-};
-```
-
-The public nonvirtual function enforces common checks and sequencing; derived
-classes customize only the intended step.
-
-### Hour 1 studio
-
-Add `Rectangle` and `CompositeShape`. Run the same center/translate/area contract
-tests through `Shape&`. Intentionally omit `const` or change a parameter type and
-observe how `override` converts a silent overload into a compile error.
-
-## Hour 2 — Dynamic dispatch, ownership, and destruction
-
-### 3. Dynamic dispatch requires indirection
-
-```cpp
-void print_area(const Shape& shape)
+template <typename T>
+T maximum(const T& left, const T& right)
 {
-    std::cout << shape.area() << '\n';
+    return left < right ? right : left;
 }
-
-Circle circle{{0.0, 0.0}, 2.0};
-print_area(circle); /* calls Circle::area */
 ```
 
-The function accepts a base reference, but the virtual call selects behavior
-using the object's dynamic type at run time.
-
-Passing by value would slice:
+The compiler instantiates a version for each used type. The type must support
+the expressions required by the template—here, comparison with `<` and copying
+the selected result. Returning by value avoids handing the caller a reference
+that could outlive a temporary argument.
 
 ```cpp
-void wrong(Shape value); /* abstract Shape makes this impossible here */
+int largest_int = maximum(3, 8);
+std::string largest_word = maximum(std::string{"ant"}, std::string{"bee"});
 ```
 
-For a nonabstract base, copying a derived value into a base object discards the
-derived part. Polymorphic APIs use references or pointers.
+Templates are compile-time polymorphism. Unlike a virtual call, the concrete
+operation is normally known during compilation and can be inlined.
 
-### 4. Polymorphic ownership
+### 2. A small class template
 
 ```cpp
-#include <memory>
+template <typename T>
+class Box {
+public:
+    explicit Box(T value) : value_{std::move(value)} {}
+
+    const T& value() const& { return value_; }
+    T value() && { return std::move(value_); }
+
+private:
+    T value_;
+};
+```
+
+Template definitions normally live in headers because a translation unit needs
+the definition when instantiating a concrete type.
+
+Avoid making a template merely to avoid naming the actual abstraction. Generic
+code is valuable when multiple types share the same meaningful operation.
+
+### Requirements before C++20 concepts
+
+In C++17, template requirements are implicit in expressions. For `maximum<T>`,
+`left < right` must be valid and usable as a condition. A compiler error may be
+long because it reports the failed instantiation path. Read from the first
+expression involving your type, not only the final diagnostic line.
+
+Create three types: one with a valid `<`, one with equality only, and one whose
+comparison returns an unsuitable type. Instantiate `maximum` and classify the
+errors. Then state the requirement in a comment beside the template.
+
+### Function objects and generic lambdas
+
+```cpp
+auto absolute_less = [](const auto& left, const auto& right) {
+    return std::abs(left) < std::abs(right);
+};
+
+std::sort(values.begin(), values.end(), absolute_less);
+```
+
+The lambda's call operator is a template. Its comparator must provide a strict
+weak ordering; returning `<=` instead of `<` violates the sorting contract.
+For signed integers, `std::abs(INT_MIN)` is not representable. Restrict the input
+domain or compare magnitudes through a checked, wider representation when that
+value is possible.
+
+### Hour 1 template studio
+
+Generalize `contains`, `print_range`, and `count_if` from `vector<int>` to
+iterator pairs. For each, list the minimum iterator and element operations. Use
+the exercise to make standard-algorithm contracts explicit.
+
+## Hour 2 — Containers, iterators, complexity, and invalidation
+
+### 3. Choose containers by required operations
+
+| Container | Strengths | Important costs |
+|-----------|-----------|-----------------|
+| `vector<T>` | contiguous, fast indexing, cache friendly | middle insertion O(n) |
+| `deque<T>` | fast insertion at both ends | not one contiguous block |
+| `list<T>` | stable iterators, O(1) splice/erase at iterator | no indexing, allocation per node |
+| `map<K,V>` | ordered keys, O(log n) operations | tree/node overhead |
+| `unordered_map<K,V>` | average O(1) lookup | no order, rehashing, hash requirements |
+| `set<T>` | ordered unique values | O(log n) operations |
+| `queue<T>` | FIFO interface | intentionally limited access |
+| `stack<T>` | LIFO interface | intentionally limited access |
+
+Default to `vector` unless another container's semantics or complexity solves a
+specific need. The legacy course used `list` frequently; modern code should not
+choose it merely because insertions look O(1)—finding the position is still a
+cost and locality often dominates.
+
+### Container-selection scenarios
+
+Choose and defend a representation for an ordered leaderboard, FIFO event queue,
+entity table by numeric ID, unique visited puzzle states, stable splice-heavy
+sequence, and dense objects updated every frame. Include iteration order,
+lookup/insertion complexity, locality, reference stability, and duplicates.
+
+### 4. Iterators represent positions and ranges
+
+The half-open range `[first, last)` includes `first` and excludes `last`.
+
+```cpp
+auto position = std::find(values.begin(), values.end(), target);
+if (position != values.end()) {
+    std::cout << "found at " << std::distance(values.begin(), position) << '\n';
+}
+```
+
+Half-open ranges compose cleanly: an empty range has `first == last`, and two
+adjacent ranges can share a boundary.
+
+Iterator categories expose supported movement. A vector iterator supports
+random access; a list iterator does not. Generic algorithms express the weakest
+category they require.
+
+## Hour 3 — Algorithms, associative containers, and solution pipelines
+
+### 5. Algorithms separate traversal from intent
+
+```cpp
+#include <algorithm>
+#include <numeric>
+
+std::sort(values.begin(), values.end());
+
+int threshold = 10;
+auto first_large = std::find_if(values.begin(), values.end(),
+    [threshold](int value) { return value >= threshold; });
+
+int total = std::accumulate(values.begin(), values.end(), 0);
+```
+
+Common algorithms include:
+
+- `find`, `find_if`, `count_if`;
+- `sort`, `stable_sort`, `lower_bound`;
+- `copy`, `transform`, `remove_if`;
+- `all_of`, `any_of`, `none_of`;
+- `accumulate`.
+
+An algorithm name states intent and centralizes boundary handling. A loop is
+still correct when the operation does not fit an algorithm cleanly.
+
+### 6. The erase-remove pattern
+
+`std::remove_if` rearranges retained elements and returns a new logical end; it
+does not resize the container.
+
+```cpp
+values.erase(
+    std::remove_if(values.begin(), values.end(),
+                   [](int value) { return value < 0; }),
+    values.end());
+```
+
+C++20 adds `std::erase_if(values, predicate)` for supported containers, but the
+older form remains important when reading C++17 projects.
+
+### 7. Maps: lookup versus insertion
+
+```cpp
+std::map<std::string, int> frequency;
+for (const std::string& word : words) {
+    ++frequency[word]; /* deliberate default insertion */
+}
+```
+
+`operator[]` inserts a missing key. For read-only lookup:
+
+```cpp
+auto found = frequency.find(query);
+if (found != frequency.end()) {
+    std::cout << found->second << '\n';
+}
+```
+
+Or use `.at(query)` when absence should produce an exception. Do not accidentally
+mutate a map while asking whether a key exists.
+
+### Frequency-to-ranking pipeline
+
+```cpp
+std::vector<std::pair<std::string, int>> ranking{
+    frequency.begin(), frequency.end()
+};
+
+std::sort(ranking.begin(), ranking.end(), [](const auto& left, const auto& right) {
+    if (left.second != right.second) return left.second > right.second;
+    return left.first < right.first;
+});
+```
+
+The map builds counts; the vector supports ranking by a different order. This is
+often clearer than forcing one container to serve incompatible access patterns.
+Prove the comparator is strict for equal pairs.
+
+### 8. `optional` makes expected absence explicit
+
+An index such as zero can be a valid answer, so it is a poor “not found”
+sentinel. `std::optional<T>` contains either one `T` or no value:
+
+```cpp
+#include <iostream>
+#include <optional>
 #include <vector>
 
-std::vector<std::unique_ptr<Shape>> shapes;
-shapes.push_back(std::make_unique<Circle>(Point{0, 0}, 2.0));
-shapes.push_back(std::make_unique<Rectangle>(Point{1, 1}, 3.0, 4.0));
-
-for (const auto& shape : shapes) {
-    std::cout << shape->area() << '\n';
-}
-```
-
-`unique_ptr<Shape>` owns one dynamically allocated object whose concrete type
-may vary. Destroying through the base pointer calls the correct derived
-destructor only because `Shape::~Shape` is virtual.
-
-### What virtual dispatch stores conceptually
-
-Typical implementations give a polymorphic object a hidden pointer to a table
-of virtual functions. A call through `Shape&` uses that table to select the
-derived override. The standard specifies behavior, not a particular table
-layout; use this model for reasoning, not portable pointer arithmetic.
-
-Virtual dispatch usually adds one indirection and may limit inlining. That cost
-is often negligible next to game rendering or allocation, but measure when it
-matters instead of eliminating abstraction speculatively.
-
-### Destruction trace
-
-Create a derived class with an owned vector/resource and instrument base and
-derived destructors. Destroy through `unique_ptr<Shape>` and confirm derived
-cleanup precedes base cleanup. Discuss what a nonvirtual base destructor would
-fail to do without executing that undefined behavior.
-
-Rule: if a class has any virtual function and objects may be deleted through a
-base pointer, give it a public virtual destructor (or deliberately prevent such
-deletion with a protected nonvirtual destructor in advanced designs).
-
-### 5. Access control
-
-- `public`: accessible through the interface.
-- `protected`: accessible in the class and derived classes.
-- `private`: accessible only to the class and its friends.
-
-Prefer private data even in base classes. Protected data couples every derived
-class to the representation. A protected helper function can expose a narrower
-extension point.
-
-Public inheritance normally preserves the public interface. Private inheritance
-is closer to an implementation technique; composition is usually clearer.
-
-### 6. Composition before inheritance
-
-“A game entity has a position” suggests composition:
-
-```cpp
-class Entity {
-private:
-    Transform transform_;
-    Sprite sprite_;
-};
-```
-
-“A tower is a kind of game object that satisfies the game-object interface” may
-justify inheritance. Ask:
-
-1. Does the derived type preserve every base precondition and postcondition?
-2. Will clients benefit from treating different derived types uniformly?
-3. Is the hierarchy stable enough to become a public design commitment?
-4. Would a member object or strategy object be simpler?
-
-Inheritance solely to reuse a few lines often creates tighter coupling than a
-composed helper.
-
-### Strategy through composition
-
-```cpp
-class Movement {
-public:
-    virtual Point next(Point current, double seconds) = 0;
-    virtual ~Movement() = default;
-};
-
-class Monster {
-public:
-    explicit Monster(std::unique_ptr<Movement> movement)
-        : movement_{std::move(movement)} {}
-
-private:
-    std::unique_ptr<Movement> movement_;
-};
-```
-
-Monster type and movement policy now vary independently. The monster uniquely
-owns its strategy; a shared immutable strategy could instead be borrowed or
-shared under an explicit lifetime design.
-
-## Hour 3 — Downcasting, variants, and brownfield architecture
-
-### 7. Downcasting is a design signal
-
-```cpp
-if (auto* circle = dynamic_cast<Circle*>(shape)) {
-    /* Circle-specific behavior */
-}
-```
-
-`dynamic_cast` safely checks a polymorphic dynamic type, but repeated type tests
-may mean the base interface is missing an operation or the behavior belongs in
-a visitor/variant. Never use `static_cast` to downcast unless a separate
-invariant proves the dynamic type; otherwise behavior is undefined.
-
-### 8. Closed alternatives with `std::variant`
-
-When the set of alternatives is small and known, value-based polymorphism can be
-clearer:
-
-```cpp
-using ShapeValue = std::variant<Circle, Rectangle>;
-
-double area(const ShapeValue& shape)
+std::optional<std::size_t> index_of(
+    const std::vector<int>& values, int target)
 {
-    return std::visit([](const auto& value) { return value.area(); }, shape);
+    for (std::size_t index = 0; index < values.size(); ++index) {
+        if (values[index] == target) return index;
+    }
+    return std::nullopt;
+}
+
+void report_index(const std::vector<int>& values, int target)
+{
+    if (auto index = index_of(values, target)) {
+        std::cout << "found at " << *index << '\n';
+    }
 }
 ```
 
-Tradeoff:
+Testing an optional as a condition asks whether it contains a value. Dereference
+with `*` only after that check; `.value()` instead throws `std::bad_optional_access`
+when empty. Use `optional` when absence is an expected result, exceptions when an
+operation cannot fulfill its contract, and a richer result type when callers
+need distinct failure reasons. The graph lecture will use this distinction for
+“no path exists.”
 
-- Virtual hierarchy: easy to add a new derived type without changing consumers.
-- Variant: easy to add a new operation with exhaustive handling of known types.
+### 9. Iterator invalidation
 
-Neither is universally superior; choose based on which axis changes.
+After a vector reallocates, pointers, references, and iterators to its elements
+are invalid. Inserting or erasing can invalidate additional positions even
+without reallocation.
 
-### Variant exhaustiveness exercise
+```cpp
+auto position = values.begin();
+values.push_back(42);
+/* position may now be invalid */
+```
 
-Add a `Triangle` to `ShapeValue`. Every `std::visit` operation must compile for
-the new alternative, so the compiler exposes incomplete operations. Contrast
-this with adding a derived virtual class, which requires no edits to existing
-virtual-call consumers but must implement every pure virtual operation.
+Read the operation's invalidation rules. A valid iterator is a lifetime and
+ownership claim just as a valid C pointer is.
 
-### Multiple inheritance and interfaces
+Use indices when a vector mutation may relocate storage and the index remains a
+meaningful position, or reacquire the iterator after mutation.
 
-The course does not use implementation-heavy multiple inheritance. A class may
-implement multiple small pure interfaces when it truly satisfies independent
-contracts, for example `Updatable` and `Drawable`. Ownership should still have
-one clear path; avoid diamond-shaped shared implementation hierarchies.
+### Invalidation trace
 
-### 9. Final-project reading strategy
+For a vector with size 3 and capacity 4, take iterators to all elements, then
+push a fourth element, insert at index 1 without reallocation, push a fifth
+element with reallocation, and erase index 2. Mark valid handles after each
+operation. Repeat for `list` and `map` and compare their guarantees.
 
-For a legacy game hierarchy:
+### 10. Complexity belongs to the interface
 
-1. Find the abstract or common base.
-2. List virtual functions and their contracts.
-3. Find where objects are constructed and who owns them.
-4. Trace one update and one draw call through dynamic dispatch.
-5. Check whether destruction is virtual.
-6. Identify where a composition or strategy would reduce subclass duplication.
+For an ordered map, lookup is O(log n). For an unordered map, lookup is average
+O(1) but worst-case O(n). `lower_bound` on a sorted vector is O(log n), but
+inserting into the middle is O(n). A good design considers the whole workload:
+build frequency, query frequency, ordering requirements, and memory overhead.
 
-### Hour 3 architecture review
+The standard library specifies both semantics and complexity. Use those
+guarantees instead of assuming an internal implementation.
 
-Choose one repeated type-switch or `dynamic_cast` chain in the project template.
-Propose three alternatives: add a virtual operation, introduce a composed
-strategy, or use a variant/visitor. Evaluate extension direction, ownership,
-testability, number of affected files, and migration risk before choosing.
+### Hour 3 integration task
+
+Read words, normalize case, count with a map/unordered map, remove stop words,
+rank by frequency then spelling, and print the top `k`. Test empty input, ties,
+repeated punctuation policy, and very large counts. Benchmark ordered versus
+unordered counting on supplied data and explain results without overgeneralizing
+from one machine.
 
 ## Check yourself
 
-1. Why is `override` more than documentation?
-2. Explain object slicing with a concrete example.
-3. Why does `unique_ptr<Base>` require a virtual base destructor?
-4. Model “monster has movement behavior” using composition.
-5. When would `variant` be preferable to a virtual hierarchy?
+1. What operation does the `maximum` template require from `T`?
+2. Select containers for a FIFO worklist, ordered dictionary, and dense table.
+3. Why is `[begin, end)` easier to represent than an inclusive end?
+4. What exactly does `map[key]` do when `key` is absent?
+5. When should a search return `optional<T>` rather than throw an exception?
+6. Identify invalid iterators after a vector insertion in the middle.
 
 ## Summary
 
-- Public inheritance models substitutable interfaces.
-- Virtual dispatch operates through references and pointers.
-- Polymorphic bases need a deliberate destruction policy.
-- `override`, private state, and ownership-aware containers prevent common bugs.
-- Prefer composition unless run-time substitutability provides real value.
+- Templates express type-safe compile-time generality.
+- Container selection follows operations, guarantees, and data layout.
+- Iterators generalize positions and half-open ranges.
+- Algorithms expose intent and reduce repeated traversal code.
+- `optional<T>` distinguishes an expected missing result from a stored value.
+- Mutation can invalidate iterators; complexity and lifetime remain correctness concerns.
 
 ## References and legacy sources
 
-- [Classes III](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20III/README.md>)
-- [2025 Week 7 notebook (Colab)](https://colab.research.google.com/drive/1oHBcNeAXt4ZeQJsdG2q4RU5m9Yu_9CCw)
-- [2025 Week 14 notebook: `optional`, `variant`, and modern C++ (Colab)](https://colab.research.google.com/drive/1CEwhynoePTk_ZG6pgAxJH4mMqsQsZyzu)
+- [Classes III: templates and related material](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20III/README.md>)
+- [Standard library](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/week%2012%20Standard%20library/week%2012%20Standard%20library.md>)
+- [2025 Week 11 notebook (Colab)](https://colab.research.google.com/drive/1RjtHSu-82v1dQt-p2teRmKwjV9bLlQsK)
+- [2025 Week 14 notebook: `optional` and modern C++ (Colab)](https://colab.research.google.com/drive/1CEwhynoePTk_ZG6pgAxJH4mMqsQsZyzu)

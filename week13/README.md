@@ -1,7 +1,9 @@
-# Week 13: Templates and the Standard Library
+# Week 13: Runtime Polymorphism
 
-- **Tuesday, December 1:** [Lecture 12 — Templates, Containers, Iterators, and Algorithms](lectures/week13_lecture.md)
-- **Thursday, December 3:** C++ codebase extension lab
+- **Tuesday, December 1:** [Lecture 12 — Inheritance and Runtime Polymorphism](lectures/week13_lecture.md)
+- **Thursday, December 3:** Templates/STL consolidation and polymorphic architecture lab
 
-Focus: compile-time genericity, container selection, half-open ranges,
-algorithms, lambdas, iterator invalidation, and complexity guarantees.
+Focus: abstract interfaces, virtual dispatch, polymorphic destruction, object
+slicing, composition, and closed alternatives with `std::variant`. The lab opens
+with delayed Note 11 practice before integrating generic containers with the
+Week 13 hierarchy.

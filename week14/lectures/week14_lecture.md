@@ -9,7 +9,7 @@ By the end of this lecture, you should be able to:
 
 1. Model an explicit graph with an adjacency list.
 2. Implement depth-first and breadth-first search with STL containers.
-3. Reconstruct a shortest unweighted path from parent links.
+3. Reconstruct a shortest unweighted path and return expected absence with `optional`.
 4. Model a puzzle as an implicit state graph.
 5. Separate state representation, successor generation, and search policy.
 
@@ -171,6 +171,10 @@ std::optional<std::vector<int>> shortest_path(
     return path;
 }
 ```
+
+As established in Note 11, the optional result distinguishes “no path exists”
+from every valid path, including one that starts at vertex zero or uses zero
+edges because `start == goal`.
 
 BFS processes vertices in nondecreasing distance from `start`. The first time a
 vertex is discovered, its parent therefore defines a shortest path.

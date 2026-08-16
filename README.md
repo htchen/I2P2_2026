@@ -38,8 +38,8 @@ The course follows one conceptual progression:
 The first three weeks form a C crash course taught through direct comparisons
 with Python. Students then study pointers, dynamic allocation, linked lists,
 recursion, binary trees, parsing, and syntax trees. The second half transitions
-to C++ references, RAII, classes, value semantics, polymorphism, templates, the
-standard library, and problem solving in a multi-file C++ codebase.
+to C++ references, RAII, classes, value semantics, templates, the standard
+library, polymorphism, and problem solving in a multi-file C++ codebase.
 
 ## Learning Outcomes
 
@@ -55,9 +55,9 @@ By the end of the course, students should be able to:
    safety and expressiveness.
 6. Design C++ classes with clear invariants and appropriate construction,
    destruction, copying, and moving behavior.
-7. Use inheritance and runtime polymorphism when appropriate.
-8. Use templates, containers, iterators, algorithms, and lambdas to solve
+7. Use templates, containers, iterators, algorithms, and lambdas to solve
    programming problems.
+8. Use inheritance and runtime polymorphism when appropriate.
 9. Read, navigate, modify, and test an unfamiliar multi-file C++ codebase.
 10. Use coding AI productively while remaining accountable for specifications,
     design decisions, correctness, testing, and submitted code.
@@ -185,16 +185,22 @@ demo date must be confirmed before the syllabus is finalized. This sequence uses
 | 6 | Oct. 13 | 6 | Recursion and binary trees | Oct. 15 | **Proposed Midterm 1** |
 | 7 | Oct. 20 | 7 | Expression parsing and syntax trees | Oct. 22 | Midterm project studio |
 | 8 | Oct. 27 | — | **Proposed midterm project demo; no lecture** | Oct. 29 | Project debrief and C++ setup |
-| 9 | Nov. 3 | 8 | From C to C++: references, `const`, strings, vectors, and RAII | Nov. 5 | C-to-C++ refactoring exercise |
+| 9 | Nov. 3 | 8 | From C to C++: values, references, exceptions, and RAII | Nov. 5 | C-to-C++ refactoring exercise |
 | 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | C++ value-class lab |
 | 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Resource-management lab |
-| 12 | Nov. 24 | 11 | Inheritance, virtual functions, and abstract interfaces | Nov. 26 | **Proposed Midterm 2** |
-| 13 | Dec. 1 | 12 | Templates, STL containers, iterators, algorithms, and lambdas | Dec. 3 | C++ codebase extension lab |
+| 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2** |
+| 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Templates and polymorphic architecture lab |
 | 14 | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Search and problem-solving lab |
 | 15 | Dec. 15 | — | Integration, review, and final project clinic | Dec. 17 | Final project lab |
 | 16 | Dec. 22 | — | **Final exam** | — | No scheduled Thursday meeting |
 
 The final project demo will take place on a date after December 22.
+
+The proposed Midterm 1 scope is Notes 1–5, so Note 6 material first presented
+on October 13 is excluded from the October 15 exam. The proposed Midterm 2 scope
+is Notes 8–10, so Note 11 material first presented on November 24 is excluded
+from the November 26 exam. This keeps each exam causally downstream of its
+tested instruction rather than assessing a topic after only two days.
 
 ## Midterm Project: C Expression Compiler
 
@@ -282,7 +288,9 @@ Exam tasks assess independent ability to:
 - use core C++ language and standard-library facilities.
 
 Detailed exam scope and permitted local documentation will be announced before
-each exam.
+each exam. Unless a later announcement explicitly provides more preparation
+time, material first presented on the Tuesday immediately before a Thursday
+midterm will not be tested on that midterm.
 
 ## Overall Assessment
 
