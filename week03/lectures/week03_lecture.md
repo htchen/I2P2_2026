@@ -13,7 +13,17 @@ By the end of this lecture, you should be able to:
 4. Build and debug a multi-file C program.
 5. State and check representation invariants.
 
-## 1. Structures group related values
+## Three-hour plan
+
+| Hour | Main question | In-class production |
+|------|---------------|---------------------|
+| 1 | How do records become reliable abstractions? | Design tokens and rational values with invariants |
+| 2 | How do source files become one program? | Build a three-file module and diagnose link failures |
+| 3 | How do tests and tools turn failure into evidence? | Debug a seeded multi-file defect and add a regression test |
+
+## Hour 1 — Records, tagged data, and invariants
+
+### 1. Structures group related values
 
 A Python dictionary or simple class can group heterogeneous fields. The C
 equivalent has a fixed compile-time layout:
@@ -39,7 +49,7 @@ An array member is copied as part of the structure even though a standalone
 array cannot be assigned. Passing a structure by value also copies it; pass a
 pointer to avoid copying a large record or to allow modification.
 
-## 2. Tagged alternatives with `enum`
+### 2. Tagged alternatives with `enum`
 
 ```c
 enum TokenKind {
@@ -67,7 +77,7 @@ typedef struct Token Token;
 
 Both `struct Token` and `Token` are reasonable course styles; be consistent.
 
-## 3. Invariants turn records into abstractions
+### 3. Invariants turn records into abstractions
 
 A representation invariant is a property that must hold whenever clients can
 observe an object. For a rational number:
@@ -88,7 +98,53 @@ int rational_make(int numerator, int denominator, struct Rational *out);
 The constructor-like function can reject zero and normalize the representation.
 Do not make every caller rediscover these rules.
 
-## 4. Interfaces live in headers
+### Designated initializers and partial initialization
+
+C designated initializers make field meaning explicit and tolerate field order
+changes better than positional initialization:
+
+```c
+struct Student student = {
+    .id = 1001,
+    .name = "Ada",
+    .grade = 92.5
+};
+```
+
+Unspecified members are initialized to zero. This differs from an uninitialized
+automatic structure, whose members have indeterminate values.
+
+### Tagged unions
+
+The earlier C course introduced unions. They are useful only when paired with a
+tag that records the active representation:
+
+```c
+enum ValueKind { ValueInteger, ValueReal, ValueError };
+
+struct Value {
+    enum ValueKind kind;
+    union {
+        long integer;
+        double real;
+        const char *error;
+    } as;
+};
+```
+
+Reading a union member inconsistent with `kind` violates the abstraction. This
+is the C predecessor of C++ tagged alternatives such as `std::variant`.
+
+### Hour 1 design exercise
+
+Design a `struct Date` and functions `date_make`, `date_next`, and `date_print`.
+Decide whether the structure is public or opaque. State leap-year and valid-day
+invariants and give boundary tests for February, month transitions, and invalid
+construction.
+
+## Hour 2 — Headers, the preprocessor, and the build graph
+
+### 4. Interfaces live in headers
 
 `rational.h`:
 
@@ -149,7 +205,7 @@ void rational_print(FILE *stream, const struct Rational *value)
 `static` on `gcd` gives it internal linkage: other source files cannot name it.
 The public header contains the contract; the source file contains private work.
 
-## 5. Separate compilation and linking
+### 5. Separate compilation and linking
 
 ```sh
 cc -std=c17 -Wall -Wextra -Wpedantic -g -c rational.c
@@ -166,7 +222,78 @@ cc rational.o main.o -o rational_demo
 Include your own header first in its implementation file. If the header is not
 self-contained, the mistake is found close to its source.
 
-## 6. Assertions, tests, and debugger evidence
+### Opaque structures
+
+When clients do not need the layout, a header can expose only an incomplete type:
+
+```c
+/* counter.h */
+struct Counter;
+
+struct Counter *counter_create(void);
+void counter_increment(struct Counter *counter);
+long counter_value(const struct Counter *counter);
+void counter_destroy(struct Counter **counter);
+```
+
+`counter.c` defines `struct Counter`. Clients can hold pointers and call the
+interface but cannot access members or allocate the structure directly. This
+creates stronger encapsulation at the cost of dynamic allocation or additional
+initialization APIs.
+
+### Preprocessor discipline
+
+Object-like macros perform token substitution and have no type:
+
+```c
+#define BUFFER_CAPACITY 256
+```
+
+Function-like macros can evaluate arguments more than once:
+
+```c
+#define BAD_SQUARE(x) ((x) * (x))
+/* BAD_SQUARE(i++) modifies i twice: do not do this. */
+```
+
+Prefer `enum` constants, `const` objects, and functions when they express the
+same intent. Use conditional compilation for genuine platform or build choices,
+not to hide multiple unrelated implementations in one file.
+
+### A minimal Makefile
+
+```make
+CC = cc
+CFLAGS = -std=c17 -Wall -Wextra -Wpedantic -g
+
+rational_demo: main.o rational.o
+	$(CC) main.o rational.o -o rational_demo
+
+main.o: main.c rational.h
+	$(CC) $(CFLAGS) -c main.c
+
+rational.o: rational.c rational.h
+	$(CC) $(CFLAGS) -c rational.c
+```
+
+The dependency edges explain what must be rebuilt after a header changes. Make
+is not the compiler; it decides which compiler/linker commands are out of date.
+
+### Hour 2 failure lab
+
+Seed and classify these defects in a three-file program:
+
+1. omit a header dependency from the Makefile;
+2. declare `double mean(...)` but define `int mean(...)`;
+3. define a non-`static` helper with the same name in two source files;
+4. place a function definition in a header included by both source files;
+5. change a function body without relinking.
+
+For each, identify the first stage capable of detecting the defect.
+
+## Hour 3 — Assertions, file boundaries, tests, and debugging
+
+### 6. Assertions, tests, and debugger evidence
 
 Use assertions for internal conditions that indicate a programmer error:
 
@@ -195,7 +322,47 @@ A practical debugging loop is:
 Typical debugger commands are `break`, `run`, `next`, `step`, `print`, and
 `backtrace`. Learn the concepts; the exact command spelling varies by debugger.
 
-## 7. Style as a correctness tool
+### File I/O is another contract boundary
+
+The legacy notes used redirection and `FILE *`. A module can accept a stream
+instead of opening a hard-coded path:
+
+```c
+int students_read(FILE *input, struct Student students[],
+                  size_t capacity, size_t *count)
+{
+    *count = 0;
+    while (*count < capacity) {
+        struct Student next;
+        int converted = fscanf(input, "%d %31s %lf",
+                               &next.id, next.name, &next.grade);
+        if (converted == EOF) return 1;
+        if (converted != 3) return 0;
+        students[(*count)++] = next;
+    }
+    return fscanf(input, "%*s") == EOF; /* reject extra records */
+}
+```
+
+Receiving `FILE *` makes the parser testable with redirected files or temporary
+streams. It also separates “where bytes come from” from “how records are parsed.”
+
+### Debugging studio: invariant first
+
+Given a rational module that occasionally prints `2/-4`, work in this order:
+
+1. add `assert(value->denominator > 0)` at public observation points;
+2. construct the smallest input that triggers the assertion;
+3. break in `normalize` and inspect both members before and after each branch;
+4. determine which operation bypassed normalization;
+5. repair the public mutation path;
+6. add a regression test that checks both value and invariant;
+7. run the complete test set with sanitizers.
+
+The assertion is not the repair. It converts a distant wrong output into a
+failure at the boundary where the invariant first becomes observable.
+
+### 7. Style as a correctness tool
 
 - Give each function one clear responsibility.
 - Use names that expose units and roles (`capacity`, `student_count`).

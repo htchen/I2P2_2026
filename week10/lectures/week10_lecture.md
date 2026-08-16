@@ -13,7 +13,17 @@ By the end of this lecture, you should be able to:
 4. Separate class declarations from definitions.
 5. Overload an operator without surprising its users.
 
-## 1. A class protects a valid state
+## Three-hour plan
+
+| Hour | Main question | In-class production |
+|------|---------------|---------------------|
+| 1 | How does a class make invalid states hard to represent? | Design and construct a normalized Rational value |
+| 2 | How do member functions and operators form a coherent value interface? | Implement arithmetic, comparison, and stream output |
+| 3 | Which class features improve a multi-file design, and which add hidden state? | Refactor and test a complete value class |
+
+## Hour 1 — Class boundaries and construction
+
+### 1. A class protects a valid state
 
 A C structure groups fields. A C++ class can additionally control how clients
 create and mutate values.
@@ -44,7 +54,7 @@ The invariant is:
 Data is private so every public operation can preserve the invariant. Privacy
 is a design tool, not a demand to write trivial setters for every field.
 
-## 2. Constructors establish the invariant
+### 2. Constructors establish the invariant
 
 ```cpp
 #include <numeric>
@@ -78,7 +88,50 @@ for references, `const` members, and members without a default constructor.
 A constructor with usable default arguments also serves as a default
 constructor here: `Rational value;` creates `0/1`.
 
-## 3. `const` member functions
+### Delegating and converting constructors
+
+```cpp
+class Rational {
+public:
+    Rational() : Rational{0, 1} {}
+    explicit Rational(int whole) : Rational{whole, 1} {}
+    Rational(int numerator, int denominator);
+};
+```
+
+A delegating constructor chooses one implementation as the invariant-establishing
+path. `explicit` prevents surprising implicit conversions such as passing an
+`int` where a `Rational` is expected. Remove `explicit`, compile examples such
+as `Rational r = 3`, and discuss when numeric conversion is desirable.
+
+### Initialization order
+
+Members are initialized in declaration order, not the textual order in the
+initializer list. Compile with warnings and keep both orders consistent:
+
+```cpp
+class Interval {
+    int lower_;
+    int upper_;
+public:
+    Interval(int lower, int upper)
+        : lower_{lower}, upper_{upper}
+    {
+        if (lower_ > upper_) throw std::invalid_argument{"reversed interval"};
+    }
+};
+```
+
+### Hour 1 design studio
+
+Design a `BoundedCounter` whose value always lies in `[minimum, maximum]`.
+Specify construction failure, increment-at-maximum behavior, observation, and
+whether assignment from a plain integer should be allowed. Compare a class with
+private fields against a public `struct` plus free functions.
+
+## Hour 2 — Member functions, `this`, and value operators
+
+### 3. `const` member functions
 
 ```cpp
 int Rational::numerator() const
@@ -100,7 +153,7 @@ void print(const Rational& value)
 Make observer functions `const` by default. This is different from returning a
 `const` scalar, which generally adds no useful guarantee.
 
-## 4. The implicit object and `this`
+### 4. The implicit object and `this`
 
 Within a non-static member function, `this` points to the current object.
 
@@ -118,7 +171,7 @@ Rational& Rational::operator+=(const Rational& other)
 Returning `*this` by reference supports conventional chaining such as
 `a += b += c`. The operator mutates the left operand and preserves its invariant.
 
-## 5. Nonmember binary operators
+### 5. Nonmember binary operators
 
 Implement symmetric binary operators in terms of compound assignment:
 
@@ -148,7 +201,41 @@ std::ostream& operator<<(std::ostream& stream, const Rational& value)
 Overload operators only when their meaning matches normal expectations. Do not
 turn `+` into an unrelated command merely because the syntax is available.
 
-## 6. Declaration and definition
+### Equality and ordering
+
+Once values are normalized, equality is simple:
+
+```cpp
+bool operator==(const Rational& left, const Rational& right)
+{
+    return left.numerator() == right.numerator()
+        && left.denominator() == right.denominator();
+}
+```
+
+Ordering via cross multiplication may overflow `int`. A correct interface must
+either use a checked/wider intermediate representation or document a restricted
+input range. Algebraic correctness alone is not machine-level correctness.
+
+### Overloading and default arguments
+
+Member functions may be overloaded by parameter types/count and by trailing
+`const`, but not by return type alone. Default arguments are substituted at the
+call site and should appear in one declaration, normally the header.
+
+Avoid pairs of overloads whose conversions make a call ambiguous. Use a small
+test call matrix to confirm which overload accepts `int`, `double`, `const
+Rational`, and temporary arguments.
+
+### Hour 2 implementation task
+
+Complete `operator-=`, unary minus, `operator-`, `operator==`, and stream output.
+Each compound operation must preserve normalization. Add a test proving that a
+nonmember binary operator does not mutate either operand.
+
+## Hour 3 — Multi-file class design, class state, and verification
+
+### 6. Declaration and definition
 
 `rational.hpp` contains the class declaration and small definitions that truly
 belong inline. `rational.cpp` includes that header and defines the remaining
@@ -170,7 +257,7 @@ c++ rational.o main.o -o rational_demo
 Headers should be self-contained and protected with `#pragma once` or consistent
 include guards.
 
-## 7. `class` versus `struct`
+### 7. `class` versus `struct`
 
 The language difference is only the default access:
 
@@ -184,7 +271,7 @@ Course convention:
 
 This is a design convention, not a rule enforced by the compiler.
 
-## 8. Static members
+### 8. Static members
 
 A static data member belongs to the class rather than each object. A static
 member function has no `this` pointer.
@@ -201,7 +288,30 @@ private:
 
 Use static state sparingly: hidden global state can make tests interdependent.
 
-## 9. Test the abstraction, not the fields
+### `this`, fluent interfaces, and lifetime
+
+Returning `*this` by reference is valid while the object remains alive. Never
+return a reference to a temporary or local object:
+
+```cpp
+Rational& bad_factory()
+{
+    Rational local{1, 2};
+    return local; /* dangling reference */
+}
+```
+
+Factories should return values. Fluent mutation should return `Class&`; a
+read-only query may return a value or a carefully justified borrowed reference.
+
+### Header-dependency exercise
+
+Split Rational into `rational.hpp`, `rational.cpp`, and `rational_test.cpp`.
+Forward declare where a complete type is unnecessary, include what the header
+itself uses, and keep implementation-only headers out of the public interface.
+Then change the private representation and list which files must recompile.
+
+### 9. Test the abstraction, not the fields
 
 ```cpp
 void test_normalization()
@@ -217,6 +327,13 @@ chained compound assignment, and values near integer limits. The simple `int`
 representation can overflow during intermediate multiplication even when the
 mathematical result is small; that limitation belongs in the contract or a
 stronger representation.
+
+### Hour 3 invariant audit
+
+For every public operation, fill a table with valid input, possible failure,
+state change, and invariant restoration point. Seed one bug that bypasses
+`normalize`, use a property test (`denominator() > 0` and gcd equals one) to find
+it, then add the smallest regression case.
 
 ## Check yourself
 

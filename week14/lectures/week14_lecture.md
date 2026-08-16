@@ -13,7 +13,17 @@ By the end of this lecture, you should be able to:
 4. Model a puzzle as an implicit state graph.
 5. Separate state representation, successor generation, and search policy.
 
-## 1. Graph vocabulary
+## Three-hour plan
+
+| Hour | Main question | In-class production |
+|------|---------------|---------------------|
+| 1 | How do graph representations change traversal code and cost? | Build an adjacency list and implement iterative/recursive DFS |
+| 2 | Why does BFS find a shortest unweighted path? | Trace frontier layers and reconstruct paths |
+| 3 | How does a puzzle become an implicit graph with explainable actions? | Implement and test a Water Jugs solver |
+
+## Hour 1 — Graph representation and depth-first exploration
+
+### 1. Graph vocabulary
 
 A graph consists of vertices and edges. Edges may be directed or undirected,
 weighted or unweighted.
@@ -26,7 +36,7 @@ weighted or unweighted.
 Trees are graphs with additional structure. General graphs may contain cycles,
 so traversal needs a visited set.
 
-## 2. Adjacency-list representation
+### 2. Adjacency-list representation
 
 For integer vertices `0 .. n-1`:
 
@@ -46,7 +56,18 @@ density and operations.
 
 Validate external vertex numbers before converting them to vector indices.
 
-## 3. Depth-first search
+### Edge list, matrix, or adjacency list
+
+| Representation | Storage | Edge query | Neighbor iteration |
+|----------------|---------|------------|--------------------|
+| Edge list | O(E) | O(E) | O(E) scan |
+| Matrix | O(V²) | O(1) | O(V) per vertex |
+| Adjacency list | O(V+E) | O(degree) typically | O(degree) |
+
+An edge list is convenient when sorting edges, a matrix suits dense graphs, and
+adjacency lists suit sparse traversal. Representation follows operations.
+
+### 3. Depth-first search
 
 ```cpp
 void dfs_visit(const Graph& graph, int vertex, std::vector<bool>& visited)
@@ -71,7 +92,45 @@ DFS explores one branch deeply before backtracking. It is useful for reachabilit
 connected components, cycle-related algorithms, and exhaustive backtracking.
 Its recursion depth can be O(V); an explicit `std::stack` avoids call-stack limits.
 
-## 4. Breadth-first search finds shortest unweighted paths
+### Iterative DFS and discovery order
+
+```cpp
+std::vector<int> dfs_order(const Graph& graph, int start)
+{
+    std::vector<int> order;
+    std::vector<bool> visited(graph.size(), false);
+    std::stack<int> work;
+    work.push(start);
+
+    while (!work.empty()) {
+        int current = work.top();
+        work.pop();
+        if (visited.at(current)) continue;
+        visited.at(current) = true;
+        order.push_back(current);
+
+        for (auto it = graph.at(current).rbegin();
+             it != graph.at(current).rend(); ++it) {
+            if (!visited.at(*it)) work.push(*it);
+        }
+    }
+    return order;
+}
+```
+
+Reverse neighbor insertion matches a left-to-right recursive traversal for a
+fixed adjacency order. DFS order is not inherently unique; tests should control
+neighbor order or assert reachability rather than one accidental sequence.
+
+### Hour 1 graph lab
+
+Read an undirected graph, reject invalid endpoints, and compute connected
+components. Test isolated vertices, parallel edges, self-loops, a cycle, and an
+empty graph. Decide whether parallel edges are preserved or normalized away.
+
+## Hour 2 — Breadth-first layers and shortest paths
+
+### 4. Breadth-first search finds shortest unweighted paths
 
 ```cpp
 #include <optional>
@@ -116,10 +175,20 @@ std::optional<std::vector<int>> shortest_path(
 BFS processes vertices in nondecreasing distance from `start`. The first time a
 vertex is discovered, its parent therefore defines a shortest path.
 
+### Layer invariant
+
+When BFS begins processing distance `d`, every queued vertex has distance `d` or
+`d+1`, and all vertices at smaller distance have been processed. Each newly
+discovered neighbor has distance exactly one more than its parent. This is the
+reason the first recorded parent yields a shortest edge-count path.
+
+Trace queue, parent, and distance after every pop on a graph with two shortest
+paths. The selected path depends on adjacency order, but its length does not.
+
 Mark a vertex visited when it is enqueued, not when it is removed; otherwise
 many frontier entries may duplicate the same vertex.
 
-## 5. Complexity
+### 5. Complexity
 
 With adjacency lists, DFS and BFS both take O(V + E) time and O(V) auxiliary
 space. Path reconstruction takes O(L), where `L` is the path length.
@@ -128,7 +197,26 @@ BFS minimizes number of edges only when all edges have equal cost. Weighted
 nonnegative graphs require Dijkstra's algorithm; negative edges require other
 methods.
 
-## 6. Puzzles are implicit graphs
+### Search-policy boundary
+
+- BFS: FIFO queue and unit edge cost.
+- DFS: stack/recursion for reachability or exhaustive exploration.
+- Dijkstra: priority queue and nonnegative weighted cost.
+- A*: priority queue plus an admissible heuristic toward a goal.
+
+Keep successor generation independent so the same model can use another policy.
+Replacing a queue with a priority queue is not enough if visited/finalization
+logic still assumes BFS.
+
+### Hour 2 checkpoint
+
+Modify `shortest_path` to return path and distance. Then add weighted edges and
+construct a case where BFS uses fewer edges but higher total cost. State the
+additional data and invariant Dijkstra needs.
+
+## Hour 3 — Implicit state graphs and puzzle solving
+
+### 6. Puzzles are implicit graphs
 
 For water jugs with capacities A and B, one state is the current amount in each
 jug:
@@ -176,7 +264,30 @@ The full solver combines:
 This separation also applies to missionaries-and-cannibals, bridge-and-torch,
 maze routing, and game AI.
 
-## 7. State invariants and duplicate control
+### Record actions, not only parents
+
+```cpp
+enum class Action { FillA, FillB, EmptyA, EmptyB, PourAToB, PourBToA };
+
+struct Step {
+    State parent;
+    Action action;
+};
+
+std::map<State, Step> discovered;
+```
+
+Path reconstruction can now explain “fill the 5-liter jug” rather than printing
+only coordinate pairs. Explainable paths help both demos and successor debugging.
+
+### Water Jugs feasibility
+
+With standard fill/empty/pour actions, a target is reachable only if it does not
+exceed the larger capacity and is divisible by `gcd(cap_a, cap_b)`. Use this as a
+fast rejection and a property check against exhaustive BFS on small capacities.
+BFS remains necessary when the output requires a shortest action sequence.
+
+### 7. State invariants and duplicate control
 
 For the jug state:
 
@@ -197,7 +308,7 @@ std::queue<State> frontier;
 For larger state spaces, `unordered_map` can improve average lookup if `State`
 has a correct equality operation and hash function.
 
-## 8. Search is an engineering boundary
+### 8. Search is an engineering boundary
 
 Keep I/O and visualization outside the solver. A solver that receives a model
 and returns `optional<vector<State>>` can be unit-tested without a terminal or
@@ -215,7 +326,7 @@ AI-generated search code often looks plausible while it:
 
 Use tiny hand-drawn state graphs and properties to audit generated code.
 
-## 9. Test strategy
+### 9. Test strategy
 
 - start equals goal;
 - goal unreachable;
@@ -228,6 +339,25 @@ Use tiny hand-drawn state graphs and properties to audit generated code.
 
 For BFS, verify not only that a path works but that no shorter path exists on
 small exhaustively enumerable cases.
+
+### Compare classic state spaces
+
+| Puzzle | State | Critical invariant | Typical action |
+|--------|-------|--------------------|----------------|
+| Water Jugs | `(amount_a, amount_b)` | capacities respected | fill, empty, pour |
+| Missionaries/Cannibals | counts on each side + boat side | missionaries safe on both sides | move one/two people |
+| Bridge and Torch | side-set + torch side + elapsed cost | torch travels with movers | one/two cross |
+| Maze | cell position | open and in bounds | move to neighbor |
+
+Bridge and Torch has weighted actions, so shortest move count and minimum time
+are different objectives. This directly motivates separating model from policy.
+
+### Hour 3 integration studio
+
+Implement Water Jugs with `State`, `successors`, `goal`, BFS, parent/action
+records, and formatted output. Assert invariants for every successor. Compare
+with hand solutions and exhaustive small cases; then change the objective to
+total poured volume and explain why ordinary BFS is no longer correct.
 
 ## Check yourself
 

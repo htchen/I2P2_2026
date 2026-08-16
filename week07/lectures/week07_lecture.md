@@ -13,7 +13,17 @@ By the end of this lecture, you should be able to:
 4. Evaluate and release an AST safely.
 5. Connect AST structure to stack-machine code generation.
 
-## 1. A small compiler is a pipeline
+## Three-hour plan
+
+| Hour | Main question | In-class production |
+|------|---------------|---------------------|
+| 1 | How do characters become a trustworthy token stream? | Complete and test a position-aware lexer |
+| 2 | How does grammar become an owning syntax tree? | Trace recursive descent and implement one precedence level |
+| 3 | How does tree meaning become checked instructions? | Add semantic checks, generate code, and test end to end |
+
+## Hour 1 — Compiler stages and lexical analysis
+
+### 1. A small compiler is a pipeline
 
 ```text
 characters -> tokens -> syntax tree -> checked tree -> instructions
@@ -30,7 +40,7 @@ Each stage gives a simpler contract to the next:
 Do not make every function inspect raw input. Good intermediate representations
 localize errors and make stages testable independently.
 
-## 2. Tokens
+### 2. Tokens
 
 ```c
 enum TokenKind {
@@ -41,6 +51,7 @@ enum TokenKind {
     TokenSlash,
     TokenLeftParen,
     TokenRightParen,
+    TokenIdentifier,
     TokenEnd,
     TokenInvalid
 };
@@ -56,7 +67,54 @@ The lexer should always make progress: consume a valid token, skip permitted
 whitespace, or consume/report an invalid character. Recording the source
 position makes later diagnostics precise.
 
-## 3. Grammar encodes precedence
+### A lexer skeleton
+
+```c
+struct Lexer {
+    const char *input;
+    size_t position;
+};
+
+static char peek(const struct Lexer *lexer)
+{
+    return lexer->input[lexer->position];
+}
+
+static char take(struct Lexer *lexer)
+{
+    char current = peek(lexer);
+    if (current != '\0') ++lexer->position;
+    return current;
+}
+```
+
+A token carries the starting position, kind, and parsed value. Integer scanning
+must detect overflow while accumulating rather than after overflow has occurred:
+
+```c
+long value = 0;
+while (isdigit((unsigned char)peek(lexer))) {
+    int digit = take(lexer) - '0';
+    if (value > (INT_MAX - digit) / 10) {
+        return token_invalid(start);
+    }
+    value = value * 10 + digit;
+}
+```
+
+Cast to `unsigned char` before calling `<ctype.h>` classification functions;
+passing a negative plain `char` other than `EOF` is undefined behavior.
+
+### Hour 1 lexer lab
+
+For input `" 12 + 3*foo"`, write every token with `[start,end)`, kind, and
+value/lexeme. Then test empty input, every operator, `INT_MAX`, one overflowing
+integer, an invalid byte between valid tokens, and repeated calls after end.
+The parser should never need to inspect raw characters or repeat overflow logic.
+
+## Hour 2 — Precedence grammar, recursive descent, and AST ownership
+
+### 3. Grammar encodes precedence
 
 This grammar makes multiplication bind tighter than addition and makes binary
 operators left-associative:
@@ -65,7 +123,7 @@ operators left-associative:
 expression  -> term (('+' | '-') term)*
 term        -> unary (('*' | '/') unary)*
 unary       -> ('+' | '-') unary | primary
-primary     -> INTEGER | '(' expression ')'
+primary     -> INTEGER | IDENTIFIER | '(' expression ')'
 ```
 
 For `1 + 2 * 3`, `expression` contains one `term` for `1` and another whose
@@ -74,7 +132,7 @@ tree is `2 * 3`. For `8 - 3 - 2`, the repetition builds `(8 - 3) - 2`.
 Grammar is executable design: one parser function corresponds to each
 nonterminal.
 
-## 4. AST representation
+### 4. AST representation
 
 ```c
 enum AstKind {
@@ -83,7 +141,8 @@ enum AstKind {
     AstSubtract,
     AstMultiply,
     AstDivide,
-    AstNegate
+    AstNegate,
+    AstIdentifier
 };
 
 struct Ast {
@@ -103,7 +162,7 @@ Representation rules:
 An AST omits punctuation that was required only to parse. Parentheses affect
 shape but do not need their own nodes.
 
-## 5. Parser state and errors
+### 5. Parser state and errors
 
 ```c
 struct Parser {
@@ -126,7 +185,7 @@ Every parser function follows a useful contract:
 The top-level parse succeeds only if an expression is followed by `TokenEnd`.
 Accepting a valid prefix while ignoring trailing garbage is a parser bug.
 
-## 6. Recursive descent
+### 6. Recursive descent
 
 Simplified additive parsing:
 
@@ -163,6 +222,42 @@ static struct Ast *parse_expression(struct Parser *parser)
 Updating `left` after each operator creates left association. Notice the
 failure paths: every successfully constructed subtree has exactly one owner.
 
+### Precedence trace
+
+Trace `-2 * (3 + 4) - 5` as a table:
+
+| Function | Token on entry | Result on return | First unused token |
+|----------|----------------|------------------|--------------------|
+| `parse_primary` | `2` | integer 2 | `*` |
+| `parse_unary` | `-` | negate(2) | `*` |
+| `parse_term` | `-` | multiply(negate(2), add(3,4)) | `-` |
+| `parse_expression` | `-` | subtract(previous,5) | end |
+
+Students should fill the omitted intermediate calls and draw the owned tree.
+This makes it visible that unary minus is syntax, not part of the integer token.
+
+### AST constructors centralize invariants
+
+```c
+static struct Ast *ast_binary(enum AstKind kind,
+                              struct Ast *left,
+                              struct Ast *right)
+{
+    if (left == NULL || right == NULL) return NULL;
+    struct Ast *node = malloc(sizeof *node);
+    if (node == NULL) return NULL;
+    node->kind = kind;
+    node->value = 0;
+    node->left = left;
+    node->right = right;
+    return node;
+}
+```
+
+Define whether ownership transfers only on success or whenever nonnull children
+are passed. The parser above assumes transfer on success; on failure it destroys
+both children itself. A mismatched convention causes leaks or double free.
+
 `parse_primary` handles integers and parenthesized expressions:
 
 ```c
@@ -192,7 +287,16 @@ static struct Ast *parse_primary(struct Parser *parser)
 }
 ```
 
-## 7. Evaluation is postorder
+### Hour 2 parser studio
+
+Implement `parse_unary` and `parse_term`. Use malformed cases to inspect cleanup
+paths: `1 +`, `2 * )`, `(3 + 4`, `--`, and a forced allocation failure after the
+left subtree exists. Require the first error position and verify that no AST
+allocation leaks.
+
+## Hour 3 — Semantics, evaluation, and code generation
+
+### 7. Evaluation is postorder
 
 ```c
 int ast_evaluate(const struct Ast *node, int *result)
@@ -228,7 +332,24 @@ int ast_evaluate(const struct Ast *node, int *result)
 Production code must also define and check overflow behavior. Semantic analysis
 can reject invalid constructs before code generation.
 
-## 8. From tree to instructions
+### Semantic checks are not parsing
+
+The grammar can accept forms whose meaning is invalid. In the original mini
+compiler, increment/decrement or assignment-like operations require a modifiable
+variable rather than an arbitrary expression. Keep this rule in a separate pass:
+
+```c
+int is_modifiable(const struct Ast *node)
+{
+    return node != NULL && node->kind == AstIdentifier;
+}
+```
+
+An AST retains enough structure to report “left operand is not modifiable” at
+the operator position. Do not twist the grammar until it rejects every
+context-sensitive rule.
+
+### 8. From tree to instructions
 
 For a simple stack machine, generate the left subtree, then the right subtree,
 then the operation:
@@ -252,7 +373,29 @@ problem: which temporary register holds each intermediate result? The midterm
 project's hidden tests check language behavior, but the demo checks whether you
 can connect emitted instructions back to AST structure.
 
-## 9. Test stages independently
+### Register pressure and evaluation order
+
+For a target with a small fixed register set, annotate every subtree with the
+number of registers required without spilling. A useful heuristic evaluates the
+more demanding subtree first. If both results cannot remain in registers, emit
+a store to temporary memory and reload it later.
+
+For each instruction, maintain an invariant describing where the subexpression
+value resides. Optimization must preserve that invariant and observable side
+effects; fewer cycles are irrelevant if evaluation order becomes incorrect.
+
+### Differential testing and demo rehearsal
+
+Execute each AST in two ways: direct evaluation and generated code in the ASMC
+simulator. Generate many small valid expressions and compare results, then keep
+separate expected-failure tests for syntax, semantics, division by zero, and
+resource exhaustion.
+
+For rehearsal, a student should tokenize one expression, draw its AST, identify
+owned allocations, explain semantic acceptance, predict instructions, make one
+small live change, and add a test that fails without the change.
+
+### 9. Test stages independently
 
 - Lexer: whitespace, multi-digit integers, each operator, invalid characters.
 - Parser: precedence, associativity, parentheses, unary chains, missing tokens.

@@ -13,7 +13,17 @@ By the end of this lecture, you should be able to:
 4. Compose algorithms with lambdas instead of rewriting loops.
 5. Recognize iterator invalidation and accidental insertion into a map.
 
-## 1. Templates describe families of code
+## Three-hour plan
+
+| Hour | Main question | In-class production |
+|------|---------------|---------------------|
+| 1 | How do templates state operations required from a type? | Generalize concrete functions and diagnose instantiation errors |
+| 2 | Which container and iterator guarantees fit a workload? | Select representations and trace invalidation |
+| 3 | How do algorithms, lambdas, and maps form a complete solution? | Implement and benchmark a frequency/ranking pipeline |
+
+## Hour 1 — Compile-time genericity and template requirements
+
+### 1. Templates describe families of code
 
 ```cpp
 template <typename T>
@@ -35,7 +45,7 @@ std::string largest_word = maximum(std::string{"ant"}, std::string{"bee"});
 Templates are compile-time polymorphism. Unlike a virtual call, the concrete
 operation is normally known during compilation and can be inlined.
 
-## 2. A small class template
+### 2. A small class template
 
 ```cpp
 template <typename T>
@@ -57,7 +67,39 @@ the definition when instantiating a concrete type.
 Avoid making a template merely to avoid naming the actual abstraction. Generic
 code is valuable when multiple types share the same meaningful operation.
 
-## 3. Choose containers by required operations
+### Requirements before C++20 concepts
+
+In C++17, template requirements are implicit in expressions. For `maximum<T>`,
+`left < right` must be valid and usable as a condition. A compiler error may be
+long because it reports the failed instantiation path. Read from the first
+expression involving your type, not only the final diagnostic line.
+
+Create three types: one with a valid `<`, one with equality only, and one whose
+comparison returns an unsuitable type. Instantiate `maximum` and classify the
+errors. Then state the requirement in a comment beside the template.
+
+### Function objects and generic lambdas
+
+```cpp
+auto absolute_less = [](const auto& left, const auto& right) {
+    return std::abs(left) < std::abs(right);
+};
+
+std::sort(values.begin(), values.end(), absolute_less);
+```
+
+The lambda's call operator is a template. Its comparator must provide a strict
+weak ordering; returning `<=` instead of `<` violates the sorting contract.
+
+### Hour 1 template studio
+
+Generalize `contains`, `print_range`, and `count_if` from `vector<int>` to
+iterator pairs. For each, list the minimum iterator and element operations. Use
+the exercise to make standard-algorithm contracts explicit.
+
+## Hour 2 — Containers, iterators, complexity, and invalidation
+
+### 3. Choose containers by required operations
 
 | Container | Strengths | Important costs |
 |-----------|-----------|-----------------|
@@ -75,7 +117,14 @@ specific need. The legacy course used `list` frequently; modern code should not
 choose it merely because insertions look O(1)—finding the position is still a
 cost and locality often dominates.
 
-## 4. Iterators represent positions and ranges
+### Container-selection scenarios
+
+Choose and defend a representation for an ordered leaderboard, FIFO event queue,
+entity table by numeric ID, unique visited puzzle states, stable splice-heavy
+sequence, and dense objects updated every frame. Include iteration order,
+lookup/insertion complexity, locality, reference stability, and duplicates.
+
+### 4. Iterators represent positions and ranges
 
 The half-open range `[first, last)` includes `first` and excludes `last`.
 
@@ -93,7 +142,9 @@ Iterator categories expose supported movement. A vector iterator supports
 random access; a list iterator does not. Generic algorithms express the weakest
 category they require.
 
-## 5. Algorithms separate traversal from intent
+## Hour 3 — Algorithms, associative containers, and solution pipelines
+
+### 5. Algorithms separate traversal from intent
 
 ```cpp
 #include <algorithm>
@@ -119,7 +170,7 @@ Common algorithms include:
 An algorithm name states intent and centralizes boundary handling. A loop is
 still correct when the operation does not fit an algorithm cleanly.
 
-## 6. The erase-remove pattern
+### 6. The erase-remove pattern
 
 `std::remove_if` rearranges retained elements and returns a new logical end; it
 does not resize the container.
@@ -134,7 +185,7 @@ values.erase(
 C++20 adds `std::erase_if(values, predicate)` for supported containers, but the
 older form remains important when reading C++17 projects.
 
-## 7. Maps: lookup versus insertion
+### 7. Maps: lookup versus insertion
 
 ```cpp
 std::map<std::string, int> frequency;
@@ -155,7 +206,24 @@ if (found != frequency.end()) {
 Or use `.at(query)` when absence should produce an exception. Do not accidentally
 mutate a map while asking whether a key exists.
 
-## 8. Iterator invalidation
+### Frequency-to-ranking pipeline
+
+```cpp
+std::vector<std::pair<std::string, int>> ranking{
+    frequency.begin(), frequency.end()
+};
+
+std::sort(ranking.begin(), ranking.end(), [](const auto& left, const auto& right) {
+    if (left.second != right.second) return left.second > right.second;
+    return left.first < right.first;
+});
+```
+
+The map builds counts; the vector supports ranking by a different order. This is
+often clearer than forcing one container to serve incompatible access patterns.
+Prove the comparator is strict for equal pairs.
+
+### 8. Iterator invalidation
 
 After a vector reallocates, pointers, references, and iterators to its elements
 are invalid. Inserting or erasing can invalidate additional positions even
@@ -173,7 +241,14 @@ ownership claim just as a valid C pointer is.
 Use indices when a vector mutation may relocate storage and the index remains a
 meaningful position, or reacquire the iterator after mutation.
 
-## 9. Complexity belongs to the interface
+### Invalidation trace
+
+For a vector with size 3 and capacity 4, take iterators to all elements, then
+push a fourth element, insert at index 1 without reallocation, push a fifth
+element with reallocation, and erase index 2. Mark valid handles after each
+operation. Repeat for `list` and `map` and compare their guarantees.
+
+### 9. Complexity belongs to the interface
 
 For an ordered map, lookup is O(log n). For an unordered map, lookup is average
 O(1) but worst-case O(n). `lower_bound` on a sorted vector is O(log n), but
@@ -182,6 +257,14 @@ build frequency, query frequency, ordering requirements, and memory overhead.
 
 The standard library specifies both semantics and complexity. Use those
 guarantees instead of assuming an internal implementation.
+
+### Hour 3 integration task
+
+Read words, normalize case, count with a map/unordered map, remove stop words,
+rank by frequency then spelling, and print the top `k`. Test empty input, ties,
+repeated punctuation policy, and very large counts. Benchmark ordered versus
+unordered counting on supplied data and explain results without overgeneralizing
+from one machine.
 
 ## Check yourself
 

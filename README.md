@@ -16,6 +16,7 @@ revision before the semester begins.
 | Duration | 16 weeks |
 | First meeting | Tuesday, September 8, 2026 |
 | Tuesday meeting | Evening lecture, project demo, or exam |
+| Regular lecture duration | Three hours |
 | Thursday meeting | Lab or midterm exam |
 | Lecture notes | 13 |
 | Final exam | Tuesday, December 22, 2026 |
@@ -130,6 +131,27 @@ incorrect or unsuitable, and repaired.
   the submitted code.
 - Fabricated development records, undisclosed material assistance, and false
   claims of contribution are academic-integrity violations.
+
+## Three-Hour Lecture Pattern
+
+Each regular Tuesday lecture is a three-hour session. The 13 lecture notes are
+organized explicitly as Hour 1, Hour 2, and Hour 3 rather than as a loose topic
+list. A typical hour contains 45–50 minutes of explanation and live coding plus
+10–15 minutes of tracing, pair work, a design checkpoint, or a short judge-style
+implementation.
+
+The three hours normally progress as follows:
+
+1. **Model and vocabulary:** connect Python-familiar ideas or prior-week material
+   to the C/C++ representation and tool model.
+2. **Core implementation:** derive and trace the central data structure,
+   language mechanism, or algorithm.
+3. **Integration and verification:** solve a larger example, exercise ownership
+   and error paths, test with tools, and connect the topic to an exam or project.
+
+Short breaks may be placed between the hourly blocks. Every note includes an
+hour-by-hour plan and concrete in-class production so that material can be
+trimmed or extended without losing the conceptual sequence.
 
 ## Weekly Lab Pattern
 
