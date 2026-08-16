@@ -1,13 +1,6 @@
-# Week 8: TBD
+# Week 8: Midterm Project Demo
 
-## Concepts
+- **Tuesday, October 27:** Proposed midterm project demo; no lecture
+- **Thursday, October 29:** Project debrief and C++ environment setup
 
-- TBD
-
-## Lecture Materials
-
-See the `lectures/` directory.
-
-## Lab Exercises
-
-See the `labs/` directory.
+No new lecture note is assigned to this week.

@@ -1,13 +1,7 @@
-# Week 1: TBD
+# Week 1: From Python to C
 
-## Concepts
+- **Tuesday, September 8:** [Lecture 1 — From Python to C](lectures/week01_lecture.md)
+- **Thursday, September 10:** Compiler and translation lab
 
-- TBD
-
-## Lecture Materials
-
-See the `lectures/` directory.
-
-## Lab Exercises
-
-See the `labs/` directory.
+Focus: toolchain, types, expressions, formatted I/O, control flow, diagnostics,
+and undefined behavior.

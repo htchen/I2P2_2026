@@ -1,21 +1,248 @@
-# Week 2 Lecture: TBD
+# Lecture 2 — Functions, Arrays, and Strings in C
 
-## Learning Objectives
+> September 15, 2026 · Source lineage: the legacy function, array, string, and
+> input notes, reorganized around comparisons with Python sequences
 
-By the end of this lecture, students will be able to:
+## Learning objectives
 
-1. TBD
+By the end of this lecture, you should be able to:
 
----
+1. Declare, define, and call a C function through a prototype.
+2. Explain pass-by-value and use return values for explicit results.
+3. Traverse arrays without reading outside their bounds.
+4. Explain the null-terminated representation of a C string.
+5. Design interfaces that pass an array together with its length or capacity.
 
-## Part 1: TBD
+## 1. Functions are typed contracts
 
-### Overview
+Python checks a function call while the program runs. A C compiler checks a
+prototype before generating the call.
 
-TBD.
+```c
+double mean(const int values[], size_t count);
+```
 
----
+This declaration promises:
+
+- the function is named `mean`;
+- it returns a `double`;
+- it receives a sequence of integers that it will not modify;
+- it receives the number of valid elements.
+
+The definition provides the implementation:
+
+```c
+#include <stddef.h>
+
+double mean(const int values[], size_t count)
+{
+    long long total = 0;
+    for (size_t i = 0; i < count; ++i) {
+        total += values[i];
+    }
+    return count == 0 ? 0.0 : (double)total / count;
+}
+```
+
+Keep the declaration and definition identical. A prototype placed in a header
+allows multiple source files to share the same contract.
+
+## 2. C passes arguments by value
+
+Each parameter starts as a copy of the corresponding argument.
+
+```c
+void ineffective_swap(int a, int b)
+{
+    int temporary = a;
+    a = b;
+    b = temporary;
+}
+```
+
+Calling `ineffective_swap(x, y)` does not modify `x` or `y`. Later we will pass
+their addresses when mutation is required. For now, prefer returning the result:
+
+```c
+int absolute_value(int value)
+{
+    return value < 0 ? -value : value;
+}
+```
+
+Precondition: `value != INT_MIN`, because `-INT_MIN` may overflow. Interfaces
+should make important preconditions visible in names, documentation, or checks.
+
+## 3. Arrays are contiguous fixed-size storage
+
+```c
+int scores[5] = {91, 82, 73, 94, 85};
+```
+
+The array contains five adjacent `int` objects indexed from `0` through `4`.
+Unlike a Python list, it does not remember a run-time length and cannot grow.
+
+Inside the same scope as the array declaration:
+
+```c
+size_t count = sizeof scores / sizeof scores[0];
+```
+
+This expression does **not** work in a function parameter. In most expressions,
+an array is converted to a pointer to its first element. Therefore every general
+array function must receive a length explicitly.
+
+```c
+int maximum(const int values[], size_t count, int *result);
+```
+
+The return value can report whether a maximum exists; `result` can hold the
+answer. We introduce this output-parameter style fully with pointers.
+
+## 4. Boundary reasoning
+
+For `count` valid elements, the canonical traversal is:
+
+```c
+for (size_t i = 0; i < count; ++i) {
+    use(values[i]);
+}
+```
+
+Ask three questions about every loop:
+
+1. What is the first valid index?
+2. What is the first invalid index?
+3. Does the loop condition exclude the first invalid index?
+
+Accessing `values[count]` is undefined behavior. C has no automatic bounds
+check and no `IndexError`.
+
+## 5. Two-dimensional arrays
+
+```c
+enum { Rows = 3, Columns = 4 };
+int matrix[Rows][Columns] = {0};
+```
+
+Elements are stored row by row. When passing this array, the compiler must know
+the column stride:
+
+```c
+int sum_matrix(size_t rows, size_t columns, const int matrix[rows][columns])
+{
+    int total = 0;
+    for (size_t r = 0; r < rows; ++r) {
+        for (size_t c = 0; c < columns; ++c) {
+            total += matrix[r][c];
+        }
+    }
+    return total;
+}
+```
+
+## 6. Strings are character arrays with a sentinel
+
+```c
+char language[] = "C17";
+```
+
+The array contains four characters: `'C'`, `'1'`, `'7'`, and the terminating
+null character `'\0'`. Library functions find the end by scanning for this
+sentinel. If the terminator is missing, a string function may continue beyond
+the array.
+
+```c
+#include <string.h>
+
+size_t length = strlen(language);  /* 3, not 4 */
+```
+
+`strlen` is linear time; it does not know the array capacity.
+
+### Capacity versus length
+
+```c
+char name[32] = "Ada";
+```
+
+- Capacity: 32 characters of storage.
+- Current string length: 3 characters.
+- Available space for additional text: 28 characters, because one position is
+  reserved for `\0`.
+
+This distinction returns later as C++ `vector::capacity()` versus `size()`.
+
+## 7. Reading a line safely
+
+For text, prefer a bounded line read and then parse:
+
+```c
+#include <stdio.h>
+#include <string.h>
+
+char line[128];
+if (fgets(line, sizeof line, stdin) == NULL) {
+    return 1;
+}
+
+line[strcspn(line, "\n")] = '\0';
+printf("You entered %zu characters: %s\n", strlen(line), line);
+```
+
+If the input is longer than the buffer, `fgets` reads only a prefix. Production
+code must detect whether the newline was read and decide whether to reject,
+discard, or continue the line.
+
+Avoid unbounded `%s` input. It cannot know the destination capacity.
+
+## Worked example: one-pass statistics
+
+```c
+#include <stddef.h>
+#include <stdbool.h>
+
+struct Statistics {
+    int minimum;
+    int maximum;
+    double mean;
+};
+
+bool statistics(const int values[], size_t count, struct Statistics *out)
+{
+    if (count == 0 || out == NULL) {
+        return false;
+    }
+
+    long long total = values[0];
+    out->minimum = values[0];
+    out->maximum = values[0];
+    for (size_t i = 1; i < count; ++i) {
+        if (values[i] < out->minimum) out->minimum = values[i];
+        if (values[i] > out->maximum) out->maximum = values[i];
+        total += values[i];
+    }
+    out->mean = (double)total / count;
+    return true;
+}
+```
+
+This preview uses a structure and a pointer, topics developed in Lectures 3 and
+4. Focus now on the boundary: the function reads `values[0]` only after proving
+that `count > 0`.
+
+## Check yourself
+
+1. Why does `sizeof parameter / sizeof parameter[0]` fail in a function?
+2. How many bytes are required to store the string `"tree"` as a `char` array?
+3. Design a function to reverse an array. What must its contract include?
+4. Find the off-by-one error in `for (i = 0; i <= count; ++i)`.
+5. What should a string-building function know besides the current length?
 
 ## Summary
 
-- TBD
+- Prototypes make function contracts available to the compiler.
+- Arguments are passed by value; mutation requires explicit indirection.
+- C arrays are contiguous and have no run-time length metadata.
+- A C string is an array convention: characters followed by `\0`.
+- Pair every array with its length and every output buffer with its capacity.

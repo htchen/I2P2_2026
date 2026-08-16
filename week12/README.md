@@ -1,13 +1,7 @@
-# Week 12: TBD
+# Week 12: Runtime Polymorphism
 
-## Concepts
+- **Tuesday, November 24:** [Lecture 11 — Inheritance and Runtime Polymorphism](lectures/week12_lecture.md)
+- **Thursday, November 26:** Proposed Midterm 2
 
-- TBD
-
-## Lecture Materials
-
-See the `lectures/` directory.
-
-## Lab Exercises
-
-See the `labs/` directory.
+Focus: abstract interfaces, virtual dispatch, polymorphic destruction, object
+slicing, composition, and closed alternatives with `std::variant`.
