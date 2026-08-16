@@ -171,6 +171,7 @@ void rational_print(FILE *stream, const struct Rational *value);
 #include "rational.h"
 
 #include <assert.h>
+#include <limits.h>
 
 static int gcd(int a, int b)
 {
@@ -184,7 +185,8 @@ static int gcd(int a, int b)
 
 int rational_make(int numerator, int denominator, struct Rational *out)
 {
-    if (denominator == 0 || out == NULL) return 0;
+    if (denominator == 0 || numerator == INT_MIN ||
+        denominator == INT_MIN || out == NULL) return 0;
     if (denominator < 0) {
         numerator = -numerator;
         denominator = -denominator;
@@ -204,6 +206,9 @@ void rational_print(FILE *stream, const struct Rational *value)
 
 `static` on `gcd` gives it internal linkage: other source files cannot name it.
 The public header contains the contract; the source file contains private work.
+This teaching representation rejects `INT_MIN` because negating it is not
+representable as `int`; a production numeric type should document or redesign
+that range limitation explicitly.
 
 ### 5. Separate compilation and linking
 
@@ -386,3 +391,10 @@ failure at the boundary where the invariant first becomes observable.
 - Headers declare contracts; source files define behavior.
 - Compilation checks each translation unit; linking connects them.
 - Invariants, assertions, focused tests, and debuggers turn failures into evidence.
+
+## References and legacy sources
+
+- [Structures, enumerations, and related C topics](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Supplementary%20Material%202/README.md>)
+- [Compiling multiple source files](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/如何compile多個檔案/如何%20compile%20多個檔案.md>)
+- [Debugging](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Programming%20related%20Topic/Debug.md>)
+- [Programming style](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Programming%20related%20Topic/程式撰寫風格.md>)

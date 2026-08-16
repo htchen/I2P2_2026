@@ -343,3 +343,8 @@ that uses `FILE *`, allocated strings, and multiple error labels.
 - References express required borrowing; `const` exposes non-mutation.
 - Range loops, `auto`, and lambdas make generic code readable when used precisely.
 - RAII binds resource cleanup to deterministic object lifetime.
+
+## References and legacy sources
+
+- [Introduction to C++](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Intro/README.md>)
+- [2025 Week 7 notebook (Colab)](https://colab.research.google.com/drive/1oHBcNeAXt4ZeQJsdG2q4RU5m9Yu_9CCw)

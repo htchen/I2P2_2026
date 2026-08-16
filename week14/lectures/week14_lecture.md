@@ -282,10 +282,11 @@ only coordinate pairs. Explainable paths help both demos and successor debugging
 
 ### Water Jugs feasibility
 
-With standard fill/empty/pour actions, a target is reachable only if it does not
-exceed the larger capacity and is divisible by `gcd(cap_a, cap_b)`. Use this as a
-fast rejection and a property check against exhaustive BFS on small capacities.
-BFS remains necessary when the output requires a shortest action sequence.
+For positive jug capacities and standard fill/empty/pour actions, a target is
+reachable only if it lies in `[0, max(cap_a, cap_b)]` and is divisible by
+`gcd(cap_a, cap_b)`. Use this as a fast rejection and a property check against
+exhaustive BFS on small capacities. BFS remains necessary when the output
+requires a shortest action sequence.
 
 ### 7. State invariants and duplicate control
 
@@ -374,3 +375,12 @@ total poured volume and explain why ordinary BFS is no longer correct.
 - Parent links turn reachability into an explainable path.
 - State-space search treats puzzles as implicit graphs.
 - Clean separation of model, successors, goal, and policy makes search testable.
+
+## References and legacy sources
+
+- [Finding paths](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/week%2013%20找路徑/week%2013%20找路徑.md>)
+- [Water Jugs Problem](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/week%2014%20Water%20Jugs%20Problem/Water%20Jugs%20Problem%20（倒水問題）.md>)
+- [Missionary and Torch](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/week%2016%20Missionary%20and%20Torch/week%2016%20Missionary%20and%20Torch.md>)
+- [2025 Week 11 notebook (Colab)](https://colab.research.google.com/drive/1RjtHSu-82v1dQt-p2teRmKwjV9bLlQsK)
+- [2025 Week 12 notebook (Colab)](https://colab.research.google.com/drive/1ptTly6n8Aplezu-3jUSrFZkeSW7UOdq4)
+- [2025 Week 13 notebook (Colab)](https://colab.research.google.com/drive/1193hkL5wgE4RY4zmSHNLs4XXay0gktfM)

@@ -389,3 +389,11 @@ array reference implementation on small `n`.
 - A pointer-to-pointer uniformly represents the link being inspected or changed.
 - Mutation should preserve invariants even when allocation fails.
 - Choose a representation using access patterns and real costs, not Big-O alone.
+
+## References and legacy sources
+
+- [Linked lists](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/2-linked_list.md>)
+- [Linked-list supplementary notes](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/2-linked_list_sup.md>)
+- [Josephus problem](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/3-josephus_problem.md>)
+- [2025 Week 1 notebook (Colab)](https://colab.research.google.com/drive/1Asu-XpzM8EfrB8ANf4ze4ejDUdgIFGq0)
+- [2025 Week 2 notebook (Colab)](https://colab.research.google.com/drive/1U1VXgyhO50YCJUTD7BPrA-zvr6GTMHIr)

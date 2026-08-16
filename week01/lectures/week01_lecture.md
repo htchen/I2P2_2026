@@ -383,3 +383,10 @@ even when `value` is negative? What special output does zero receive?
 - Declarations, format strings, and conversions are contracts.
 - Warnings, exit status, and tests are part of normal development.
 - Avoiding undefined behavior is a correctness requirement.
+
+## References and legacy sources
+
+- [Introduction to programming](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Introduction%20to%20programming/README.md>)
+- [Operators, expressions, and statements](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Operators%2C%20Expressions%2C%20and%20Statements/README.md>)
+- [Looping](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Looping/README.md>)
+- [`printf` and `scanf` summary](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Printf%20and%20Scanf/總整理.md>)

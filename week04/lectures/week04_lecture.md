@@ -233,14 +233,26 @@ failed `push`.
 Never overwrite the only pointer before confirming `realloc` succeeded:
 
 ```c
-int *resized = realloc(values, new_count * sizeof *values);
-if (resized == NULL && new_count != 0) {
-    /* values is still valid */
-    handle_failure();
+if (new_count == 0) {
+    free(values);
+    values = NULL;
 } else {
-    values = resized;
+    if (new_count > SIZE_MAX / sizeof *values) {
+        handle_failure();
+    } else {
+        int *resized = realloc(values, new_count * sizeof *values);
+        if (resized == NULL) {
+            /* values is still valid */
+            handle_failure();
+        } else {
+            values = resized;
+        }
+    }
 }
 ```
+
+Handling zero separately avoids the implementation-defined corner cases of
+`realloc(pointer, 0)` in C17.
 
 ### Lifetime timeline exercise
 
@@ -310,6 +322,8 @@ The callback borrows two elements as `const void *` and casts them back to the
 actual element type. Returning only `-1`, `0`, or `1` avoids overflow errors such
 as `return a->id - b->id`. Passing the wrong element size or comparator type
 creates undefined behavior that the generic C API cannot detect.
+This comparator assumes every grade is finite; a design that permits NaN must
+define and implement an explicit total ordering for it.
 
 ### Sanitizer triage studio
 
@@ -362,3 +376,9 @@ report close to the failing operation.
 - Dynamic allocation makes lifetime explicit and therefore makes ownership vital.
 - Every successful allocation needs one eventual release on every path.
 - Pointer contracts should state nullability, size, mutability, and ownership.
+
+## References and legacy sources
+
+- [Pointers](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/pointer/Pointer.md>)
+- [Supplementary C material: memory and pointers](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Supplementary%20Material%201/README.md>)
+- [2025 Week 1 notebook: linked-list foundations (Colab)](https://colab.research.google.com/drive/1Asu-XpzM8EfrB8ANf4ze4ejDUdgIFGq0)
