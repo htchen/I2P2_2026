@@ -373,6 +373,19 @@ Include at least:
 Useful properties include “inorder output of a BST is strictly increasing” and
 “size after inserting a new distinct value increases by exactly one.”
 
+## Midterm project connection — AST checkpoint
+
+An abstract syntax tree uses the same recursive ownership model as the trees in
+this lecture, but its node kind determines which children and payload are
+valid. In a bounded in-class or asynchronous checkpoint, construct a small tree
+for a supplied expression, traverse it in evaluation order, and destroy it in
+postorder. Include one deliberately failed child allocation and show how the
+partial tree is released.
+
+This is a non-graded miniature rather than a solution to the project parser.
+Because Thursday is Midterm 1, the checkpoint supplies the tree-ownership
+practice that would otherwise be lost before the Week 7 integration studio.
+
 ## Check yourself
 
 1. Identify the base case and decreasing measure in `tree_size`.

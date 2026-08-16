@@ -374,6 +374,19 @@ under AddressSanitizer. For the circular version, additionally test `k = 1`,
 `k > n`, and repeated wraparound. Compare the elimination order with a simple
 array reference implementation on small `n`.
 
+## Midterm project connection — Tokens are a representation boundary
+
+The project uses a linked representation while recognizing tokens and may
+convert it into a form convenient for indexed parsing. Trace the incoming link,
+current token, and list owner for empty input, one token, several tokens, and an
+invalid character. The conversion must preserve token order and define who
+releases both representations.
+
+Use AI to generate adversarial input categories, then reduce each suggestion to
+a precise expected token sequence or expected rejection. Do not ask it to fill
+the graded parser TODOs. Thursday's evidence is a hand trace and test table that
+will be reused in Week 7.
+
 ## Check yourself
 
 1. Draw `link`, `*link`, and `**link` during removal of the second node.

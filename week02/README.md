@@ -1,7 +1,7 @@
 # Week 2: Functions, Arrays, and Strings
 
 - **Tuesday, September 15:** [Lecture 2 — Functions, Arrays, and Strings in C](lectures/week02_lecture.md)
-- **Thursday, September 17:** Arrays and strings lab
+- **Thursday, September 17:** [Arrays, strings, and interface-contract lab](labs/README.md)
 
 Focus: typed function contracts, pass-by-value, a minimal address-passing bridge,
 bounds, array/length interfaces, null-terminated strings, and bounded input.

@@ -417,6 +417,30 @@ small live change, and add a test that fails without the change.
 Property idea: pretty-print an AST with sufficient parentheses, parse it again,
 and compare evaluation results.
 
+## Midterm project handoff — Integrate against the real contracts
+
+The lecture's small grammar and stack-machine example teach the pipeline, but
+the project specification is authoritative. Before implementation, write its
+exact precedence levels, associativity, prefix/postfix behavior, lvalue rules,
+variable-memory mapping, and target-instruction constraints. Do not silently
+substitute the lecture grammar or instruction model.
+
+Verification should proceed stage by stage:
+
+1. compare token sequences with the source text;
+2. print or hand-trace AST shapes for precedence and associativity cases;
+3. test valid and invalid increment/decrement operands;
+4. trace side effects and evaluation order before emitting instructions;
+5. run generated instructions with ASMC and compare final values with an
+   independent oracle where the language subset permits it;
+6. run valid and rejected inputs under sanitizers;
+7. optimize instruction cycles only after all correctness evidence passes.
+
+Use AI for counterexamples, trace review, and diagnosis. If it proposes code,
+require it to name the grammar production and ownership contract being
+implemented, then verify those claims manually. The demo may ask for an
+AI-free explanation or a small modification in any of these stages.
+
 ## Check yourself
 
 1. Draw the AST for `-1 + 2 * (3 - 4)`.
