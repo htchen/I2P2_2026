@@ -330,6 +330,13 @@ site. Flag raw owning pointers, reference captures that may outlive objects, and
 `shared_ptr` without genuine shared lifetime. Propose the smallest Rule-of-Zero
 or `unique_ptr` improvement and describe its integration risk.
 
+Thursday's project milestone carries one proposal through implementation. Keep
+the change bounded: update the owner, construction, observation, removal, and
+destruction sites together; do not mechanically replace every raw pointer. A
+raw observer can be appropriate when a documented owner outlives it. Verify the
+normal path, removal during update, scene shutdown, and early initialization
+failure where applicable.
+
 ## Check yourself
 
 1. Why does memberwise copying fail for an owning raw pointer?

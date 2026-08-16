@@ -364,6 +364,21 @@ records, and formatted output. Assert invariants for every successor. Compare
 with hand solutions and exhaustive small cases; then change the objective to
 total poured volume and explain why ordinary BFS is no longer correct.
 
+## Final project handoff — Test logic without the window
+
+Choose an approved project behavior with a clean state transition: an enemy
+mode, cooldown, targeting rule, wave state, or pathfinding policy. Represent its
+inputs and outputs without Allegro handles so normal, boundary, and impossible
+states can be tested deterministically. The graphical layer should translate
+events into model inputs and render resulting state; it should not contain the
+only copy of the rule.
+
+For AI-assisted algorithms, require tiny counterexamples and properties in
+addition to example outputs. A path must use legal adjacent states; an FSM must
+define every relevant state/event pair; a target selector must state its tie
+rule. Thursday's deliverable combines automated logic tests with a repeatable
+manual integration plan.
+
 ## Check yourself
 
 1. Why does a graph traversal need visited state while a tree traversal may not?

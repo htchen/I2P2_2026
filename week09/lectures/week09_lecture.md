@@ -366,6 +366,21 @@ and a lambda comparator. It must report open/read failures, avoid global state,
 and return all results by value. Compare its cleanup proof with the C version
 that uses `FILE *`, allocated strings, and multiple error labels.
 
+## Final project connection — Event loop and resource lifetime
+
+Before adding gameplay, trace the template's control flow from one input event
+through state handling, update, and draw. These phases have different
+responsibilities: input records intent, update changes model state, and draw
+observes that state. A feature that mutates game state during drawing is harder
+to reason about and test.
+
+Choose one Allegro resource and trace acquisition, registration/use, normal
+release, and initialization failure. The existing template may use explicit C
+handles even though the surrounding program is C++. Treat that as an ownership
+boundary: first document the actual lifetime, then consider a small RAII wrapper
+rather than rewriting the resource subsystem. Thursday's evidence is an event
+trace and resource-lifecycle table.
+
 ## Check yourself
 
 1. When should a parameter be `const T&`, `T&`, or `T`?

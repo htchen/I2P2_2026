@@ -343,6 +343,21 @@ state change, and invariant restoration point. Seed one bug that bypasses
 `normalize`, use a property test (`denominator() > 0` and gcd equals one) to find
 it, then add the smallest regression case.
 
+## Final project connection — A class must enter the system safely
+
+Adding a project class requires more than writing its declaration. Before
+implementation, make a change-impact map covering its header and source file,
+construction site, owner, observers, update or query path, and tests. Forward
+declare a type when only a pointer/reference declaration needs it; include the
+complete definition where members, inheritance, `sizeof`, or inline operations
+require it.
+
+For Thursday's bounded component, state one invariant and test it without
+opening the Allegro window. If a factory creates the component, specify whether
+it returns a value, `unique_ptr`, or borrowed reference and why. An AI-generated
+class skeleton is only a draft until its includes, ownership, and integration
+sites have been checked against the repository.
+
 ## Check yourself
 
 1. Which operations can create or change a `Rational`?
