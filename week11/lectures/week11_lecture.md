@@ -13,7 +13,17 @@ By the end of this lecture, you should be able to:
 4. Apply the Rule of Zero and use smart pointers appropriately.
 5. Explain exception-safe resource transfer at a conceptual level.
 
-## 1. Ownership must survive value operations
+## Three-hour plan
+
+| Hour | Main question | In-class production |
+|------|---------------|---------------------|
+| 1 | Why does an owning class need coordinated lifetime operations? | Trace the legacy IntVec representation and destructor |
+| 2 | What are the exact semantics of copy, assignment, and move? | Implement/test special members including failure paths |
+| 3 | How should production code express ownership with Rule of Zero and smart pointers? | Refactor IntVec and audit final-project lifetimes |
+
+## Hour 1 — Owning representations and deterministic destruction
+
+### 1. Ownership must survive value operations
 
 Consider a teaching vector that directly owns a dynamic array:
 
@@ -46,7 +56,43 @@ But the compiler-generated copy constructor copies the pointer value, not the
 array. Two objects would then believe they own the same allocation and both
 destructors would call `delete[]` on it.
 
-## 2. The special member functions
+### Size, capacity, and growth invariant
+
+The 2025 IntVec notebook stored begin, logical end, and allocation end pointers.
+This version stores a pointer plus counts; both need the same invariant:
+
+```text
+0 <= size_ <= capacity_
+data_ == nullptr exactly when capacity_ == 0
+data_[0 .. size_) contains live values owned by this object
+```
+
+```cpp
+void IntVec::reserve(std::size_t requested)
+{
+    if (requested <= capacity_) return;
+
+    int* replacement = new int[requested];
+    if (size_ != 0) std::copy_n(data_, size_, replacement);
+    delete[] data_;
+    data_ = replacement;
+    capacity_ = requested;
+}
+```
+
+For a generic element type, use an RAII temporary so an exception during copying
+cannot leak. The `int` specialization is a teaching step toward `std::vector<T>`.
+
+### Hour 1 lifetime trace
+
+Instrument every constructor and destructor with object address, data address,
+size, and capacity. Trace default construction, growth, nested scope exit, and
+return-by-value. Separate guaranteed language behavior from optional copy
+elision; log count is not the abstraction's contract.
+
+## Hour 2 — Copy, move, assignment, and exception guarantees
+
+### 2. The special member functions
 
 The ownership-relevant operations are:
 
@@ -71,7 +117,7 @@ IntVec c = std::move(a); // move construction; a remains valid but unspecified
 `std::move` does not move by itself. It permits overload resolution to select an
 rvalue-reference operation that may transfer resources.
 
-## 3. Deep copying
+### 3. Deep copying
 
 ```cpp
 IntVec::IntVec(const IntVec& other)
@@ -112,7 +158,19 @@ IntVec& IntVec::operator=(const IntVec& other)
 If copying throws, the original object is unchanged. On success, `copy` later
 destroys the old allocation.
 
-## 4. Moving transfers ownership
+### Construction versus assignment
+
+| Operation | Destination already owns a resource? | Required behavior |
+|-----------|---------------------------------------|-------------------|
+| Copy construction | No | allocate and copy from source |
+| Copy assignment | Yes | preserve source and replace destination safely |
+| Move construction | No | acquire source resource and leave source valid |
+| Move assignment | Yes | release destination, acquire source, handle self-move |
+
+Construction creates lifetime; assignment operates within an existing lifetime.
+This distinction is why one implementation cannot blindly serve every case.
+
+### 4. Moving transfers ownership
 
 ```cpp
 IntVec::IntVec(IntVec&& other) noexcept
@@ -146,7 +204,28 @@ usually unspecified unless the class documents something stronger.
 Mark resource-transfer moves `noexcept` when true. Standard containers can then
 move elements during reallocation without risking loss of the original data.
 
-## 5. Rule of Three, Five, and Zero
+### Exception-safety levels
+
+- **No-throw guarantee:** operation cannot fail by exception.
+- **Strong guarantee:** failure leaves the original observable state unchanged.
+- **Basic guarantee:** failure preserves invariants and leaks nothing, but the
+  value may change.
+- **No guarantee:** even invariants may be lost.
+
+Copy-and-swap commonly provides the strong guarantee. A direct assignment that
+deletes old storage before allocating new storage loses the original value when
+allocation throws.
+
+### Aliasing and self-assignment lab
+
+Test `value = value`, `value = std::move(value)`, assignment between empty and
+nonempty vectors, and copying when capacity exceeds size. Use distinct values to
+detect copying uninitialized capacity instead of logical elements. Force an
+allocation failure through a teaching hook and verify the promised guarantee.
+
+## Hour 3 — Rule of Zero, smart pointers, and project ownership
+
+### 5. Rule of Three, Five, and Zero
 
 - **Rule of Three:** if a class needs a custom destructor, copy constructor, or
   copy assignment, it probably needs all three.
@@ -171,7 +250,7 @@ Now generated copy, move, assignment, and destruction have the correct meaning.
 We implement a raw owning class once to understand the mechanism, then prefer
 the Rule of Zero.
 
-## 6. Smart pointers encode ownership
+### 6. Smart pointers encode ownership
 
 ```cpp
 #include <memory>
@@ -190,7 +269,31 @@ run-time overhead and cycles of shared owners leak unless broken with `weak_ptr`
 Borrow with `T&`, `const T&`, or a non-owning `T*` according to nullability.
 Ownership and access are different questions.
 
-## 7. Explicitly disable unsupported operations
+### Unique ownership in a tree
+
+```cpp
+struct Node {
+    int value;
+    std::unique_ptr<Node> left;
+    std::unique_ptr<Node> right;
+};
+
+auto root = std::make_unique<Node>();
+root->value = 10;
+root->left = std::make_unique<Node>();
+```
+
+Recursive destruction is automatic. The type is movable but not copyable unless
+deep copy is explicitly implemented. Search functions can return `Node*` or
+`const Node*` as borrowers while the tree retains ownership.
+
+### Shared ownership cycles
+
+If two `shared_ptr` objects own each other, neither reference count reaches zero.
+Model a parent observer as `weak_ptr` when children own descendants. Draw strong
+and weak edges; “shared because many places use it” is not a lifetime design.
+
+### 7. Explicitly disable unsupported operations
 
 Some resources cannot sensibly be copied:
 
@@ -206,7 +309,7 @@ public:
 
 Compile-time rejection is better than an accidental shallow copy.
 
-## 8. Ownership in the final project
+### 8. Ownership in the final project
 
 For each game object, answer:
 
@@ -218,6 +321,14 @@ For each game object, answer:
 
 The demo may ask you to trace one object's creation, registration, use, removal,
 and destruction through the multi-file codebase.
+
+### Hour 3 final-project audit
+
+Choose one tower, monster, scene, and asset. For each, record owner type,
+creation site, transfers, borrowers/callbacks, removal event, and destruction
+site. Flag raw owning pointers, reference captures that may outlive objects, and
+`shared_ptr` without genuine shared lifetime. Propose the smallest Rule-of-Zero
+or `unique_ptr` improvement and describe its integration risk.
 
 ## Check yourself
 

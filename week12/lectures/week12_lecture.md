@@ -13,7 +13,17 @@ By the end of this lecture, you should be able to:
 4. Avoid object slicing and unsafe downcasts.
 5. Decide between inheritance, composition, and `std::variant`.
 
-## 1. Substitutability, not code reuse, is the starting point
+## Three-hour plan
+
+| Hour | Main question | In-class production |
+|------|---------------|---------------------|
+| 1 | What contract makes derived objects genuinely substitutable? | Implement and test a Shape hierarchy |
+| 2 | How do dispatch, destruction, and ownership interact? | Trace polymorphic calls and container lifetimes |
+| 3 | When should a design use inheritance, composition, or variants? | Refactor one final-project hierarchy and defend the choice |
+
+## Hour 1 — Abstract interfaces and substitutable overrides
+
+### 1. Substitutability, not code reuse, is the starting point
 
 Use public inheritance when every derived object can be used wherever the base
 interface is expected without violating its contract.
@@ -36,7 +46,7 @@ public:
 A pure virtual function (`= 0`) makes `Shape` abstract. It describes an
 interface; `Shape shape;` is ill-formed because no complete base behavior exists.
 
-## 2. Override the contract
+### 2. Override the contract
 
 ```cpp
 class Circle final : public Shape {
@@ -73,7 +83,49 @@ private:
 being overridden. It catches parameter, `const`, and spelling mismatches.
 `final` prevents further derivation when the design intends a leaf class.
 
-## 3. Dynamic dispatch requires indirection
+### Strengthen neither preconditions nor surprises
+
+If `Shape::translate` accepts every finite offset, `Circle::translate` cannot
+silently reject negative offsets. A derived operation may guarantee more in its
+result but must not demand more from callers using the base contract.
+
+Create contract tests that run against a `Shape&` and reuse them for every
+derived type. This catches behavioral incompatibility that `override` syntax
+alone cannot detect.
+
+### Non-virtual interface pattern
+
+```cpp
+class GameObject {
+public:
+    void update(double seconds)
+    {
+        if (seconds < 0.0) throw std::invalid_argument{"negative time"};
+        before_update();
+        do_update(seconds);
+        after_update();
+    }
+    virtual ~GameObject() = default;
+
+private:
+    virtual void do_update(double seconds) = 0;
+    void before_update();
+    void after_update();
+};
+```
+
+The public nonvirtual function enforces common checks and sequencing; derived
+classes customize only the intended step.
+
+### Hour 1 studio
+
+Add `Rectangle` and `CompositeShape`. Run the same center/translate/area contract
+tests through `Shape&`. Intentionally omit `const` or change a parameter type and
+observe how `override` converts a silent overload into a compile error.
+
+## Hour 2 — Dynamic dispatch, ownership, and destruction
+
+### 3. Dynamic dispatch requires indirection
 
 ```cpp
 void print_area(const Shape& shape)
@@ -97,7 +149,7 @@ void wrong(Shape value); /* abstract Shape makes this impossible here */
 For a nonabstract base, copying a derived value into a base object discards the
 derived part. Polymorphic APIs use references or pointers.
 
-## 4. Polymorphic ownership
+### 4. Polymorphic ownership
 
 ```cpp
 #include <memory>
@@ -116,11 +168,29 @@ for (const auto& shape : shapes) {
 may vary. Destroying through the base pointer calls the correct derived
 destructor only because `Shape::~Shape` is virtual.
 
+### What virtual dispatch stores conceptually
+
+Typical implementations give a polymorphic object a hidden pointer to a table
+of virtual functions. A call through `Shape&` uses that table to select the
+derived override. The standard specifies behavior, not a particular table
+layout; use this model for reasoning, not portable pointer arithmetic.
+
+Virtual dispatch usually adds one indirection and may limit inlining. That cost
+is often negligible next to game rendering or allocation, but measure when it
+matters instead of eliminating abstraction speculatively.
+
+### Destruction trace
+
+Create a derived class with an owned vector/resource and instrument base and
+derived destructors. Destroy through `unique_ptr<Shape>` and confirm derived
+cleanup precedes base cleanup. Discuss what a nonvirtual base destructor would
+fail to do without executing that undefined behavior.
+
 Rule: if a class has any virtual function and objects may be deleted through a
 base pointer, give it a public virtual destructor (or deliberately prevent such
 deletion with a protected nonvirtual destructor in advanced designs).
 
-## 5. Access control
+### 5. Access control
 
 - `public`: accessible through the interface.
 - `protected`: accessible in the class and derived classes.
@@ -133,7 +203,7 @@ extension point.
 Public inheritance normally preserves the public interface. Private inheritance
 is closer to an implementation technique; composition is usually clearer.
 
-## 6. Composition before inheritance
+### 6. Composition before inheritance
 
 “A game entity has a position” suggests composition:
 
@@ -156,7 +226,32 @@ justify inheritance. Ask:
 Inheritance solely to reuse a few lines often creates tighter coupling than a
 composed helper.
 
-## 7. Downcasting is a design signal
+### Strategy through composition
+
+```cpp
+class Movement {
+public:
+    virtual Point next(Point current, double seconds) = 0;
+    virtual ~Movement() = default;
+};
+
+class Monster {
+public:
+    explicit Monster(std::unique_ptr<Movement> movement)
+        : movement_{std::move(movement)} {}
+
+private:
+    std::unique_ptr<Movement> movement_;
+};
+```
+
+Monster type and movement policy now vary independently. The monster uniquely
+owns its strategy; a shared immutable strategy could instead be borrowed or
+shared under an explicit lifetime design.
+
+## Hour 3 — Downcasting, variants, and brownfield architecture
+
+### 7. Downcasting is a design signal
 
 ```cpp
 if (auto* circle = dynamic_cast<Circle*>(shape)) {
@@ -169,7 +264,7 @@ may mean the base interface is missing an operation or the behavior belongs in
 a visitor/variant. Never use `static_cast` to downcast unless a separate
 invariant proves the dynamic type; otherwise behavior is undefined.
 
-## 8. Closed alternatives with `std::variant`
+### 8. Closed alternatives with `std::variant`
 
 When the set of alternatives is small and known, value-based polymorphism can be
 clearer:
@@ -190,7 +285,21 @@ Tradeoff:
 
 Neither is universally superior; choose based on which axis changes.
 
-## 9. Final-project reading strategy
+### Variant exhaustiveness exercise
+
+Add a `Triangle` to `ShapeValue`. Every `std::visit` operation must compile for
+the new alternative, so the compiler exposes incomplete operations. Contrast
+this with adding a derived virtual class, which requires no edits to existing
+virtual-call consumers but must implement every pure virtual operation.
+
+### Multiple inheritance and interfaces
+
+The course does not use implementation-heavy multiple inheritance. A class may
+implement multiple small pure interfaces when it truly satisfies independent
+contracts, for example `Updatable` and `Drawable`. Ownership should still have
+one clear path; avoid diamond-shaped shared implementation hierarchies.
+
+### 9. Final-project reading strategy
 
 For a legacy game hierarchy:
 
@@ -200,6 +309,13 @@ For a legacy game hierarchy:
 4. Trace one update and one draw call through dynamic dispatch.
 5. Check whether destruction is virtual.
 6. Identify where a composition or strategy would reduce subclass duplication.
+
+### Hour 3 architecture review
+
+Choose one repeated type-switch or `dynamic_cast` chain in the project template.
+Propose three alternatives: add a virtual operation, introduce a composed
+strategy, or use a variant/visitor. Evaluate extension direction, ownership,
+testability, number of affected files, and migration risk before choosing.
 
 ## Check yourself
 

@@ -13,7 +13,17 @@ By the end of this lecture, you should be able to:
 4. Identify leaks, dangling pointers, null dereferences, and invalid access.
 5. Express ownership and mutation through a function contract.
 
-## 1. A pointer stores an address
+## Three-hour plan
+
+| Hour | Main question | In-class production |
+|------|---------------|---------------------|
+| 1 | What exactly does a pointer designate? | Draw stack objects and trace pointer/array expressions |
+| 2 | How is dynamic lifetime created and changed? | Implement a failure-aware dynamic integer buffer |
+| 3 | How are generic callbacks and multi-level pointers used safely? | Sort records, audit ownership, and repair sanitizer findings |
+
+## Hour 1 — Addresses, indirection, arrays, and `const`
+
+### 1. A pointer stores an address
 
 ```c
 int value = 7;
@@ -39,7 +49,7 @@ int *second;
 
 This is clearer than `int *first, second`, where `second` is not a pointer.
 
-## 2. Pass an address to modify a caller's object
+### 2. Pass an address to modify a caller's object
 
 ```c
 void swap(int *left, int *right)
@@ -67,7 +77,7 @@ Use `const` to separate observation from mutation:
 int sum(const int *values, size_t count); /* pointed-to ints are read-only */
 ```
 
-## 3. Arrays and pointers are related, not identical
+### 3. Arrays and pointers are related, not identical
 
 In most expressions, an array is converted to a pointer to its first element:
 
@@ -86,7 +96,45 @@ Pointer arithmetic is defined only within one array object (plus its one-past
 position). You may form the one-past pointer for loop comparison, but not
 dereference it.
 
-## 4. Lifetime is different from scope
+### Read declarations from the identifier outward
+
+```c
+int *p;                    /* pointer to int */
+const int *read_only;      /* pointer to const int */
+int *const fixed = &value; /* const pointer to int */
+const int *const both = &value;
+int (*operation)(int, int);/* pointer to function */
+```
+
+`const` applies to the item immediately to its left, or to its right when there
+is no type on the left. Use typedefs sparingly when they clarify a complicated
+callback, but do not use them to avoid learning the underlying type.
+
+### Pointer/array trace
+
+```c
+int values[] = {10, 20, 30, 40};
+int *first = values;
+int *last = values + 4;
+
+for (int *position = first; position != last; ++position) {
+    printf("index=%td value=%d\n", position - first, *position);
+}
+```
+
+`position - first` is measured in elements and has type `ptrdiff_t`; `%td` is
+its matching format. Draw all five valid pointer positions, including the
+one-past pointer, and mark which four may be dereferenced.
+
+### Hour 1 checkpoint
+
+For each expression, state whether it changes the pointer, the pointed-to value,
+both, or neither: `*p++`, `(*p)++`, `*++p`, `++*p`. Then add parentheses that
+make the parse explicit. Do not run the code until the prediction is written.
+
+## Hour 2 — Lifetime and dynamic storage
+
+### 4. Lifetime is different from scope
 
 ```c
 int *bad_address(void)
@@ -100,7 +148,7 @@ The returned pointer dangles. The variable name is out of scope, and more
 importantly the object no longer exists. A valid pointer must designate a live
 object (or be a permitted one-past pointer that is never dereferenced).
 
-## 5. Dynamic allocation
+### 5. Dynamic allocation
 
 Dynamic storage remains allocated until `free` releases it.
 
@@ -142,6 +190,41 @@ values = NULL;
 Writing `sizeof *values` keeps the allocation correct if the pointed-to type is
 changed. Check multiplication before allocation when sizes may be untrusted.
 
+### Build a dynamic buffer incrementally
+
+```c
+struct IntBuffer {
+    int *data;
+    size_t size;
+    size_t capacity;
+};
+
+int buffer_push(struct IntBuffer *buffer, int value)
+{
+    if (buffer->size == buffer->capacity) {
+        size_t next = buffer->capacity == 0 ? 8 : buffer->capacity * 2;
+        if (next < buffer->capacity || next > SIZE_MAX / sizeof *buffer->data) {
+            return 0;
+        }
+        int *replacement = realloc(buffer->data,
+                                   next * sizeof *buffer->data);
+        if (replacement == NULL) return 0;
+        buffer->data = replacement;
+        buffer->capacity = next;
+    }
+    buffer->data[buffer->size++] = value;
+    return 1;
+}
+```
+
+Invariant: `size <= capacity`; `data == NULL` when capacity is zero; otherwise
+`data` designates storage for at least `capacity` integers. On allocation
+failure, size, capacity, data, and existing elements remain unchanged.
+
+Finish `buffer_init`, `buffer_clear`, and `buffer_destroy`. Test growth across
+the 0→8 and 8→16 boundaries and verify the object can be destroyed after any
+failed `push`.
+
 ### `calloc` and `realloc`
 
 - `calloc(count, size)` allocates and zeroes the bytes.
@@ -159,7 +242,17 @@ if (resized == NULL && new_count != 0) {
 }
 ```
 
-## 6. Ownership contracts
+### Lifetime timeline exercise
+
+Draw a timeline for this sequence: declare a buffer, allocate eight elements,
+store a borrowed pointer to element three, reallocate to sixteen elements, and
+free the buffer. Mark the exact events that may invalidate the borrowed pointer.
+`realloc` may move storage even when it succeeds, so every interior pointer must
+be considered invalid after a successful resize.
+
+## Hour 3 — Ownership APIs, callbacks, and memory-error diagnosis
+
+### 6. Ownership contracts
 
 For every pointer, ask:
 
@@ -190,7 +283,50 @@ void values_destroy(int **owned)
 }
 ```
 
-## 7. Failure patterns
+### Function pointers and `qsort`
+
+The legacy supplementary material used `qsort` to combine generic bytes with a
+typed comparator:
+
+```c
+#include <stdlib.h>
+
+struct Student {
+    int id;
+    double grade;
+};
+
+int compare_grade_descending(const void *left, const void *right)
+{
+    const struct Student *a = left;
+    const struct Student *b = right;
+    return (b->grade > a->grade) - (b->grade < a->grade);
+}
+
+qsort(students, count, sizeof students[0], compare_grade_descending);
+```
+
+The callback borrows two elements as `const void *` and casts them back to the
+actual element type. Returning only `-1`, `0`, or `1` avoids overflow errors such
+as `return a->id - b->id`. Passing the wrong element size or comparator type
+creates undefined behavior that the generic C API cannot detect.
+
+### Sanitizer triage studio
+
+Run a seeded program containing one each of:
+
+- read one element beyond a dynamic array;
+- use an element pointer after `realloc`;
+- free a stack address;
+- leak on an early return;
+- dereference a null output parameter;
+- call `values_destroy` twice.
+
+For every report, record the invalid operation, where the affected allocation
+was created/released, and the ownership rule that would have prevented it. Fix
+the contract or control flow, not only the single reported line.
+
+### 7. Failure patterns
 
 | Failure | Meaning |
 |---------|---------|

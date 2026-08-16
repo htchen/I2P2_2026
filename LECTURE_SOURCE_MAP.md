@@ -56,6 +56,8 @@ post-final enrichment rather than required Tuesday lectures.
   compiled behavior.
 - Preserve the legacy project spine: linked data → trees → syntax tree/compiler,
   followed by C++ abstractions and a multi-file game.
+- Organize every Tuesday lecture into three instructional hours, each ending in
+  a trace, design checkpoint, live implementation, or verification activity.
 - Prefer one coherent example per idea over several near-duplicate versions.
 - State nullability, bounds, ownership, invariants, and failure behavior.
 - Use warnings, sanitizers, tests, and small trace questions throughout.

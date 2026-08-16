@@ -13,7 +13,17 @@ By the end of this lecture, you should be able to:
 4. Explain deterministic destruction and RAII.
 5. Refactor a manual C resource into a standard-library value.
 
-## 1. Compile C++ as C++
+## Three-hour plan
+
+| Hour | Main question | In-class production |
+|------|---------------|---------------------|
+| 1 | Which C++ library values replace common manual C representations? | Refactor a C input/array program to strings and vectors |
+| 2 | How do references, `const`, `auto`, and lambdas express borrowing and behavior? | Annotate and implement parameter/capture contracts |
+| 3 | How does RAII make every control-flow path safe? | Trace resource lifetimes and build a file-processing pipeline |
+
+## Hour 1 — C++ compilation, I/O, strings, and vectors
+
+### 1. Compile C++ as C++
 
 ```sh
 c++ -std=c++17 -Wall -Wextra -Wpedantic -g program.cpp -o program
@@ -38,7 +48,7 @@ int main()
 Prefer `std::` qualification in teaching examples. A global `using namespace
 std;` can make names collide and hides where facilities originate.
 
-## 2. Prefer library values over manual buffers
+### 2. Prefer library values over manual buffers
 
 ```cpp
 std::string name;
@@ -67,7 +77,51 @@ A vector combines a dynamic array with ownership and size information.
 Use `.at(i)` when checked access is useful and `operator[]` when bounds have
 already been established.
 
-## 3. References are aliases
+### Stream state and robust input
+
+```cpp
+std::vector<int> values;
+for (int value; std::cin >> value;) {
+    values.push_back(value);
+}
+
+if (!std::cin.eof()) {
+    std::cerr << "input contained a non-integer token\n";
+    return 1;
+}
+```
+
+The stream itself is tested as a condition. Extraction either succeeds and
+updates `value`, or sets failure state. This mirrors the checked `scanf` loop
+without exposing format strings or destination addresses.
+
+When mixing `operator>>` with `getline`, remember that formatted extraction
+usually leaves the newline in the stream. Consume the remainder deliberately or
+use line-oriented input consistently.
+
+### Initialization forms
+
+```cpp
+int count{0};
+std::string title{"I2P II"};
+std::vector<int> first(5, 0);  /* five zeroes */
+std::vector<int> second{5, 0}; /* two elements: 5 and 0 */
+```
+
+Brace initialization rejects many narrowing conversions, but constructor syntax
+can differ when an initializer-list overload exists. Predict `size()` for both
+vectors before compiling.
+
+### Hour 1 refactoring studio
+
+Take the Week 2 C program that reads a bounded character array and a fixed score
+array. Replace ownership and capacity management with `std::string` and
+`std::vector<int>`, while preserving validation and output. List which C failure
+modes disappear and which domain errors remain.
+
+## Hour 2 — References, `const`, deduction, and local callables
+
+### 3. References are aliases
 
 ```cpp
 void swap_values(int& left, int& right)
@@ -92,7 +146,7 @@ std::vector<int> doubled(std::vector<int> values); /* local copy/value */
 Use a pointer when null is meaningful or pointer arithmetic/low-level interop is
 required. Use a reference for a required borrowed object.
 
-## 4. `const` makes interfaces readable
+### 4. `const` makes interfaces readable
 
 ```cpp
 double mean(const std::vector<int>& values)
@@ -126,7 +180,22 @@ for (const auto& word : words) {
 Use `auto` when the initializer makes the type clear; spell the type when it
 communicates an important unit, conversion, or ownership decision.
 
-## 5. Lambdas are local callable objects
+### `decltype` preserves an expression's type
+
+The legacy C++ introduction included `decltype`:
+
+```cpp
+int value = 0;
+int& alias = value;
+
+decltype(value) another = 1;          /* int */
+decltype((value)) reference = value;  /* int&: (value) is an lvalue */
+```
+
+This distinction matters in generic code, but should not replace readable
+explicit types in ordinary application code. Parentheses can change the result.
+
+### 5. Lambdas are local callable objects
 
 ```cpp
 #include <algorithm>
@@ -149,7 +218,37 @@ auto passed = [threshold](int score) { return score >= threshold; };
 Avoid broad `[&]` or `[=]` captures in long-lived lambdas because ownership and
 lifetime become difficult to see.
 
-## 6. RAII: lifetime controls resources
+### Parameter and capture audit
+
+For each operation, choose `T`, `T&`, `const T&`, or `T*` and explain why:
+
+1. print a vector;
+2. sort it in place;
+3. accept an optional output destination;
+4. take ownership of a string for long-term storage;
+5. return a filtered vector.
+
+Then audit three lambdas: one invoked immediately, one stored in a local vector
+of callbacks, and one registered with a longer-lived game scene. A reference
+capture safe in the first case may dangle in the third.
+
+### Algorithm preview
+
+```cpp
+std::vector<int> positives;
+std::copy_if(values.begin(), values.end(), std::back_inserter(positives),
+             [](int value) { return value > 0; });
+
+std::transform(positives.begin(), positives.end(), positives.begin(),
+               [](int value) { return value * value; });
+```
+
+This connects Python comprehensions to typed algorithms. Check overflow before
+claiming the result is equivalent for all Python integers.
+
+## Hour 3 — Deterministic lifetime and value-oriented design
+
+### 6. RAII: lifetime controls resources
 
 RAII means **Resource Acquisition Is Initialization**. An object establishes
 its invariant and acquires resources during construction; its destructor
@@ -173,7 +272,7 @@ The same principle manages vectors, strings, locks, sockets, and smart pointers.
 RAII turns every control-flow path—normal return, early return, or exception—
 into deterministic cleanup.
 
-## 7. Values first
+### 7. Values first
 
 Prefer automatic-duration value objects:
 
@@ -200,6 +299,34 @@ std::vector<int> even_values(const std::vector<int>& input)
 
 Copy elision and moves allow the language to transfer or construct the result
 efficiently without exposing manual ownership.
+
+### Nested RAII lifetimes
+
+```cpp
+std::vector<std::string> read_words(const std::string& path)
+{
+    std::ifstream input{path};
+    if (!input) throw std::runtime_error{"cannot open " + path};
+
+    std::vector<std::string> words;
+    for (std::string word; input >> word;) {
+        words.push_back(std::move(word));
+    }
+    if (!input.eof()) throw std::runtime_error{"read failure"};
+    return words;
+}
+```
+
+Trace construction and destruction for `input`, each loop-local `word`, the
+vector, its elements, and the returned value on normal return and on each throw.
+No explicit cleanup appears because every owner has a destructor.
+
+### Hour 3 integration task
+
+Build a word-frequency program using `ifstream`, `string`, `vector`, sorting,
+and a lambda comparator. It must report open/read failures, avoid global state,
+and return all results by value. Compare its cleanup proof with the C version
+that uses `FILE *`, allocated strings, and multiple error labels.
 
 ## Check yourself
 
