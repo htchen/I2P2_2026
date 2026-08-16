@@ -10,8 +10,9 @@ By the end of this lecture, you should be able to:
 1. Explain how C++ extends rather than replaces the C machine model.
 2. Use `std::string`, `std::vector`, references, and `const`.
 3. Write range-based loops and small lambdas.
-4. Explain deterministic destruction and RAII.
-5. Refactor a manual C resource into a standard-library value.
+4. Trace `throw`, handler selection, and stack unwinding.
+5. Explain deterministic destruction and RAII.
+6. Refactor a manual C resource into a standard-library value.
 
 ## Three-hour plan
 
@@ -19,7 +20,7 @@ By the end of this lecture, you should be able to:
 |------|---------------|---------------------|
 | 1 | Which C++ library values replace common manual C representations? | Refactor a C input/array program to strings and vectors |
 | 2 | How do references, `const`, `auto`, and lambdas express borrowing and behavior? | Annotate and implement parameter/capture contracts |
-| 3 | How does RAII make every control-flow path safe? | Trace resource lifetimes and build a file-processing pipeline |
+| 3 | How do exceptions and RAII make failure paths safe? | Trace unwinding, resource lifetimes, and a file-processing pipeline |
 
 ## Hour 1 — C++ compilation, I/O, strings, and vectors
 
@@ -248,7 +249,44 @@ claiming the result is equivalent for all Python integers.
 
 ## Hour 3 — Deterministic lifetime and value-oriented design
 
-### 6. RAII: lifetime controls resources
+### 6. Exceptions transfer control to a handler
+
+Python programmers already know exception-based failure. C++ makes object
+destruction during that transfer part of the language model:
+
+```cpp
+#include <iostream>
+#include <stdexcept>
+
+void require_nonnegative(int value)
+{
+    if (value < 0) {
+        throw std::invalid_argument{"negative value"};
+    }
+}
+
+int main()
+{
+    try {
+        require_nonnegative(-1);
+    } catch (const std::invalid_argument& error) {
+        std::cerr << error.what() << '\n';
+    }
+}
+```
+
+`throw` stops the current path and searches outward for a matching handler.
+Automatic objects in exited scopes are destroyed in reverse construction order;
+this is **stack unwinding**. Catch standard exceptions by `const` reference to
+avoid copying and slicing. If no matching handler exists, the program terminates.
+
+Use exceptions for failures that prevent an operation from fulfilling its
+contract, not for ordinary loop or selection logic. Constructors cannot return
+an error code, so throwing is a conventional way to report construction failure.
+Later lectures build on this model when constructors validate invariants and
+copy operations promise exception-safety guarantees.
+
+### 7. RAII: lifetime controls resources
 
 RAII means **Resource Acquisition Is Initialization**. An object establishes
 its invariant and acquires resources during construction; its destructor
@@ -272,7 +310,7 @@ The same principle manages vectors, strings, locks, sockets, and smart pointers.
 RAII turns every control-flow path—normal return, early return, or exception—
 into deterministic cleanup.
 
-### 7. Values first
+### 8. Values first
 
 Prefer automatic-duration value objects:
 
@@ -333,8 +371,9 @@ that uses `FILE *`, allocated strings, and multiple error labels.
 1. When should a parameter be `const T&`, `T&`, or `T`?
 2. Replace a C character buffer with `std::string` and list removed failure modes.
 3. Why does a captured reference have a lifetime requirement?
-4. What resource does a vector's destructor release?
-5. Refactor a `malloc`/`free` integer array into `std::vector<int>`.
+4. Which objects are destroyed when an exception leaves two nested scopes?
+5. What resource does a vector's destructor release?
+6. Refactor a `malloc`/`free` integer array into `std::vector<int>`.
 
 ## Summary
 
@@ -342,6 +381,7 @@ that uses `FILE *`, allocated strings, and multiple error labels.
 - Strings and vectors own storage and know their sizes.
 - References express required borrowing; `const` exposes non-mutation.
 - Range loops, `auto`, and lambdas make generic code readable when used precisely.
+- Exceptions transfer control while stack unwinding destroys automatic objects.
 - RAII binds resource cleanup to deterministic object lifetime.
 
 ## References and legacy sources

@@ -9,9 +9,10 @@ By the end of this lecture, you should be able to:
 
 1. Declare, define, and call a C function through a prototype.
 2. Explain pass-by-value and use return values for explicit results.
-3. Traverse arrays without reading outside their bounds.
-4. Explain the null-terminated representation of a C string.
-5. Design interfaces that pass an array together with its length or capacity.
+3. Read simple address-passing interfaces that use `&`, `*`, and pointer parameters.
+4. Traverse arrays without reading outside their bounds.
+5. Explain the null-terminated representation of a C string.
+6. Design interfaces that pass an array together with its length or capacity.
 
 ## Three-hour plan
 
@@ -87,6 +88,44 @@ int absolute_value(int value)
 Precondition: `value != INT_MIN`, because `-INT_MIN` may overflow. Interfaces
 should make important preconditions visible in names, documentation, or checks.
 
+### Address-passing bridge
+
+Several ordinary C interfaces cannot wait until the full pointer lecture. Read
+these three symbols operationally for now:
+
+```c
+int value = 10;
+int *address = &value; /* address points to value */
+*address = 20;         /* write through the address */
+```
+
+- In a declaration, `int *address` means “address of an `int`.”
+- In an expression, `&value` obtains the address of `value`.
+- In an expression, `*address` designates the pointed-to `int`.
+
+That is enough to repair the swap contract:
+
+```c
+void swap(int *left, int *right)
+{
+    int temporary = *left;
+    *left = *right;
+    *right = temporary;
+}
+
+void example(void)
+{
+    int x = 1;
+    int y = 2;
+    swap(&x, &y);
+}
+```
+
+Both pointers are borrowed and must designate valid `int` objects for the whole
+call. Lecture 4 develops the complete model: pointer arithmetic, nullability,
+array relationships, lifetime, dynamic allocation, and ownership. Until then,
+do not infer that every address may be dereferenced or retained.
+
 ### Decompose before coding
 
 The legacy function notes built a program in stages. For a judge problem that
@@ -133,7 +172,7 @@ structure when the state is part of the abstraction.
 Write a prototype and five-line contract for a function that finds a target in
 an integer array. Compare three result designs: return an index with a sentinel,
 return success plus an output parameter, or return a pointer to the element.
-The third design will become meaningful after Lecture 4.
+The third design will be analyzed fully after Lecture 4.
 
 ## Hour 2 — Array layout, multidimensional storage, and algorithms
 

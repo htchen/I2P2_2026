@@ -1,10 +1,10 @@
 # Course Proposal: Introduction to Programming II in C and C++
 
-**Status:** Draft 0.1 for discussion and revision
+**Status:** Draft 0.2 for discussion and revision
 
 **Academic term:** Fall 2026
 
-**Last updated:** August 15, 2026
+**Last updated:** August 16, 2026
 
 This document records the initial curriculum proposal. It distinguishes fixed
 course constraints from working assumptions so that the schedule can be revised
@@ -102,9 +102,9 @@ By the end of the course, students should be able to:
    resource safety.
 6. Design C++ value types with correct construction, destruction, copying, and
    moving behavior.
-7. Use inheritance and runtime polymorphism when appropriate.
-8. Use templates, containers, iterators, algorithms, and lambdas to solve
+7. Use templates, containers, iterators, algorithms, and lambdas to solve
    programming problems.
+8. Use inheritance and runtime polymorphism when appropriate.
 9. Compare a manual C implementation with a safer and more expressive C++
    implementation.
 10. Build and demonstrate a nontrivial program using appropriate data
@@ -127,17 +127,30 @@ for integration and review, and Week 16 is the final exam.
 | 6 | Oct. 13 | 6 | Recursion and binary trees | Oct. 15 | **Proposed Midterm 1** |
 | 7 | Oct. 20 | 7 | Expression parsing and syntax trees | Oct. 22 | Midterm-project studio |
 | 8 | Oct. 27 | — | **Proposed midterm project demo; no lecture** | Oct. 29 | Project debrief and C++ setup |
-| 9 | Nov. 3 | 8 | From C to C++: references, `const`, strings, vectors, and RAII | Nov. 5 | Refactor a C program into C++ |
+| 9 | Nov. 3 | 8 | From C to C++: values, references, exceptions, and RAII | Nov. 5 | Refactor a C program into C++ |
 | 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | C++ value-class lab |
 | 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Resource-management lab |
-| 12 | Nov. 24 | 11 | Inheritance, virtual functions, and abstract interfaces | Nov. 26 | **Proposed Midterm 2** |
-| 13 | Dec. 1 | 12 | Templates, STL containers, iterators, algorithms, and lambdas | Dec. 3 | STL transformation lab |
+| 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2** |
+| 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Templates and polymorphic architecture lab |
 | 14 | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Search and problem-solving lab |
 | 15 | Dec. 15 | — | Integration, review, and final-project clinic | Dec. 17 | Final-project lab |
 | 16 | Dec. 22 | — | **Final exam** | — | No scheduled Thursday meeting |
 
-If this calendar is adopted, the current provisional lecture files will need to
-be remapped to match it.
+The lecture files now follow this dependency order. Three deliberate bridges
+prevent concepts from appearing without enough prior model:
+
+- Note 2 gives the minimal `&`/`*` address-passing vocabulary needed by ordinary
+  C interfaces, while Note 4 retains the full pointer, lifetime, and ownership
+  treatment.
+- Note 8 introduces throwing, handler selection, and stack unwinding before
+  constructors and copy operations depend on exception behavior.
+- Note 11 explains templates and `std::optional` before Note 12 uses generic
+  polymorphic containers/`variant` and Note 13 returns optional search results.
+
+Students may use `vector<T>` as library clients in Note 8 before learning to
+author templates; classes and move semantics in Notes 9–10 provide the needed
+foundation for template definitions. Both midterms exclude material first
+presented on the Tuesday immediately before the exam.
 
 ## 6. Proposed Project Spine
 
@@ -204,8 +217,9 @@ weights and dates are confirmed.
 - C++ references, `const`, strings, vectors, and RAII
 - Classes, constructors, destructors, and value semantics
 - Copy/move operations and the Rule of Zero/Five
-- Basic inheritance and runtime polymorphism
 - Basic templates, STL containers, iterators, algorithms, and lambdas
+- Expected-absence results with `std::optional`
+- Basic inheritance and runtime polymorphism
 - Graph or state-space problem solving
 
 ### Optional or appendix material
@@ -222,9 +236,10 @@ weights and dates are confirmed.
 - Python/C++ interoperability
 - CUDA
 
-Selected C++17/C++20 features such as structured bindings, `std::optional`, and
-`std::variant` may be introduced inside relevant examples. They should not
-displace the ownership, classes, and STL core.
+The small `std::optional` result model is part of the core because graph search
+uses it in Note 13. Other selected C++17/C++20 features such as structured
+bindings and `std::variant` may be introduced inside relevant examples. They
+should not displace the ownership, classes, and STL core.
 
 ## 9. Lecture-Note Format
 
@@ -295,3 +310,4 @@ story but creates more room for STL, testing, exceptions, and modern ownership.
 | Version | Date | Change |
 |---------|------|--------|
 | 0.1 | 2026-08-15 | Initial proposal based on the previous C/C++ materials and confirmed scheduling constraints |
+| 0.2 | 2026-08-16 | Reordered templates before polymorphism; added pointer, exception, and `optional` prerequisite bridges; clarified midterm scope |
