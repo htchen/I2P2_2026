@@ -1,6 +1,6 @@
 # Course Proposal: Introduction to Programming II in C and C++
 
-**Status:** Draft 0.2 for discussion and revision
+**Status:** Draft 0.3 for discussion and revision
 
 **Academic term:** Fall 2026
 
@@ -109,6 +109,10 @@ By the end of the course, students should be able to:
    implementation.
 10. Build and demonstrate a nontrivial program using appropriate data
     structures and ownership rules.
+11. Use coding AI for explanation, review, testing, and debugging while
+    verifying its claims and documenting one repaired or rejected suggestion.
+12. Demonstrate independent C and C++ fluency during secured AI-free exams and
+    individual project checks.
 
 ## 5. Proposed 16-Week Schedule
 
@@ -121,18 +125,18 @@ for integration and review, and Week 16 is the final exam.
 |------|---------|------|--------------------------|----------|-----------------------------|
 | 1 | Sep. 8 | 1 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
 | 2 | Sep. 15 | 2 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
-| 3 | Sep. 22 | 3 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Multi-file C lab |
-| 4 | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Pointer tracing and sanitizers |
-| 5 | Oct. 6 | 5 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Linked-list implementation |
-| 6 | Oct. 13 | 6 | Recursion and binary trees | Oct. 15 | **Proposed Midterm 1** |
+| 3 | Sep. 22 | 3 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
+| 4 | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Midterm ownership and sanitizer milestone |
+| 5 | Oct. 6 | 5 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Token-list tracing and testing milestone |
+| 6 | Oct. 13 | 6 | Recursion and binary trees; AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
 | 7 | Oct. 20 | 7 | Expression parsing and syntax trees | Oct. 22 | Midterm-project studio |
-| 8 | Oct. 27 | — | **Proposed midterm project demo; no lecture** | Oct. 29 | Project debrief and C++ setup |
-| 9 | Nov. 3 | 8 | From C to C++: values, references, exceptions, and RAII | Nov. 5 | Refactor a C program into C++ |
-| 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | C++ value-class lab |
-| 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Resource-management lab |
-| 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2** |
-| 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Templates and polymorphic architecture lab |
-| 14 | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Search and problem-solving lab |
+| 8 | Oct. 27 | — | **Proposed midterm project demo; no lecture** | Oct. 29 | Final-template build and architecture map |
+| 9 | Nov. 3 | 8 | From C to C++: values, references, exceptions, and RAII | Nov. 5 | Event-loop and resource-lifecycle trace |
+| 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | Small cross-file project component |
+| 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Final-project ownership audit and refactor |
+| 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2**; asynchronous container checkpoint |
+| 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
+| 14 | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Testable game logic, FSM, or search extension |
 | 15 | Dec. 15 | — | Integration, review, and final-project clinic | Dec. 17 | Final-project lab |
 | 16 | Dec. 22 | — | **Final exam** | — | No scheduled Thursday meeting |
 
@@ -154,8 +158,11 @@ presented on the Tuesday immediately before the exam.
 
 ## 6. Proposed Project Spine
 
-The recommended design is one evolving project rather than unrelated C and C++
-projects.
+The course uses two different legacy projects: a C expression compiler for the
+midterm and an Allegro C++ game extension for the final. They are not one
+evolving codebase. Their continuity comes from a common engineering method:
+students map unfamiliar code, state ownership, make incremental changes, build
+tests, audit AI suggestions, and demonstrate individual understanding.
 
 ### C phase and midterm project
 
@@ -171,22 +178,32 @@ This project gives pointers, allocation, linked structures, recursion, and trees
 a shared purpose. Weekly labs should build components of the project rather than
 introduce an unrelated assignment each time.
 
+Release the scaffold by Week 3. Use Weeks 3–5 for code mapping, ownership, token
+structures, and verification. Since the Week 6 Thursday meeting is Midterm 1,
+place a bounded AST checkpoint in Tuesday's lecture or asynchronous work. Week 7
+then integrates parser, semantic, and code-generation work before the demo.
+
 ### C++ phase and final project
 
-Students refactor and extend the C project in C++:
+Students read and extend the previous Allegro tower-defense template:
 
-1. Replace character arrays and manual resizable arrays with `std::string` and
-   `std::vector`.
-2. Encapsulate tokens, nodes, and evaluators in classes with clear invariants.
-3. Replace manual ownership with RAII and smart ownership where appropriate.
-4. Use copy/move behavior intentionally, preferring the Rule of Zero.
-5. Use standard-library containers and algorithms.
-6. Add an extension that requires graph or state-space search, alternative node
-   types, or another approved feature.
-7. Demonstrate the final version after the final exam.
+1. Build the supplied multi-file C++ codebase and trace its event/update/draw
+   lifecycle.
+2. Map class, header, resource, and ownership relationships before changing
+   them.
+3. Add a small feature across all required subsystems as a thin vertical slice.
+4. Use copy/move behavior intentionally and improve one ownership or resource
+   boundary, preferring RAII and the Rule of Zero.
+5. Use standard-library containers and algorithms with correct invalidation and
+   complexity reasoning.
+6. Isolate non-graphical logic for automated tests and maintain a manual
+   graphical integration plan.
+7. Add an approved gameplay, finite-state-machine, or search extension and
+   demonstrate the final version after the final exam.
 
-This creates a direct comparison between C and C++ and makes the motivation for
-C++ visible in the students' own code.
+The template is introduced in Week 8, not Week 15. Allegro setup and
+template-specific navigation are taught in labs; lectures teach the underlying
+C++ mechanisms and end with short project connections.
 
 ## 7. Suggested Assessment Alignment
 
@@ -270,6 +287,8 @@ lifetime, linked structures, trees, and copy/move behavior.
 - Assess explanation and debugging, not only final output.
 - Use starter code selectively; students must still implement the central data
   structure or ownership decision.
+- Require the predict → ask → verify → audit → explain cycle for significant AI
+  assistance and preserve the evidence in the project milestone.
 
 ## 11. Risks and Mitigations
 
@@ -278,9 +297,11 @@ lifetime, linked structures, trees, and copy/move behavior.
 | The first three weeks become a syntax dump | Teach through Python-to-C translation and omit concepts students already understand |
 | Students use pointers mechanically without a memory model | Require diagrams, tracing, sanitizers, and explicit ownership contracts |
 | C consumes too much of the semester | Freeze the required C scope after the midterm project and move extra C topics to appendices |
-| C++ becomes a list of unrelated features | Introduce each feature while refactoring a limitation in the C project |
+| C++ becomes a list of unrelated features | Connect each feature to a concrete ownership, architecture, container, or dispatch decision in the final-project template |
 | Copy/move semantics overwhelm students | Use one small resource-owning class, then emphasize Rule of Zero in normal code |
-| Projects and labs create excessive workload | Make labs incremental project milestones and reuse the same domain |
+| Projects and labs create excessive workload | Make labs incremental project milestones; keep each deliverable small and reuse it in the final submission |
+| Thursday exams remove prerequisite labs | Move the Week 6 AST and Week 12 STL checkpoints into bounded Tuesday/asynchronous work |
+| AI produces plausible but unverified code | Require prediction, tests, an AI audit, explanation, and an AI-free live modification |
 | Advanced material crowds out fundamentals | Treat modern C++, interoperability, CUDA, and systems topics as enrichment |
 
 ## 12. Alternative Compression Option
@@ -295,7 +316,6 @@ story but creates more room for STL, testing, exceptions, and modern ownership.
 
 - Which Thursdays will contain Midterm 1 and Midterm 2?
 - Which Tuesday will contain the midterm project demo?
-- Will the expression/syntax-tree project be the common semester project?
 - Should Midterm 2 be cumulative or C++-focused?
 - What are the assessment weights?
 - Will projects be individual or team-based?
@@ -311,3 +331,4 @@ story but creates more room for STL, testing, exceptions, and modern ownership.
 |---------|------|--------|
 | 0.1 | 2026-08-15 | Initial proposal based on the previous C/C++ materials and confirmed scheduling constraints |
 | 0.2 | 2026-08-16 | Reordered templates before polymorphism; added pointer, exception, and `optional` prerequisite bridges; clarified midterm scope |
+| 0.3 | 2026-08-16 | Aligned the separate compiler and game projects with staged labs, corrected the project narrative, and added AI-verification and exam-week mitigations |

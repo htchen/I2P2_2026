@@ -85,6 +85,16 @@ The governing principle is:
 > Project grades measure demonstrated ownership of the software, not unaided
 > authorship of every line.
 
+For substantial AI-assisted work, students should use the following evidence
+cycle:
+
+1. **Predict:** state the expected behavior, ownership rule, or likely failure.
+2. **Ask:** use AI for explanation, alternatives, tests, review, or debugging.
+3. **Verify:** compile, run tests, use sanitizers, and trace representative cases.
+4. **Audit:** challenge at least one AI assumption or unsuitable suggestion.
+5. **Explain:** record why the accepted implementation satisfies its contract.
+6. **Modify:** be prepared to make a small AI-free change during the demo.
+
 ## Coding AI Policy
 
 ### Permitted and encouraged uses
@@ -179,18 +189,18 @@ demo date must be confirmed before the syllabus is finalized. This sequence uses
 |------|---------|------|------------------------|----------|-------------|
 | 1 | Sep. 8 | 1 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
 | 2 | Sep. 15 | 2 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
-| 3 | Sep. 22 | 3 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Multi-file C lab |
-| 4 | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Pointer tracing and sanitizers |
-| 5 | Oct. 6 | 5 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Linked-list implementation |
-| 6 | Oct. 13 | 6 | Recursion and binary trees | Oct. 15 | **Proposed Midterm 1** |
+| 3 | Sep. 22 | 3 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
+| 4 | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Midterm ownership and sanitizer milestone |
+| 5 | Oct. 6 | 5 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Token-list tracing and testing milestone |
+| 6 | Oct. 13 | 6 | Recursion and binary trees; in-lecture AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
 | 7 | Oct. 20 | 7 | Expression parsing and syntax trees | Oct. 22 | Midterm project studio |
-| 8 | Oct. 27 | — | **Proposed midterm project demo; no lecture** | Oct. 29 | Project debrief and C++ setup |
-| 9 | Nov. 3 | 8 | From C to C++: values, references, exceptions, and RAII | Nov. 5 | C-to-C++ refactoring exercise |
-| 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | C++ value-class lab |
-| 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Resource-management lab |
-| 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2** |
-| 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Templates and polymorphic architecture lab |
-| 14 | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Search and problem-solving lab |
+| 8 | Oct. 27 | — | **Proposed midterm project demo; no lecture** | Oct. 29 | Final-template build and architecture map |
+| 9 | Nov. 3 | 8 | From C to C++: values, references, exceptions, and RAII | Nov. 5 | Event-loop and resource-lifecycle trace |
+| 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | Small cross-file final-project component |
+| 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Final-project ownership audit and refactor |
+| 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2**; asynchronous STL reading checkpoint |
+| 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
+| 14 | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Testable logic, FSM, or search extension |
 | 15 | Dec. 15 | — | Integration, review, and final project clinic | Dec. 17 | Final project lab |
 | 16 | Dec. 22 | — | **Final exam** | — | No scheduled Thursday meeting |
 
@@ -226,15 +236,22 @@ every stage, but must submit tests, an ownership explanation, an AI-use record,
 and an AI audit. Each student must complete an individual code explanation or
 small live modification during the demo.
 
+The scaffold is released in Week 3. Weeks 3–5 establish its module map,
+ownership model, token representation, and test workflow. Because Midterm 1
+replaces the Week 6 lab, a small AST construction/traversal checkpoint occurs
+during Tuesday's lecture. Week 7 is an integration studio rather than the
+students' first contact with the project.
+
 ### Proposed midterm project rubric
 
 | Component | Weight |
 |-----------|-------:|
-| Judge-system correctness | 35% |
-| Student-designed tests | 15% |
+| Judge-system correctness | 30% |
+| Staged milestone evidence | 15% |
+| Student-designed tests | 10% |
 | Memory safety and code quality | 15% |
 | Individual demo and code explanation | 25% |
-| AI-use record and audit | 10% |
+| AI-use record and audit | 5% |
 
 ## Final Project: C++ Game Extension
 
@@ -258,12 +275,20 @@ Art, animation, and audio may improve the demonstration, but the programming
 grade should emphasize architecture, ownership, integration, verification, and
 understanding rather than the number of visible features.
 
+The template is introduced in the Week 8 Thursday meeting. Subsequent labs
+trace the event/update/draw lifecycle, add a small cross-file component, audit
+ownership, and deliver one thin vertical slice before the Week 15 integration
+clinic. Allegro-specific setup and codebase navigation belong primarily in the
+labs; Tuesday notes retain transferable C++ concepts and include short project
+connections.
+
 ### Proposed final project rubric
 
 | Component | Weight |
 |-----------|-------:|
-| Correctness and completeness | 20% |
-| Meaningful gameplay extension | 15% |
+| Correctness and completeness | 15% |
+| Staged milestone evidence | 10% |
+| Meaningful gameplay extension | 10% |
 | Architecture and integration | 20% |
 | C++ ownership and design quality | 15% |
 | Testing and verification | 10% |
@@ -333,6 +358,10 @@ The detailed curriculum rationale, alternatives, risks, and unresolved design
 questions are recorded in [COURSE_PROPOSAL.md](COURSE_PROPOSAL.md).
 The reuse and reorganization of the previous C/C++ notes and 2025 notebooks is
 recorded in [LECTURE_SOURCE_MAP.md](LECTURE_SOURCE_MAP.md).
+The week-by-week relationship among lectures, labs, projects, exams, and AI-use
+evidence is recorded in [PROJECT_ALIGNMENT.md](PROJECT_ALIGNMENT.md). Reusable
+submission forms for AI use, architecture/ownership mapping, verification, and
+demos are in [`project_templates/`](project_templates/).
 
 ## Repository Layout
 
@@ -342,6 +371,11 @@ Each `weekXX/` directory contains:
 - `lectures/` — lecture note and examples
 - `lectures/lecture_exercises/` — in-lecture exercises and starter code
 - `labs/` — Thursday lab material
+
+Each project-related lab contains an AI-free readiness exercise, a guided
+project milestone, verification requirements, and a concrete submission
+artifact. Exam weeks use asynchronous checkpoints instead of pretending that a
+Thursday lab is available.
 
 The 13 lecture notes are placed in Weeks 1–7 and 9–14. Weeks 8, 15, and 16 are
 reserved for the midterm project demo, integration/review, and final exam.

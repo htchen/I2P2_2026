@@ -309,6 +309,19 @@ repeated punctuation policy, and very large counts. Benchmark ordered versus
 unordered counting on supplied data and explain results without overgeneralizing
 from one machine.
 
+## Final project connection — Container mutation is a lifetime event
+
+Locate one template loop that updates or removes game objects from a container.
+Record the container type, element ownership, mutation operation, invalidated
+iterators/references, and destruction point. Then compare three safe designs:
+the container's erase-return idiom, erase/remove where appropriate, and a
+two-phase mark-then-sweep update. Choose based on the actual container and
+whether callbacks or collisions still borrow the object.
+
+Because Thursday is Midterm 2, complete only the bounded asynchronous trace.
+Implementation and broader template/STL practice continue in Week 13. AI may
+review the trace after the student predicts which handles remain valid.
+
 ## Check yourself
 
 1. What operation does the `maximum` template require from `T`?

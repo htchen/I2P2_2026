@@ -361,6 +361,19 @@ cc -std=c17 -Wall -Wextra -Wpedantic -g \
 Sanitizers do not prove correctness, but they turn many silent errors into a
 report close to the failing operation.
 
+## Midterm project connection — Ownership is part of correctness
+
+Create an ownership table for the compiler scaffold. Include the token list,
+token array if present, AST nodes, and any temporary buffers. For each resource,
+record its creator, owner, borrowers, successful release, and error-path
+release. Then trace three cases: valid input, invalid syntax after partial AST
+construction, and a semantic failure after parsing.
+
+An LLM can propose likely owners, but it cannot infer the contract reliably
+from a partial snippet. Check call sites and cleanup code, run a small case under
+AddressSanitizer, and reject any suggested repair that merely suppresses a
+report without restoring the ownership rule.
+
 ## Check yourself
 
 1. Draw the objects and arrows after `int x = 3; int *p = &x;`.

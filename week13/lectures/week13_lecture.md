@@ -317,6 +317,19 @@ Propose three alternatives: add a virtual operation, introduce a composed
 strategy, or use a variant/visitor. Evaluate extension direction, ownership,
 testability, number of affected files, and migration risk before choosing.
 
+### Final-project handoff — Build a thin vertical slice
+
+Thursday's milestone adds one small object or behavior through the complete
+runtime path: construction, ownership/registration, input if needed, update,
+interaction, draw, removal, and destruction. A thin slice exposes integration
+assumptions earlier than several isolated classes.
+
+Before coding, decide whether the extension is best represented by an existing
+virtual interface, a composed strategy, or a closed variant. After coding,
+trace one dynamic dispatch and one lifetime end. An LLM may compare designs or
+review affected files, but the student must reject suggestions that invent
+interfaces or bypass the template's actual control flow.
+
 ## Check yourself
 
 1. Why is `override` more than documentation?

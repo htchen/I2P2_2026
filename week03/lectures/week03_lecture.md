@@ -376,6 +376,26 @@ failure at the boundary where the invariant first becomes observable.
 - Use `const` for data a function must not modify.
 - Document why a surprising choice is correct, not what obvious syntax does.
 
+## Midterm project connection — Map before modifying
+
+The expression-compiler scaffold and its companion tools are released this
+week. Treat them as an unfamiliar system, not as a collection of blanks to send
+to an LLM.
+Before changing code, identify:
+
+- the entry point and input contract;
+- token representation and the lexer boundary;
+- the parser's input and AST output;
+- semantic and instruction-generation stages;
+- allocation, cleanup, and error-reporting responsibilities;
+- each TODO's precondition and postcondition.
+
+Trace one public expression through the existing stages and record where the
+scaffold is complete, incomplete, or deliberately simplified. An AI tool may
+help explain a function, but students must verify every claim against the
+actual declarations and one executed trace. Thursday's deliverable is a build
+record and pipeline map, not project implementation.
+
 ## Check yourself
 
 1. Which declarations belong in a public header, and which should remain private?
