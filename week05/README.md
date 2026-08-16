@@ -1,13 +1,7 @@
-# Week 5: TBD
+# Week 5: Linked Lists
 
-## Concepts
+- **Tuesday, October 6:** [Lecture 5 — Linked Lists and Pointer-to-Pointer Techniques](lectures/week05_lecture.md)
+- **Thursday, October 8:** Linked-list implementation lab
 
-- TBD
-
-## Lecture Materials
-
-See the `lectures/` directory.
-
-## Lab Exercises
-
-See the `labs/` directory.
+Focus: node ownership, list invariants, insertion/removal, destruction, circular
+lists, and representation tradeoffs.

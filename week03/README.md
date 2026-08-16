@@ -1,13 +1,7 @@
-# Week 3: TBD
+# Week 3: Structures and Modular C
 
-## Concepts
+- **Tuesday, September 22:** [Lecture 3 — Structures, Modules, Builds, and Debugging](lectures/week03_lecture.md)
+- **Thursday, September 24:** Multi-file C lab
 
-- TBD
-
-## Lecture Materials
-
-See the `lectures/` directory.
-
-## Lab Exercises
-
-See the `labs/` directory.
+Focus: structures, enums, invariants, public headers, separate compilation,
+linking, assertions, and debugger-driven diagnosis.

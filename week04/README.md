@@ -1,13 +1,7 @@
-# Week 4: TBD
+# Week 4: Pointers and Dynamic Memory
 
-## Concepts
+- **Tuesday, September 29:** [Lecture 4 — Pointers, Lifetime, and Dynamic Memory](lectures/week04_lecture.md)
+- **Thursday, October 1:** Pointer tracing and sanitizers lab
 
-- TBD
-
-## Lecture Materials
-
-See the `lectures/` directory.
-
-## Lab Exercises
-
-See the `labs/` directory.
+Focus: addresses, indirection, lifetime, dynamic arrays, allocation failure,
+ownership contracts, and memory-error detection.

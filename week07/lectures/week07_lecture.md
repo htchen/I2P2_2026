@@ -1,0 +1,280 @@
+# Lecture 7 — Expression Parsing and Syntax Trees
+
+> October 20, 2026 · Source lineage: the legacy syntax-tree, computer, and
+> assembly notes plus the 2025 Week 4–5 compiler notebooks
+
+## Learning objectives
+
+By the end of this lecture, you should be able to:
+
+1. Separate lexical analysis, parsing, semantic analysis, and code generation.
+2. Write an unambiguous expression grammar with precedence and associativity.
+3. Implement a recursive-descent parser that produces an AST.
+4. Evaluate and release an AST safely.
+5. Connect AST structure to stack-machine code generation.
+
+## 1. A small compiler is a pipeline
+
+```text
+characters -> tokens -> syntax tree -> checked tree -> instructions
+              lexer      parser       semantics       code generator
+```
+
+Each stage gives a simpler contract to the next:
+
+- **Lexer:** groups characters into tokens such as integers and operators.
+- **Parser:** checks grammatical structure and builds an abstract syntax tree.
+- **Semantic analysis:** checks rules not captured conveniently by the grammar.
+- **Code generation:** emits instructions that implement the tree's meaning.
+
+Do not make every function inspect raw input. Good intermediate representations
+localize errors and make stages testable independently.
+
+## 2. Tokens
+
+```c
+enum TokenKind {
+    TokenInteger,
+    TokenPlus,
+    TokenMinus,
+    TokenStar,
+    TokenSlash,
+    TokenLeftParen,
+    TokenRightParen,
+    TokenEnd,
+    TokenInvalid
+};
+
+struct Token {
+    enum TokenKind kind;
+    int value;
+    size_t position;
+};
+```
+
+The lexer should always make progress: consume a valid token, skip permitted
+whitespace, or consume/report an invalid character. Recording the source
+position makes later diagnostics precise.
+
+## 3. Grammar encodes precedence
+
+This grammar makes multiplication bind tighter than addition and makes binary
+operators left-associative:
+
+```text
+expression  -> term (('+' | '-') term)*
+term        -> unary (('*' | '/') unary)*
+unary       -> ('+' | '-') unary | primary
+primary     -> INTEGER | '(' expression ')'
+```
+
+For `1 + 2 * 3`, `expression` contains one `term` for `1` and another whose
+tree is `2 * 3`. For `8 - 3 - 2`, the repetition builds `(8 - 3) - 2`.
+
+Grammar is executable design: one parser function corresponds to each
+nonterminal.
+
+## 4. AST representation
+
+```c
+enum AstKind {
+    AstInteger,
+    AstAdd,
+    AstSubtract,
+    AstMultiply,
+    AstDivide,
+    AstNegate
+};
+
+struct Ast {
+    enum AstKind kind;
+    int value;
+    struct Ast *left;
+    struct Ast *right;
+};
+```
+
+Representation rules:
+
+- `AstInteger` stores its number in `value` and has no children.
+- `AstNegate` uses `left` as its operand and has no right child.
+- Binary nodes own both child trees.
+
+An AST omits punctuation that was required only to parse. Parentheses affect
+shape but do not need their own nodes.
+
+## 5. Parser state and errors
+
+```c
+struct Parser {
+    struct Lexer lexer;
+    struct Token current;
+    const char *error;
+};
+
+static void advance(struct Parser *parser)
+{
+    parser->current = lexer_next(&parser->lexer);
+}
+```
+
+Every parser function follows a useful contract:
+
+- on success, return an owned AST and leave `current` at the first unused token;
+- on failure, return `NULL`, record one diagnostic, and release partial trees.
+
+The top-level parse succeeds only if an expression is followed by `TokenEnd`.
+Accepting a valid prefix while ignoring trailing garbage is a parser bug.
+
+## 6. Recursive descent
+
+Simplified additive parsing:
+
+```c
+static struct Ast *parse_expression(struct Parser *parser)
+{
+    struct Ast *left = parse_term(parser);
+    if (left == NULL) return NULL;
+
+    while (parser->current.kind == TokenPlus ||
+           parser->current.kind == TokenMinus) {
+        enum TokenKind operation = parser->current.kind;
+        advance(parser);
+
+        struct Ast *right = parse_term(parser);
+        if (right == NULL) {
+            ast_destroy(left);
+            return NULL;
+        }
+
+        enum AstKind kind = operation == TokenPlus ? AstAdd : AstSubtract;
+        struct Ast *combined = ast_binary(kind, left, right);
+        if (combined == NULL) {
+            ast_destroy(left);
+            ast_destroy(right);
+            return NULL;
+        }
+        left = combined;
+    }
+    return left;
+}
+```
+
+Updating `left` after each operator creates left association. Notice the
+failure paths: every successfully constructed subtree has exactly one owner.
+
+`parse_primary` handles integers and parenthesized expressions:
+
+```c
+static struct Ast *parse_primary(struct Parser *parser)
+{
+    if (parser->current.kind == TokenInteger) {
+        int value = parser->current.value;
+        advance(parser);
+        return ast_integer(value);
+    }
+
+    if (parser->current.kind == TokenLeftParen) {
+        advance(parser);
+        struct Ast *inside = parse_expression(parser);
+        if (inside == NULL) return NULL;
+        if (parser->current.kind != TokenRightParen) {
+            parser->error = "expected ')'";
+            ast_destroy(inside);
+            return NULL;
+        }
+        advance(parser);
+        return inside;
+    }
+
+    parser->error = "expected an integer or '('";
+    return NULL;
+}
+```
+
+## 7. Evaluation is postorder
+
+```c
+int ast_evaluate(const struct Ast *node, int *result)
+{
+    if (node->kind == AstInteger) {
+        *result = node->value;
+        return 1;
+    }
+
+    int left;
+    int right;
+    if (!ast_evaluate(node->left, &left)) return 0;
+    if (node->kind == AstNegate) {
+        *result = -left;
+        return 1;
+    }
+    if (!ast_evaluate(node->right, &right)) return 0;
+
+    switch (node->kind) {
+    case AstAdd:      *result = left + right; return 1;
+    case AstSubtract: *result = left - right; return 1;
+    case AstMultiply: *result = left * right; return 1;
+    case AstDivide:
+        if (right == 0) return 0;
+        *result = left / right;
+        return 1;
+    default:
+        return 0;
+    }
+}
+```
+
+Production code must also define and check overflow behavior. Semantic analysis
+can reject invalid constructs before code generation.
+
+## 8. From tree to instructions
+
+For a simple stack machine, generate the left subtree, then the right subtree,
+then the operation:
+
+```text
+AST:       (+)
+          /   \
+         1    (*)
+             /   \
+            2     3
+
+PUSH 1
+PUSH 2
+PUSH 3
+MUL
+ADD
+```
+
+This is postorder traversal. A register machine adds a resource-allocation
+problem: which temporary register holds each intermediate result? The midterm
+project's hidden tests check language behavior, but the demo checks whether you
+can connect emitted instructions back to AST structure.
+
+## 9. Test stages independently
+
+- Lexer: whitespace, multi-digit integers, each operator, invalid characters.
+- Parser: precedence, associativity, parentheses, unary chains, missing tokens.
+- Semantics: division by zero or invalid update targets, as specified.
+- Generator: smallest tree for every node kind and nested combinations.
+- End to end: compare interpreter and generated-code results.
+
+Property idea: pretty-print an AST with sufficient parentheses, parse it again,
+and compare evaluation results.
+
+## Check yourself
+
+1. Draw the AST for `-1 + 2 * (3 - 4)`.
+2. Why does the grammar use a loop for left-associative binary operators?
+3. Where must a partial tree be freed when the right operand fails to parse?
+4. Why must the top-level parser require `TokenEnd`?
+5. Emit stack-machine instructions for `(8 - 3) / 5`.
+
+## Summary
+
+- A compiler pipeline replaces one complicated task with testable stages.
+- Grammar structure expresses precedence and associativity.
+- Recursive-descent functions mirror grammar nonterminals.
+- AST edges express ownership as well as syntax.
+- Evaluation, destruction, and simple code generation are tree traversals.

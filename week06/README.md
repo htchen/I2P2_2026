@@ -1,13 +1,7 @@
-# Week 6: TBD
+# Week 6: Recursion and Binary Trees
 
-## Concepts
+- **Tuesday, October 13:** [Lecture 6 — Recursion and Binary Trees](lectures/week06_lecture.md)
+- **Thursday, October 15:** Proposed Midterm 1
 
-- TBD
-
-## Lecture Materials
-
-See the `lectures/` directory.
-
-## Lab Exercises
-
-See the `labs/` directory.
+Focus: recursive contracts, stack frames, tree traversals, BST construction,
+postorder destruction, reconstruction, and height-dependent complexity.

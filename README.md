@@ -301,6 +301,8 @@ The new course draws from:
 
 The detailed curriculum rationale, alternatives, risks, and unresolved design
 questions are recorded in [COURSE_PROPOSAL.md](COURSE_PROPOSAL.md).
+The reuse and reorganization of the previous C/C++ notes and 2025 notebooks is
+recorded in [LECTURE_SOURCE_MAP.md](LECTURE_SOURCE_MAP.md).
 
 ## Repository Layout
 
@@ -311,8 +313,8 @@ Each `weekXX/` directory contains:
 - `lectures/lecture_exercises/` — in-lecture exercises and starter code
 - `labs/` — Thursday lab material
 
-The current placement of lecture templates is provisional and will be remapped
-after the schedule is approved.
+The 13 lecture notes are placed in Weeks 1–7 and 9–14. Weeks 8, 15, and 16 are
+reserved for the midterm project demo, integration/review, and final exam.
 
 ## Items to Finalize
 

@@ -1,13 +1,7 @@
-# Week 10: TBD
+# Week 10: Classes and Invariants
 
-## Concepts
+- **Tuesday, November 10:** [Lecture 9 — Classes, Invariants, and Operators](lectures/week10_lecture.md)
+- **Thursday, November 12:** C++ value-class lab
 
-- TBD
-
-## Lecture Materials
-
-See the `lectures/` directory.
-
-## Lab Exercises
-
-See the `labs/` directory.
+Focus: constructors, member-initializer lists, access control, `const` member
+functions, operators, interfaces, and representation invariants.
