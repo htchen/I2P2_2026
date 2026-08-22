@@ -12,6 +12,8 @@ By the end of this lecture, you should be able to:
 3. Write `const` member functions and distinguish class from object state.
 4. Separate class declarations from definitions.
 5. Overload an operator without surprising its users.
+6. Use a named factory when creation needs validation, alternate construction
+   modes, or a deliberate ownership contract.
 
 ## Three-hour plan
 
@@ -19,7 +21,7 @@ By the end of this lecture, you should be able to:
 |------|---------------|---------------------|
 | 1 | How does a class make invalid states hard to represent? | Design and construct a normalized Rational value |
 | 2 | How do member functions and operators form a coherent value interface? | Implement arithmetic, comparison, and stream output |
-| 3 | Which class features improve a multi-file design, and which add hidden state? | Refactor and test a complete value class |
+| 3 | Which construction policies belong in a multi-file design? | Refactor, add a named factory, and test a complete value class |
 
 ## Hour 1 — Class boundaries and construction
 
@@ -296,6 +298,57 @@ private:
 
 Use static state sparingly: hidden global state can make tests interdependent.
 
+### Named factories and private construction
+
+A `static` member function has access to private constructors, so it can expose
+a named creation policy instead of a large set of ambiguous constructors.
+Consider a validated sampling interval:
+
+```cpp
+#include <cmath>
+#include <stdexcept>
+
+class SampleWindow {
+public:
+    static SampleWindow from_endpoints(double start, double finish)
+    {
+        if (!std::isfinite(start) || !std::isfinite(finish) || start > finish) {
+            throw std::invalid_argument{"invalid sampling window"};
+        }
+        return SampleWindow{start, finish};
+    }
+
+private:
+    SampleWindow(double start, double finish)
+        : start_{start}, finish_{finish} {}
+
+    double start_;
+    double finish_;
+};
+```
+
+The factory name communicates how arguments are interpreted, validation occurs
+before a value is published, and returning by value gives ordinary value
+semantics. Pass small scalar inputs by value rather than by `const` reference.
+For an owned string parameter, accepting `std::string` by value and moving into
+the member can support both lvalues and rvalues cleanly.
+
+A factory is not automatically better than a constructor. Prefer an ordinary
+constructor when there is one obvious, valid interpretation. Use named factories
+for alternate units/formats, fallible parsing, hidden concrete types, or
+polymorphic creation. The return type must state the lifetime contract: value,
+unique owner, shared immutable object, or explicit failure. Returning an owning
+raw pointer leaves that contract unstated; Note 10 develops the smart-pointer
+alternatives.
+
+### Factory design checkpoint
+
+For a class that can be created from seconds, milliseconds, or a configuration
+string, compare overloaded constructors with three named factories. State which
+forms throw, which preserve the original object on failure, and which return a
+value versus an owner. Do not implement all factories; first make the creation
+table unambiguous.
+
 ### `this`, fluent interfaces, and lifetime
 
 Returning `*this` by reference is valid while the object remains alive. Never
@@ -364,12 +417,15 @@ sites have been checked against the repository.
 2. Why is a setter for `denominator_` a risky interface?
 3. When does a member function need trailing `const`?
 4. Why implement `operator+` in terms of `operator+=`?
-5. Design an invariant and public interface for a `TimeOfDay` class.
+5. When is a named factory clearer than an overloaded constructor?
+6. Why should a factory's return type communicate ownership?
+7. Design an invariant and public interface for a `TimeOfDay` class.
 
 ## Summary
 
 - A class is valuable when it protects a meaningful invariant.
 - Constructors create valid objects; initializer lists construct members directly.
+- Named factories make alternate creation policies and failure contracts explicit.
 - `const` member functions expose safe observation.
 - Public interfaces should be smaller and more stable than representations.
 - Operator overloads should preserve invariants and conventional meaning.

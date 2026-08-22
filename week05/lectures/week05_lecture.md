@@ -12,6 +12,8 @@ By the end of this lecture, you should be able to:
 3. Use a pointer-to-pointer to update a link uniformly.
 4. State list invariants and ownership rules.
 5. Compare linked-list and array operation costs.
+6. Specify and test indexed insertion, removal, filtering, and subrange reversal
+   without losing nodes or dereferencing freed storage.
 
 ## Three-hour plan
 
@@ -266,6 +268,68 @@ Implement and test:
 Define behavior when the position does not belong to the list. Decide whether
 the API can detect that efficiently or must state it as a precondition.
 
+### Sequence-editor case study: specify before rewiring
+
+Consider a playlist represented by a singly linked list of integer track IDs.
+The requested operations are deliberately stated with half-open, zero-based
+positions:
+
+- insert a track **before** position `position`, permitting `position == size`;
+- remove the track at `position`, reporting failure when it does not exist;
+- remove every track satisfying a supplied predicate;
+- reverse the node range `[first, last)`, leaving all other nodes in place.
+
+Do not begin with pointer assignments. First decide whether the representation
+uses a real head pointer or a dummy/sentinel node. A sentinel is never playlist
+data; it can simplify front mutations, but size, traversal, and destruction
+must consistently exclude it. Mixing the two representations is a common cause
+of null dereferences and accidental sentinel deletion.
+
+### Design invariants for the four operations
+
+For an index walk, record the meaning of the cursor after `k` links rather than
+relying on comments such as “near the destination.” For a link-location design,
+the useful invariant is:
+
+```text
+link designates the pointer field that owns the node at the current position
+```
+
+For remove-all, adjacent matches must not be skipped: after unlinking and
+freeing a node, the same incoming link now designates the next candidate. For a
+subrange reversal, maintain three disjoint regions throughout the operation:
+
+```text
+unchanged prefix | range being rearranged | unchanged suffix
+```
+
+Every original node must remain reachable from exactly one region until the
+regions are reconnected. Save any needed successor before changing or freeing
+the current node.
+
+### Edge-case matrix
+
+Before writing pseudocode, predict behavior for:
+
+| Operation | Cases that define the contract |
+|-----------|--------------------------------|
+| Insert | empty list, front, middle, end, position beyond end |
+| Remove at | empty list, front, last, position equal to size |
+| Remove if | no match, head match, adjacent matches, every node matches |
+| Reverse range | empty range, one node, starts at zero, ends at size, invalid order |
+
+Draw the links before and after each accepted case. For rejected cases, require
+that the list is unchanged. Then write function contracts or pseudocode—but not
+a complete implementation—and use the drawings as an oracle for later tests.
+
+### Sequence-editor checkpoint
+
+Starting with `11 → 22 → 33 → 44 → 55`, draw the result of one insertion, one
+removal, removal by a simple predicate, and reversal of `[1, 4)`. After every
+step, state the list size, the incoming link that changed, and which object owns
+each remaining node. Repeat the reversal on `[0, size)` and explain how the head
+connection changes.
+
 ## Hour 3 — Traversal variants, circular lists, and Josephus
 
 ### 7. Traversal and read-only borrowing
@@ -392,14 +456,19 @@ will be reused in Week 7.
 1. Draw `link`, `*link`, and `**link` during removal of the second node.
 2. Why is a traversal pointer not an owner?
 3. Add `list_pop_front` and state its failure behavior.
-4. Which invariant detects an accidental cycle?
-5. Run insertion and removal tests under AddressSanitizer.
+4. Why must the list representation explicitly distinguish a sentinel from a
+   data node?
+5. Which handles must be saved before removing a node or rewiring a range?
+6. Which invariant detects an accidental cycle?
+7. Run insertion and removal tests under AddressSanitizer.
 
 ## Summary
 
 - A linked list is a chain of separately allocated nodes.
 - The list owns every reachable node and must release each exactly once.
 - A pointer-to-pointer uniformly represents the link being inspected or changed.
+- Indexed edits require an explicit position convention and unchanged-on-failure
+  contract.
 - Mutation should preserve invariants even when allocation fails.
 - Choose a representation using access patterns and real costs, not Big-O alone.
 

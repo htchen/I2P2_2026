@@ -2,14 +2,18 @@
 
 ## Outcomes
 
-Students consolidate delayed STL practice and integrate one small polymorphic or
-composed feature through the final project's complete runtime path.
+Students consolidate delayed STL practice, trace a recursive Composite, and
+integrate one small polymorphic or composed feature through the final project's
+complete runtime path.
 
 ## Part A — Delayed AI-free readiness
 
-Complete a short container/algorithm exercise and identify all invalidated
-iterators after a mutation. Then trace one virtual call through a base pointer
-and explain why the destruction policy is safe or unsafe.
+Complete a short container/algorithm exercise using `lower_bound`,
+`upper_bound`, or `equal_range`; state the ordering precondition and interpret
+the returned half-open range. Identify all invalidated iterators after a later
+mutation. Then trace one virtual call through a leaf and a recursive composite,
+identify every owning child edge, and explain why destruction through the base
+is safe or unsafe.
 
 ## Part B — Design the slice
 

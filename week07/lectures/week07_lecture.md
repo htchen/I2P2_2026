@@ -1,7 +1,8 @@
 # Lecture 7 — Expression Parsing and Syntax Trees
 
 > October 20, 2026 · Source lineage: the legacy syntax-tree, computer, and
-> assembly notes plus the 2025 Week 4–5 compiler notebooks
+> assembly notes, the 2025 Week 4–5 compiler notebooks, and the
+> instructor-provided *From C to Assembly* handout
 
 ## Learning objectives
 
@@ -361,6 +362,27 @@ the operator position. Do not twist the grammar until it rejects every
 context-sensitive rule.
 
 ### 8. From tree to instructions
+
+#### Real assembly and the teaching target
+
+A native compiler and this course's mini compiler solve the same broad lowering
+problem but target different contracts. Native assembly commonly includes
+register-to-register or register-to-memory transfers, arithmetic instructions,
+labels and conditional jumps, and an ABI for calls and returns. Structured C
+such as `if (value > 3)` may become a comparison followed by a jump that skips
+the body when the condition is false; the compiler need not preserve the
+source's positive wording.
+
+The project target is a deliberately smaller simulated instruction set. Its
+specification, register count, memory model, side-effect order, and cycle rules
+are authoritative. Do not emit an x86 instruction just because it appeared in
+the native assembly for similar C, and do not infer that the simulator follows
+the host machine's calling convention.
+
+Use native C-to-assembly output as a comparison exercise: identify loads,
+stores, arithmetic, comparisons, branches, labels, calls, and returns. Then map
+the same source behavior to the project target one semantic step at a time.
+This separates the portable behavior being compiled from one machine's encoding.
 
 For a simple stack machine, generate the left subtree, then the right subtree,
 then the operation:

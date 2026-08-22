@@ -5,6 +5,7 @@
 - **Asynchronous:** [Container and invalidation checkpoint](labs/README.md), due on the project schedule rather than during the exam
 
 Focus: compile-time genericity, container selection, half-open ranges,
-algorithms, lambdas, `std::optional`, iterator invalidation, and complexity.
+algorithms, lower/upper bounds, lambdas, `std::optional`, iterator invalidation,
+and complexity.
 Hands-on template/STL practice continues in the December 3 lab because this
 week's Thursday meeting is occupied by the midterm.

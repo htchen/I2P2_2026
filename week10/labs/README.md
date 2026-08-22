@@ -2,8 +2,9 @@
 
 ## Outcomes
 
-Students can introduce a small C++ class with a stable invariant, correct header
-dependencies, and automated tests before graphical integration.
+Students can introduce a small C++ class with a stable invariant, deliberate
+constructor/factory policy, correct header dependencies, and automated tests
+before graphical integration.
 
 ## Part A — AI-free readiness
 
@@ -16,6 +17,7 @@ For an instructor-approved non-graphical value or policy component, identify:
 
 - public header and implementation;
 - invariant and constructor validation;
+- constructor or named-factory choice and its return/lifetime contract;
 - factory/creation site and owner;
 - observers and mutation sites;
 - automated test target;

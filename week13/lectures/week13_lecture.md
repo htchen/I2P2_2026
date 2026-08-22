@@ -12,13 +12,15 @@ By the end of this lecture, you should be able to:
 3. Explain why a polymorphic base needs a virtual destructor.
 4. Avoid object slicing and unsafe downcasts.
 5. Decide between inheritance, composition, and `std::variant`.
+6. Design a recursive polymorphic Composite with explicit construction,
+   evaluation, transformation, and ownership contracts.
 
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
 |------|---------------|---------------------|
 | 1 | What contract makes derived objects genuinely substitutable? | Implement and test a Shape hierarchy |
-| 2 | How do dispatch, destruction, and ownership interact? | Trace polymorphic calls and container lifetimes |
+| 2 | How do dispatch, destruction, and ownership interact? | Trace polymorphic calls and design a recursive Composite |
 | 3 | When should a design use inheritance, composition, or variants? | Refactor one final-project hierarchy and defend the choice |
 
 ## Hour 1 — Abstract interfaces and substitutable overrides
@@ -249,6 +251,86 @@ Monster type and movement policy now vary independently. The monster uniquely
 owns its strategy; a shared immutable strategy could instead be borrowed or
 shared under an explicit lifetime design.
 
+### Recursive Composite case study
+
+Some domains contain leaf and branch objects that clients should treat through
+one interface. Consider a scoring expression with this conceptual hierarchy:
+
+```text
+Rule (abstract)
+├── literal value
+├── input lookup
+├── unary rule  ── owns one child Rule
+└── binary rule ── owns left and right Rule objects plus an operation tag
+```
+
+This is the **Composite** pattern: a branch contains objects satisfying the same
+interface as the branch itself. A read-only operation such as
+`evaluate(context)` recursively dispatches through the children. Its interface
+should be `const` because evaluation observes the model rather than changing its
+structure.
+
+The abstract base needs a virtual destructor and a precise domain/error
+contract. Every concrete override must handle its valid state or report failure
+consistently; falling out of a non-void override or silently accepting an unknown
+operation is not a valid default. Store operation choices with `enum class`
+rather than loosely interpreted characters when the set is closed.
+
+### Evaluation and transformation are different operations
+
+Evaluation returns a number for one context. A transformation—such as constant
+folding, variable renaming, validation, or normalization—returns a new model or
+an explicit failure. Decide whether the original remains usable before choosing
+an ownership design:
+
+- with `unique_ptr<Rule>` children, unchanged structure must be cloned when both
+  original and transformed trees remain alive;
+- with `shared_ptr<const Rule>`, immutable subtrees can be reused deliberately;
+- with arena ownership, returned nodes borrow the arena and cannot outlive it.
+
+A virtual `clone` operation can express deep copying for a unique tree, but it
+must be implemented by every concrete type and return a unique base owner. A
+shared immutable design may avoid cloning but introduces reference-count and
+cycle considerations. Neither choice is automatically correct.
+
+### Factory boundary for polymorphic objects
+
+Clients cannot create an abstract base by value. A factory can validate an
+operation and return a polymorphic owner while hiding the concrete class. Keep
+construction, ownership, and failure in one contract. If a factory allocates
+children and then rejects an operation, RAII owners must clean up every partial
+object.
+
+Draw the call and ownership paths for one leaf and one binary branch. Then
+design—but do not implement—a factory table containing accepted operation,
+concrete type, child count, invalid-input behavior, and returned ownership.
+
+### Operation-axis tradeoff
+
+A virtual hierarchy makes it easy to add another concrete node when existing
+virtual operations are sufficient. Adding a new operation requires changing
+the base and every derived type. A `variant` plus visitors reverses that tradeoff:
+the set of node types is closed, while another visitor can add an operation.
+This axis-of-change question is more important than avoiding a `switch` at all
+costs.
+
+### Composite verification matrix
+
+Test the abstraction rather than private fields:
+
+| Concern | Representative evidence |
+|---------|-------------------------|
+| Dispatch | each leaf and branch is exercised through `Rule&` or `Rule*` |
+| Construction | invalid tag/arity is rejected without leaks |
+| Evaluation | nested branches, boundary values, and domain failures |
+| Transformation | original remains valid and semantic properties are preserved |
+| Ownership | destruction through the base releases every node exactly once |
+| Copy/share policy | cloned nodes are independent or shared nodes are immutable |
+
+For a normalization transform, useful properties include idempotence and
+preservation of evaluation on representative contexts. These properties test
+the public contract without revealing a particular recursive implementation.
+
 ## Hour 3 — Downcasting, variants, and brownfield architecture
 
 ### 7. Downcasting is a design signal
@@ -336,7 +418,10 @@ interfaces or bypass the template's actual control flow.
 2. Explain object slicing with a concrete example.
 3. Why does `unique_ptr<Base>` require a virtual base destructor?
 4. Model “monster has movement behavior” using composition.
-5. When would `variant` be preferable to a virtual hierarchy?
+5. Why must a Composite decide between cloning and immutable subtree sharing?
+6. What should a polymorphic factory return, and what does that return type say
+   about lifetime?
+7. When would `variant` be preferable to a virtual hierarchy?
 
 ## Summary
 
@@ -344,6 +429,8 @@ interfaces or bypass the template's actual control flow.
 - Virtual dispatch operates through references and pointers.
 - Polymorphic bases need a deliberate destruction policy.
 - `override`, private state, and ownership-aware containers prevent common bugs.
+- Composite treats leaves and branches uniformly, but evaluation and structural
+  transformation require different contracts.
 - Prefer composition unless run-time substitutability provides real value.
 
 ## References and legacy sources

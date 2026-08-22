@@ -4,4 +4,5 @@
 - **Thursday, September 17:** [Arrays, strings, and interface-contract lab](labs/README.md)
 
 Focus: typed function contracts, pass-by-value, a minimal address-passing bridge,
-bounds, array/length interfaces, null-terminated strings, and bounded input.
+bounds, array/length interfaces, prefix-query preprocessing, null-terminated
+strings, sorted-range boundary queries, and bounded input.

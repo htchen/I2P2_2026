@@ -11,15 +11,18 @@ By the end of this lecture, you should be able to:
 2. Explain pass-by-value and use return values for explicit results.
 3. Read simple address-passing interfaces that use `&`, `*`, and pointer parameters.
 4. Traverse arrays without reading outside their bounds.
-5. Explain the null-terminated representation of a C string.
-6. Design interfaces that pass an array together with its length or capacity.
+5. Build a prefix table and answer half-open range queries from it.
+6. Specify lower and upper boundaries in sorted data and trace their binary
+   search invariants.
+7. Explain the null-terminated representation of a C string.
+8. Design interfaces that pass an array together with its length or capacity.
 
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
 |------|---------------|---------------------|
 | 1 | How do typed functions decompose a program? | Specify and implement a small function family |
-| 2 | How do array layout and bounds shape algorithms? | Trace one- and two-dimensional array operations |
+| 2 | How can preprocessing replace repeated query work? | Trace prefix and sorted-boundary queries |
 | 3 | How do null-terminated strings remain inside their buffers? | Build and test bounded string utilities |
 
 ## Hour 1 — Function contracts and decomposition
@@ -221,7 +224,76 @@ Ask three questions about every loop:
 Accessing `values[count]` is undefined behavior. C has no automatic bounds
 check and no `IndexError`.
 
-### 5. Two-dimensional arrays
+### 5. Prefix tables: preprocess repeated range queries
+
+Suppose a program receives an array once and then answers many questions about
+contiguous ranges. Repeating a loop for every query costs time proportional to
+the length of every range. A prefix table stores the accumulated total before
+each boundary:
+
+```text
+values:  [ 3, -1,  4,  2 ]
+boundary:  0   1   2   3   4
+prefix:  [ 0,  3,  2,  6,  8 ]
+```
+
+The invariant is:
+
+```text
+prefix[i] = values[0] + values[1] + ... + values[i - 1]
+```
+
+The extra leading zero is deliberate. It makes `prefix` have `count + 1`
+elements and represents the empty prefix without a special case. The total of
+the half-open range `[left, right)` is therefore:
+
+```text
+prefix[right] - prefix[left]
+```
+
+For the table above, `[1, 4)` totals `8 - 3 = 5`. This matches C's usual loop
+boundary: start at `left` and continue while `i < right`.
+
+### Build/query contracts before implementation
+
+Design two interfaces rather than hiding preprocessing inside `main`:
+
+```c
+#include <stdint.h>
+
+int build_prefix(const int values[], size_t count,
+                 int64_t prefix[], size_t prefix_capacity);
+
+int query_total(const int64_t prefix[], size_t prefix_count,
+                size_t left, size_t right, int64_t *result);
+```
+
+The first requires space for `count + 1` accumulated values. The second must
+validate `left <= right` and `right < prefix_count`. Both should state how
+arithmetic overflow is prevented or reported; using `int64_t` widens the common
+case but is not a mathematical proof that every possible input fits.
+
+With `n` values and `q` queries, preprocessing plus constant-time queries costs
+O(n + q), compared with O(nq) in the worst case when each query scans its
+range. The tradeoff is O(n) additional storage and the need to rebuild or
+update the table if an input value changes.
+
+### Prefixes of derived contributions
+
+The accumulated value need not be the original element. A program can first
+define a contribution—for example, `1` when a reading satisfies a condition and
+`0` otherwise—and then prefix those contributions to count qualifying elements
+in any range. Keep the transformation and range convention explicit; changing
+either changes the meaning of every query.
+
+### Prefix-table checkpoint
+
+For `values = {5, -2, 0, 7, -3}`, build the six boundary totals by hand. Answer
+`[0, 0)`, `[0, 3)`, `[2, 5)`, and `[4, 5)`. Then specify expected rejection for
+three invalid boundary pairs. Only after the table and expectations are fixed,
+write the two function bodies and compare their results with a direct loop.
+
+### 6. Two-dimensional arrays
 
 ```c
 enum { Rows = 3, Columns = 4 };
@@ -279,7 +351,72 @@ Trace the loop backward. A forward shift would overwrite values before they are
 copied. Test insertion at the front, middle, end, into an empty array, and into
 a full array.
 
-### Sorting and comparator previews
+### 7. Lower and upper boundaries in sorted data
+
+When equal values form one contiguous block in an ascending sorted array, two
+boundary queries describe that block precisely:
+
+- **lower bound:** first position whose value is not less than the target;
+- **upper bound:** first position whose value is greater than the target.
+
+Both return the past-the-end position `count` when no element satisfies the
+condition. If `lower` and `upper` are the two results, the sorted range is
+partitioned as:
+
+```text
+[0, lower)       values < target
+[lower, upper)   values equivalent to target
+[upper, count)   values > target
+```
+
+Therefore `lower == upper` means the target is absent, and `upper - lower` is
+the size of its equal block. The same boundaries also identify where a value
+could be inserted while preserving order.
+
+### A monotone-predicate view of binary search
+
+Do not memorize two nearly identical loops. For lower bound, search for the
+first index where `values[index] >= target` becomes true. For upper bound,
+replace the predicate with `values[index] > target`. In both cases, maintain a
+half-open candidate interval `[low, high)` containing the first true boundary.
+
+A design trace must state:
+
+- everything before `low` is known to make the predicate false;
+- everything at or after `high` is known to make it true, with `count` acting
+  as a valid sentinel boundary;
+- each comparison removes `mid` from the candidate interval or makes it the new
+  boundary, so the interval strictly shrinks;
+- the midpoint is formed as `low + (high - low) / 2`, avoiding addition
+  overflow from `(low + high) / 2`.
+
+Write only the invariant and interval updates first. Test the trace on an empty
+array, one element, all-equal values, a target below every value, a target above
+every value, and duplicates at both ends. A conventional equality-returning
+binary search is insufficient because it may find any duplicate rather than a
+specified boundary.
+
+### Sorting and comparator consistency
+
+Boundary search requires the range to be partitioned according to the same
+ordering used by the search. If C's `qsort` prepares the data, its comparator
+must define a consistent three-way order. Avoid subtraction-based comparators
+such as `left - right`, which can overflow; compare relationally and return a
+negative, zero, or positive result.
+
+Sorting once and answering `q` boundary queries costs O(n log n + q log n).
+Scanning the unsorted array for each query costs O(nq), but preserves original
+order and needs no sorting. Choose from the complete workload and data contract,
+not from the query operation alone.
+
+### Boundary-search checkpoint
+
+For `{-3, -1, -1, -1, 2, 5, 5}`, fill a table of lower and upper positions for
+targets `-4`, `-1`, `0`, `5`, and `8`. For each comparison, record `[low, high)`
+and the truth value of the relevant predicate. Then write function contracts
+for the two searches without writing their bodies.
+
+### Optional extension: implementing the sort
 
 The legacy notes used insertion sort before introducing `qsort`. Students
 should be able to implement and reason about the simple algorithm:
@@ -303,7 +440,7 @@ Loop invariant: before iteration `i`, the prefix `[0, i)` is sorted and contains
 the original prefix's values. The algorithm is O(n²) in the worst case but is a
 useful exercise in bounds and mutation.
 
-### Hour 2 checkpoint
+### Optional sorting checkpoint
 
 Trace `insertion_sort` on `{4, 2, 2, 1}`. After each outer iteration, record the
 array, `current`, and `position`. Then identify exactly which comparisons make
@@ -311,7 +448,7 @@ the algorithm stable for equal elements.
 
 ## Hour 3 — String representation, bounded input, and parsing
 
-### 6. Strings are character arrays with a sentinel
+### 8. Strings are character arrays with a sentinel
 
 ```c
 char language[] = "C17";
@@ -343,7 +480,7 @@ char name[32] = "Ada";
 
 This distinction returns later as C++ `vector::capacity()` versus `size()`.
 
-### 7. Reading a line safely
+### 9. Reading a line safely
 
 For text, prefer a bounded line read and then parse:
 
@@ -467,15 +604,22 @@ that `count > 0`.
 
 1. Why does `sizeof parameter / sizeof parameter[0]` fail in a function?
 2. How many bytes are required to store the string `"tree"` as a `char` array?
-3. Design a function to reverse an array. What must its contract include?
-4. Find the off-by-one error in `for (i = 0; i <= count; ++i)`.
-5. What should a string-building function know besides the current length?
+3. Why does a prefix table for `count` values contain `count + 1` entries?
+4. Express the inclusive mathematical range `left` through `right` as a C-style
+   half-open range, checking for overflow in the boundary conversion.
+5. State the three sorted regions defined by lower and upper bounds.
+6. Why can ordinary binary search return the wrong position for duplicates?
+7. Design a function to reverse an array. What must its contract include?
+8. Find the off-by-one error in `for (i = 0; i <= count; ++i)`.
+9. What should a string-building function know besides the current length?
 
 ## Summary
 
 - Prototypes make function contracts available to the compiler.
 - Arguments are passed by value; mutation requires explicit indirection.
 - C arrays are contiguous and have no run-time length metadata.
+- Prefix preprocessing turns repeated range totals into boundary subtraction.
+- Lower and upper bounds locate the edges of an equal block in sorted data.
 - A C string is an array convention: characters followed by `\0`.
 - Pair every array with its length and every output buffer with its capacity.
 

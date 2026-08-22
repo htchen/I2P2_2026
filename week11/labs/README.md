@@ -2,13 +2,16 @@
 
 ## Outcomes
 
-Students can trace one project lifetime end-to-end and improve ownership without
-performing an unsafe repository-wide pointer replacement.
+Students can compare recursive-object ownership models, trace one project
+lifetime end-to-end, and improve ownership without performing an unsafe
+repository-wide pointer replacement.
 
 ## Part A — AI-free readiness
 
 Classify supplied examples as value, unique owner, shared owner, or borrower.
 Find one shallow-copy defect and refactor it toward the Rule of Zero.
+For a small recursive composite diagram, compare unique-tree and immutable-
+shared ownership and mark where a transformation would clone or share children.
 
 ## Part B — Ownership audit
 

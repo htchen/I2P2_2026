@@ -1,7 +1,8 @@
 # Lecture 4 — Pointers, Lifetime, and Dynamic Memory
 
 > September 29, 2026 · Source lineage: the legacy pointer, dynamic allocation,
-> double-pointer, and linked-data notes
+> double-pointer, and linked-data notes plus the instructor-provided
+> *From C to Assembly* handout
 
 ## Learning objectives
 
@@ -70,6 +71,29 @@ int main(void)
 C still passes arguments by value: `left` receives a copy of `&a`. Both the
 original address and its copy designate the same integer, so dereferencing the
 copy modifies `a`.
+
+### Assembly lens: forming an address is not accessing an object
+
+Consider three different C operations:
+
+```c
+int value = 7;
+int *pointer = &value; /* form an address */
+int copy = *pointer;   /* load through an address */
+*pointer = 9;          /* store through an address */
+```
+
+On x86, an unoptimized compiler may use `lea` to calculate an effective address
+and `mov` with a memory operand to load or store. `lea` does not dereference the
+address, and it is also used for ordinary address arithmetic. Conversely, a
+memory operand such as `[register]` asks the processor to access memory at the
+computed address. Intel and AT&T assembly syntax even write operands in
+different orders, so always read the compiler's selected syntax before tracing.
+
+This is a useful model, not a source-level equivalence: `&` and `*` obey C's
+type, bounds, alignment, and lifetime rules, while `lea` and `mov` are target
+instructions. Optimization may keep `value` only in a register or replace the
+whole fragment with a constant, leaving no visible pointer operation.
 
 Use `const` to separate observation from mutation:
 
@@ -274,6 +298,11 @@ For every pointer, ask:
 4. Who owns the allocation?
 5. Who must free it, and when?
 6. Can another pointer outlive the owner?
+
+As an assembly cross-check, compile one safe pointer example and one returning
+the address of a local object with `-O0 -S`. Identifying an address calculation
+does not prove that the resulting pointer remains valid; the lifetime argument
+must still be made at the C level.
 
 Examples:
 

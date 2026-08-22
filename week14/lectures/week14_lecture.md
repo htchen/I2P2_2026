@@ -12,13 +12,17 @@ By the end of this lecture, you should be able to:
 3. Reconstruct a shortest unweighted path and return expected absence with `optional`.
 4. Model a puzzle as an implicit state graph.
 5. Separate state representation, successor generation, and search policy.
+6. Model proximity data as an implicit graph and classify connected components
+   without constructing every edge explicitly.
+7. Use multi-source BFS to compute simultaneous arrival times and detect
+   required cells that no source can reach.
 
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
 |------|---------------|---------------------|
-| 1 | How do graph representations change traversal code and cost? | Build an adjacency list and implement iterative/recursive DFS |
-| 2 | Why does BFS find a shortest unweighted path? | Trace frontier layers and reconstruct paths |
+| 1 | How do graph representations change traversal code and cost? | Compare explicit and geometric implicit graphs with DFS components |
+| 2 | Why does BFS find shortest unweighted distances? | Trace single- and multi-source frontier layers and aggregate target times |
 | 3 | How does a puzzle become an implicit graph with explainable actions? | Implement and test a Water Jugs solver |
 
 ## Hour 1 — Graph representation and depth-first exploration
@@ -122,15 +126,92 @@ Reverse neighbor insertion matches a left-to-right recursive traversal for a
 fixed adjacency order. DFS order is not inherently unique; tests should control
 neighbor order or assert reachability rather than one accidental sequence.
 
+### 4. Geometric proximity defines an implicit graph
+
+Suppose monitoring stations have integer coordinates. Two stations can
+communicate directly when their Euclidean distance is at most a configured
+radius. Model each station as a vertex and the proximity relation as an
+undirected edge.
+
+The graph need not be stored as an adjacency list. A DFS at station `u` can
+consider every unvisited station `v` and apply a neighbor predicate. This saves
+an explicit O(V²) matrix, but it does **not** make the computation linear: every
+visited vertex may scan all V candidates, so the straightforward traversal
+performs O(V²) proximity checks and uses O(V) auxiliary state.
+
+Connectivity is transitive, while direct proximity is not. If `A` reaches `B`
+and `B` reaches `C`, all three are in one component even when `A` is farther
+than the radius from `C`. Draw edges first; do not classify groups by distance
+from one chosen representative.
+
+### Squared distance and integer safety
+
+Comparing squared distances avoids floating-point square roots:
+
+```text
+dx * dx + dy * dy <= radius * radius
+```
+
+The comparison is equivalent for a nonnegative radius, but only if the integer
+arithmetic itself is valid. Subtraction and multiplication occur in the operand
+type, so widening after `dx * dx` is too late. Derive the maximum possible
+coordinate difference from the input contract, choose a sufficiently wide
+signed type, and widen before subtracting and multiplying. Also reject a
+negative radius rather than treating its square as meaningful.
+
+Unit-test the neighbor predicate independently with identical points, exactly
+on the boundary, just outside the boundary, negative coordinates, and the
+largest permitted coordinates. When the published bounds do not fit safely in
+64 bits, use checked arithmetic or a wider intermediate type.
+
+### Component sweep and size classification
+
+One DFS marks exactly the vertices in the start vertex's connected component.
+An outer sweep starts a traversal only at an unvisited vertex, so each such
+start discovers one new component. The traversal may return its component size
+or append visited vertices to a component record.
+
+The invariant is:
+
+```text
+before the next outer iteration, every previously encountered vertex belongs
+to exactly one completed component and is marked visited
+```
+
+This supports classifications such as singleton stations versus multi-station
+networks. A singleton is a component of size one, not merely a vertex whose
+first few candidate checks found no neighbor.
+
+Mark a vertex visited when the traversal discovers it, before exploring its
+neighbors. Marking later permits cycles to rediscover the same vertex and can
+cause repeated work or unbounded recursion. Recursive DFS may reach depth V on
+a chain, so an explicit stack is the robust choice when V can be large.
+
+### Representation and scaling choices
+
+| Approach | Stored edges | Typical proximity work | Main tradeoff |
+|----------|--------------|------------------------|---------------|
+| Adjacency matrix | O(V²) | O(V²) build, O(V) neighbor scan | Simple dense representation |
+| Materialized adjacency lists | O(V+E) | O(V²) naive build, then O(V+E) DFS | Reuse edges across later algorithms |
+| On-demand predicate | None | O(V²) across DFS | Low edge storage, repeated predicate checks |
+| Spatial buckets | Data-dependent | Check nearby cells | More invariants; worst case may remain quadratic |
+
+Do not claim O(V+E) for an on-demand traversal unless neighbor generation truly
+enumerates only the E edges. For very large point sets, a grid or spatial index
+can reduce candidate checks under suitable coordinate/radius assumptions, but
+that optimization belongs after the simple model is verified.
+
 ### Hour 1 graph lab
 
-Read an undirected graph, reject invalid endpoints, and compute connected
-components. Test isolated vertices, parallel edges, self-loops, a cycle, and an
-empty graph. Decide whether parallel edges are preserved or normalized away.
+First read an explicit undirected graph, reject invalid endpoints, and compute
+connected components. Then receive a small point set and radius, draw the
+implicit edges, and classify singleton and multi-vertex components without
+materializing an adjacency matrix. Test isolated vertices, an exact-boundary
+edge, a transitive chain, duplicate coordinates, and an empty graph.
 
 ## Hour 2 — Breadth-first layers and shortest paths
 
-### 4. Breadth-first search finds shortest unweighted paths
+### 5. Breadth-first search finds shortest unweighted paths
 
 ```cpp
 #include <optional>
@@ -192,10 +273,91 @@ paths. The selected path depends on adjacency order, but its length does not.
 Mark a vertex visited when it is enqueued, not when it is removed; otherwise
 many frontier entries may duplicate the same vertex.
 
-### 5. Complexity
+### Multi-source BFS: simultaneous starts
+
+Suppose several rescue stations begin operating at time zero and each move to
+one orthogonally adjacent open grid cell per minute. Running a separate BFS from
+every station repeats work. Instead, initialize one FIFO queue with **all**
+stations at distance zero, mark every one discovered, and then perform ordinary
+BFS.
+
+For a proof, imagine adding a super-source with one unweighted edge to every
+real source. Ordinary BFS distance from that vertex, minus one, is:
+
+```text
+minimum distance from any real source to that cell
+```
+
+Seeding all real sources directly at distance zero performs that subtraction
+implicitly without adding a vertex to the implementation.
+
+The layer invariant still holds. All initial sources occupy layer zero; their
+previously unseen neighbors enter layer one; then layer two, and so on. Source
+insertion order may change which equally near source is considered the parent,
+but not the distance.
+
+For a grid, keep the input representation separate from search state:
+
+- the grid says whether a cell is blocked, open, a source, or a required target;
+- a distance matrix starts at an `unseen` sentinel;
+- the queue stores coordinates whose shortest distance is already known;
+- four direction offsets generate candidate neighbors.
+
+For each candidate, check row bounds, column bounds, traversability, and unseen
+status **before** enqueueing it. Set its distance when it is enqueued. This
+ensures that every reachable cell enters the queue once and avoids using a
+mutated input character as both terrain and visited state.
+
+In C++17, a coordinate may be represented by `std::pair<int, int>` and unpacked
+with a structured binding:
+
+```cpp
+auto [row, column] = frontier.front();
+frontier.pop();
+```
+
+Distance usually belongs in the distance matrix rather than in every queue
+entry. That makes the discovery invariant visible and leaves the grid available
+for later validation or rendering. If a sparse problem genuinely needs more
+metadata in each queue item, prefer a small named `struct` when positional
+`tuple<int, int, int>` fields would obscure which integer means what.
+
+### From distances to a completion result
+
+After BFS, scan the required targets:
+
+- if any target still has the unseen distance, the requested completion is
+  impossible;
+- otherwise, the time when all targets have been reached is the maximum target
+  distance;
+- if there are no targets, the specification must say whether completion time
+  is zero or whether the input is invalid.
+
+The maximum is correct because targets are reached simultaneously over time,
+not visited one after another by a single route. Summing their distances would
+answer a different question. Counting targets as they are discovered is also
+valid, but a final scan often gives a simpler invariant and keeps target
+classification independent of queue order.
+
+Trace a small map with two sources, one wall-separated target, and one target
+equidistant from both sources. Record the queue by layers and the distance
+matrix after each layer. Then remove one wall and identify exactly which result
+changes.
+
+Multi-source BFS assumes interchangeable sources, unit-time edges, and one
+arrival-time objective. Competing agents with different speeds or effects need
+additional state or a different shortest-path algorithm; seeding one queue does
+not automatically model those rules.
+
+### 6. Complexity
 
 With adjacency lists, DFS and BFS both take O(V + E) time and O(V) auxiliary
 space. Path reconstruction takes O(L), where `L` is the path length.
+
+On a rectangular grid with constant-degree moves, multi-source BFS takes
+O(rows × columns) time and space because each traversable cell is discovered at
+most once. Adding more initial sources does not multiply the asymptotic search
+cost.
 
 BFS minimizes number of edges only when all edges have equal cost. Weighted
 nonnegative graphs require Dijkstra's algorithm; negative edges require other
@@ -220,7 +382,7 @@ additional data and invariant Dijkstra needs.
 
 ## Hour 3 — Implicit state graphs and puzzle solving
 
-### 6. Puzzles are implicit graphs
+### 7. Puzzles are implicit graphs
 
 For water jugs with capacities A and B, one state is the current amount in each
 jug:
@@ -292,7 +454,7 @@ reachable only if it lies in `[0, max(cap_a, cap_b)]` and is divisible by
 exhaustive BFS on small capacities. BFS remains necessary when the output
 requires a shortest action sequence.
 
-### 7. State invariants and duplicate control
+### 8. State invariants and duplicate control
 
 For the jug state:
 
@@ -313,7 +475,7 @@ std::queue<State> frontier;
 For larger state spaces, `unordered_map` can improve average lookup if `State`
 has a correct equality operation and hash function.
 
-### 8. Search is an engineering boundary
+### 9. Search is an engineering boundary
 
 Keep I/O and visualization outside the solver. A solver that receives a model
 and returns `optional<vector<State>>` can be unit-tested without a terminal or
@@ -331,10 +493,13 @@ AI-generated search code often looks plausible while it:
 
 Use tiny hand-drawn state graphs and properties to audit generated code.
 
-### 9. Test strategy
+### 10. Test strategy
 
 - start equals goal;
 - goal unreachable;
+- no sources, one source, and several simultaneous sources;
+- every required grid cell reachable versus at least one isolated target;
+- a target equally near two sources and a map with no targets;
 - one-edge solution;
 - graph with a cycle;
 - multiple shortest paths;
@@ -382,15 +547,30 @@ manual integration plan.
 ## Check yourself
 
 1. Why does a graph traversal need visited state while a tree traversal may not?
-2. Prove briefly that BFS discovers vertices in distance order.
-3. Why is a parent map also a visited set in the example?
-4. List all successors of jug state `(0, 0)` for capacities `(3, 5)`.
-5. Change the search objective from fewest moves to least total pouring cost.
+2. Why can an implicit geometric DFS take O(V²) even though each vertex is
+   marked only once?
+3. Why must coordinate arithmetic be widened before subtraction and squaring?
+4. Prove briefly that BFS discovers vertices in distance order.
+5. Why is a parent map also a visited set in the example?
+6. Why does seeding a queue with every source compute distance to the nearest
+   source rather than the first source listed?
+7. When is the maximum target distance the correct aggregate, and what does an
+   unseen target mean?
+8. List all successors of jug state `(0, 0)` for capacities `(3, 5)`.
+9. Change the search objective from fewest moves to least total pouring cost.
 
 ## Summary
 
 - Adjacency lists represent sparse explicit graphs efficiently.
 - DFS explores depth; BFS gives shortest paths in unweighted graphs.
+- Multi-source BFS models simultaneous unit-cost propagation and computes each
+  reachable vertex's distance from its nearest source.
+- A completion-time query takes the maximum required-target distance and must
+  report unreachable targets explicitly.
+- A neighbor predicate can define an implicit geometric graph, but its cost
+  depends on how candidates are generated.
+- An outer visited sweep partitions an undirected graph into connected
+  components; component size supports later classification.
 - Parent links turn reachability into an explainable path.
 - State-space search treats puzzles as implicit graphs.
 - Clean separation of model, successors, goal, and policy makes search testable.

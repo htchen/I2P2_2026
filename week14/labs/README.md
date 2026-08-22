@@ -2,13 +2,22 @@
 
 ## Outcomes
 
-Students can separate a deterministic game rule from graphics and verify an AI-
-assisted state machine or search algorithm with properties and counterexamples.
+Students can trace geometric connected components and multi-source BFS layers,
+separate a deterministic game rule from graphics, and verify an AI-assisted
+state machine or search algorithm with properties and counterexamples.
 
 ## Part A — AI-free readiness
 
-For a small graph or state machine, enumerate successors/transitions and trace
-BFS or event handling by hand. Identify one missing transition or illegal state.
+For a small set of integer-coordinate stations and a radius, compute the
+squared-distance predicate by hand, draw the implicit undirected graph, and
+trace a connected-component DFS. Include a transitive chain whose endpoints are
+not direct neighbors and classify singleton versus multi-vertex components.
+Then trace a small grid BFS seeded by two simultaneous sources. Fill the distance
+matrix by layers, identify the last reachable required cell, and detect one
+required cell isolated by walls. Explain why visited state is recorded when a
+cell enters the queue. Finally, for a small explicit graph or state machine,
+enumerate successors or transitions and identify one missing transition or
+illegal state.
 
 ## Part B — Select an approved extension
 
@@ -30,6 +39,8 @@ rules. Preserve one failing AI-generated case as a regression test.
 
 ## Deliverable
 
+- geometric neighbor/component trace with arithmetic-bound justification;
+- multi-source queue-layer trace, target-time aggregate, and unreachable case;
 - state/transition or search model;
 - automated non-graphical tests;
 - manual graphical integration plan and smoke-test result;

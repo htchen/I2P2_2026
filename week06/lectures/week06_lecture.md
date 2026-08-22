@@ -1,7 +1,8 @@
 # Lecture 6 — Recursion and Binary Trees
 
-> October 13, 2026 · Source lineage: the legacy recursion and binary-tree notes
-> and the 2025 Week 3–4 notebooks
+> October 13, 2026 · Source lineage: the legacy recursion and binary-tree notes,
+> the 2025 Week 3–4 notebooks, and the instructor-provided *From C to Assembly*
+> handout
 
 ## Learning objectives
 
@@ -12,14 +13,17 @@ By the end of this lecture, you should be able to:
 3. Represent and traverse a binary tree.
 4. Build and destroy an owning tree safely.
 5. Relate tree shape to time and stack-space complexity.
+6. Explain when traversal pairs determine a unique tree and when multiple
+   interpretations must be validated or counted.
+7. Structure a small exhaustive search as choose, recurse, validate, and undo.
 
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
 |------|---------------|---------------------|
-| 1 | How do recursive contracts guarantee progress? | Trace and implement numeric/list recursion |
+| 1 | How do recursive contracts guarantee progress? | Trace recursion and a choose/recurse/undo search |
 | 2 | How does tree shape determine traversal order? | Draw trees and derive traversal/query functions |
-| 3 | How are trees built, reconstructed, tested, and destroyed? | Complete a BST module and verify ownership |
+| 3 | What can traversal sequences prove about a tree? | Reconstruct, validate, and compare possible interpretations |
 
 ## Hour 1 — Recursive reasoning and the call stack
 
@@ -59,6 +63,35 @@ factorial(4)
 After the base case, calls finish in reverse order. Recursion depth consumes
 stack space. A missing base case or non-decreasing argument eventually exhausts
 the stack rather than producing a Python `RecursionError` with a portable limit.
+
+### Assembly lens: calls, frames, and the ABI
+
+At the machine level, a call must preserve enough information to resume the
+caller. A platform's application binary interface (ABI) specifies where
+arguments and return values go, which registers a function must preserve, stack
+alignment, and related conventions. A traditional 32-bit x86 trace may show:
+
+- a `call` that records a return address and transfers control;
+- a prologue that saves a frame pointer and reserves local storage;
+- parameters and locals addressed relative to that frame pointer;
+- a return value placed in a designated register; and
+- an epilogue followed by `ret` to resume the caller.
+
+None of those exact instruction sequences is required by C. Modern ABIs often
+pass initial arguments in registers; a compiler can omit the frame pointer,
+inline a function, reuse storage, or eliminate a call. Stack growth toward lower
+addresses is common on x86 but is also an implementation detail.
+
+Recursion creates one distinct source-level function activation per unfinished
+call. It commonly creates repeated machine stack frames, which explains how
+parameters and locals from different calls remain distinct and why excessive
+depth can overflow finite stack space. Tail-call elimination can sometimes
+reuse a frame, but C does not guarantee it.
+
+Compile a small recursive sum with `-O0 -S` and `-O2 -S`. At each optimization
+level, mark the base-case branch, recursive call or replacement loop, returned
+value, and evidence that the argument progresses. Do not make program
+correctness depend on the optimized version eliminating recursion.
 
 ### Euclid's algorithm
 
@@ -105,6 +138,31 @@ loop may be necessary for unbounded input.
 For Fibonacci, binary search, and linked-list length, identify the problem
 measure, number of recursive calls, maximum depth, and overlapping subproblems.
 Explain why naive Fibonacci is exponential while the other two need not be.
+
+### Backtracking: choose, recurse, undo
+
+Some small search spaces are naturally described by a sequence of decisions.
+To enumerate arrangements of distinct labels, maintain:
+
+- the partial arrangement built so far;
+- which labels are already used;
+- the next position to fill;
+- a validator or accumulator at the base case.
+
+At each position, choose one unused label, mark it used, recurse on the next
+position, and undo the mark before trying the next choice. The undo step restores
+the caller's invariant; omitting it silently removes valid branches.
+
+Draw the recursion tree for arranging `A`, `B`, and `C`. There are `3!` leaves,
+so complete permutation enumeration is appropriate only when the published
+bound is genuinely small. Before using it, estimate the largest search tree and
+ask whether partial candidates can be rejected early or whether the object has
+recursive structure that avoids enumerating unrelated candidates.
+
+Keep the generator separate from the validator. Pass the working arrangement,
+used-label set, and result accumulator explicitly or group them in a context
+structure. Hidden mutable `static` work buffers make repeated calls, tests, and
+future concurrency harder to reason about.
 
 ## Hour 2 — Recursive data and traversal design
 
@@ -295,6 +353,73 @@ The same argument recursively reconstructs both subtrees. A simple linear
 search for each root gives O(n²) worst-case time; an index map can reduce it to
 O(n), provided values are unique.
 
+### Which traversal pairs are sufficient?
+
+With distinct labels:
+
+- preorder plus inorder determines one ordered binary tree;
+- inorder plus postorder determines one ordered binary tree;
+- preorder plus postorder does **not** generally determine one tree.
+
+The ambiguity appears as soon as a node has one child. Both of these trees have
+preorder `A B` and postorder `B A`:
+
+```text
+    A          A
+   /            \
+  B              B
+```
+
+Their inorder sequences differ (`B A` versus `A B`), so the missing inorder
+information is exactly what distinguishes the two orientations. If the domain
+guarantees a full binary tree—every internal node has two children—distinct
+preorder and postorder labels are sufficient; without that structural promise,
+ambiguity is part of the problem rather than an input error.
+
+### Validate before reconstructing or counting
+
+For any traversal-consistency task, check the contract before exploring tree
+shapes:
+
+1. sequence lengths agree;
+2. all sequences contain the same label set or multiset;
+3. the stated distinctness/duplicate policy holds;
+4. the first preorder label agrees with the last postorder label;
+5. each recursive subtree occupies a contiguous segment of every traversal;
+6. every indexed search checks the bound before reading the candidate element.
+
+The final item matters in C: write the bounds test on the left side of `&&` so
+short-circuit evaluation proves the array access is valid.
+
+### Counting interpretations: compare design strategies
+
+For a small label bound, one general strategy is to generate candidate
+arrangements and pass each complete candidate to an independent traversal
+validator. A second strategy reasons directly about legal recursive subtree
+partitions. The first is easier to specify but grows factorially; the second can
+avoid unrelated candidates but requires a careful recurrence and duplicate
+policy.
+
+Do not implement either during the first discussion. Instead, complete this
+design sheet:
+
+| Question | Required decision |
+|----------|-------------------|
+| Counted object | tree shapes, ordered trees, or distinct inorder sequences? |
+| Labels | distinct, repeated, or invalid when repeated? |
+| Empty input | zero interpretations or one empty tree? |
+| Candidate state | what does one recursive call represent? |
+| Base case | what exactly is validated or counted? |
+| Pruning | which partial contradictions are safe to reject? |
+| Complexity | what input bound makes the method feasible? |
+
+For distinct labels, preorder plus a candidate inorder determines at most one
+tree, which provides a useful validator. For preorder `A B C` and postorder
+`C B A`, identify all consistent inorder sequences by hand and compare the
+number of examined arrangements with the number of valid interpretations. The
+exercise stops at traces, contracts, and complexity analysis; students still
+design and implement their own algorithms in later problem-solving work.
+
 ### 8. Shape determines cost
 
 Every full traversal visits `n` nodes: O(n) time. Its additional stack use is
@@ -330,7 +455,7 @@ const struct TreeNode *bst_minimum(const struct TreeNode *node)
 Both return borrowed pointers. They do not transfer ownership, and a later tree
 mutation or destruction may invalidate them.
 
-### Deletion cases
+### Optional extension: deletion cases
 
 BST removal separates three cases:
 
@@ -393,12 +518,20 @@ practice that would otherwise be lost before the Week 7 integration studio.
 3. Draw the BST produced by `4, 2, 6, 1, 3, 5, 7`.
 4. How does inserting sorted input affect recursion depth?
 5. Reconstruct a tree from `preorder: 2 1 3` and `inorder: 1 2 3`.
+6. Give two different trees with preorder `A B` and postorder `B A`.
+7. What must a choose/recurse/undo generator restore before trying the next
+   candidate?
+8. List the checks required before counting traversal interpretations.
 
 ## Summary
 
 - Recursive code should follow a contract, base case, and decreasing measure.
 - Tree structure naturally produces recursive algorithms.
 - Traversal order describes when the root is processed relative to children.
+- Preorder/postorder ambiguity comes from missing child-orientation information;
+  stated structural constraints determine whether reconstruction is unique.
+- Backtracking is practical only when its state, restoration invariant, and
+  factorial search bound are explicit.
 - Ownership determines destruction order.
 - Complexity depends on tree height as well as node count.
 

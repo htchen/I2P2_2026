@@ -13,6 +13,8 @@ By the end of this lecture, you should be able to:
 4. Compose algorithms with lambdas instead of rewriting loops.
 5. Represent an expected missing result with `std::optional`.
 6. Recognize iterator invalidation and accidental insertion into a map.
+7. Use `lower_bound`, `upper_bound`, and `equal_range` with a consistent
+   ordering and interpret their iterator results.
 
 ## Three-hour plan
 
@@ -171,7 +173,7 @@ int total = std::accumulate(values.begin(), values.end(), 0);
 Common algorithms include:
 
 - `find`, `find_if`, `count_if`;
-- `sort`, `stable_sort`, `lower_bound`;
+- `sort`, `stable_sort`, `lower_bound`, `upper_bound`, `equal_range`;
 - `copy`, `transform`, `remove_if`;
 - `all_of`, `any_of`, `none_of`;
 - `accumulate`.
@@ -179,7 +181,47 @@ Common algorithms include:
 An algorithm name states intent and centralizes boundary handling. A loop is
 still correct when the operation does not fit an algorithm cleanly.
 
-### 6. The erase-remove pattern
+### 6. Boundary algorithms on partitioned ranges
+
+For an ascending sorted range, the standard algorithms express the same
+boundary contracts introduced with C arrays:
+
+```cpp
+auto lower = std::lower_bound(values.begin(), values.end(), target);
+auto upper = std::upper_bound(values.begin(), values.end(), target);
+auto equal = std::equal_range(values.begin(), values.end(), target);
+```
+
+- `lower` is the first iterator whose value is not less than `target`;
+- `upper` is the first iterator whose value is greater than `target`;
+- `equal` returns both boundaries as a pair.
+
+The equal range is `[lower, upper)`. It is empty when the target is absent;
+otherwise it contains every equivalent element. Use `std::distance(lower,
+upper)` for a generic iterator pair. Direct subtraction works only for
+random-access iterators such as `vector` iterators.
+
+The precondition is more precisely that the range is partitioned for the
+algorithm's comparison, usually because it was sorted with the same strict weak
+ordering. Sorting by one key and searching as though another key defined the
+order violates the contract even when the data looks mostly sorted.
+
+For random-access iterators, these algorithms use O(log n) comparisons. With a
+forward iterator they still use logarithmically many comparisons but may perform
+O(n) iterator increments. This is why calling `std::lower_bound` on a linked
+list does not create random access; an ordered associative container's member
+`lower_bound` can follow its tree structure in O(log n).
+
+### Comparator and projection exercise
+
+Sort a vector of records by `(category, identifier)`. Specify, without writing
+a complete query program, the comparator and search key required to find the
+half-open block for one category. Explain why a comparator using `<=`, or one
+that orders during sort by identifier alone, breaks the boundary precondition.
+Test an empty vector, absent key, one match, repeated matches at both ends, and
+a key outside the stored range.
+
+### 7. The erase-remove pattern
 
 `std::remove_if` rearranges retained elements and returns a new logical end; it
 does not resize the container.
@@ -194,7 +236,7 @@ values.erase(
 C++20 adds `std::erase_if(values, predicate)` for supported containers, but the
 older form remains important when reading C++17 projects.
 
-### 7. Maps: lookup versus insertion
+### 8. Maps: lookup versus insertion
 
 ```cpp
 std::map<std::string, int> frequency;
@@ -232,7 +274,7 @@ The map builds counts; the vector supports ranking by a different order. This is
 often clearer than forcing one container to serve incompatible access patterns.
 Prove the comparator is strict for equal pairs.
 
-### 8. `optional` makes expected absence explicit
+### 9. `optional` makes expected absence explicit
 
 An index such as zero can be a valid answer, so it is a poor “not found”
 sentinel. `std::optional<T>` contains either one `T` or no value:
@@ -266,7 +308,7 @@ operation cannot fulfill its contract, and a richer result type when callers
 need distinct failure reasons. The graph lecture will use this distinction for
 “no path exists.”
 
-### 9. Iterator invalidation
+### 10. Iterator invalidation
 
 After a vector reallocates, pointers, references, and iterators to its elements
 are invalid. Inserting or erasing can invalidate additional positions even
@@ -291,7 +333,7 @@ push a fourth element, insert at index 1 without reallocation, push a fifth
 element with reallocation, and erase index 2. Mark valid handles after each
 operation. Repeat for `list` and `map` and compare their guarantees.
 
-### 10. Complexity belongs to the interface
+### 11. Complexity belongs to the interface
 
 For an ordered map, lookup is O(log n). For an unordered map, lookup is average
 O(1) but worst-case O(n). `lower_bound` on a sorted vector is O(log n), but
@@ -327,9 +369,11 @@ review the trace after the student predicts which handles remain valid.
 1. What operation does the `maximum` template require from `T`?
 2. Select containers for a FIFO worklist, ordered dictionary, and dense table.
 3. Why is `[begin, end)` easier to represent than an inclusive end?
-4. What exactly does `map[key]` do when `key` is absent?
-5. When should a search return `optional<T>` rather than throw an exception?
-6. Identify invalid iterators after a vector insertion in the middle.
+4. Distinguish the results of `lower_bound`, `upper_bound`, and `equal_range`.
+5. Why can `std::lower_bound` perform linear iterator movement on a list?
+6. What exactly does `map[key]` do when `key` is absent?
+7. When should a search return `optional<T>` rather than throw an exception?
+8. Identify invalid iterators after a vector insertion in the middle.
 
 ## Summary
 
@@ -337,6 +381,8 @@ review the trace after the student predicts which handles remain valid.
 - Container selection follows operations, guarantees, and data layout.
 - Iterators generalize positions and half-open ranges.
 - Algorithms expose intent and reduce repeated traversal code.
+- Boundary algorithms require a consistently partitioned range and return
+  iterators delimiting an equal block.
 - `optional<T>` distinguishes an expected missing result from a stored value.
 - Mutation can invalidate iterators; complexity and lifetime remain correctness concerns.
 

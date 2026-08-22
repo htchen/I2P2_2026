@@ -1,13 +1,15 @@
 # Lecture 1 — From Python to C
 
 > September 8, 2026 · C17 · Source lineage: the legacy C introduction,
-> formatted-I/O, operators, and looping notes
+> formatted-I/O, operators, and looping notes plus the instructor-provided
+> *From C to Assembly* handout
 
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
 
-1. Describe preprocessing, compilation, linking, and execution.
+1. Describe preprocessing, compilation, assembly, linking, and execution, and
+   inspect the generated assembly as evidence of translation.
 2. Translate a small Python program into typed C.
 3. Use formatted input/output and C control flow safely.
 4. Distinguish a compile-time error, a link-time error, and a run-time fault.
@@ -17,7 +19,7 @@ By the end of this lecture, you should be able to:
 
 | Hour | Main question | In-class production |
 |------|---------------|---------------------|
-| 1 | How does typed C become an executable? | Compile, deliberately break, and repair a small program |
+| 1 | How does typed C become an executable? | Compile, inspect, deliberately break, and repair a small program |
 | 2 | How are Python-familiar values represented and formatted? | Type/conversion worksheet and robust input fragment |
 | 3 | How do we translate control flow without inheriting C-specific bugs? | Complete and test a judge-style classification program |
 
@@ -52,12 +54,25 @@ cc -std=c17 -Wall -Wextra -Wpedantic -g hello.c -o hello
 ./hello
 ```
 
-Conceptually, the toolchain performs four stages:
+Conceptually, the build performs four translation stages before execution:
 
 1. **Preprocess:** expand directives such as `#include` and `#define`.
-2. **Compile:** check C and translate it to assembly/object code.
-3. **Link:** combine object files and libraries into one executable.
-4. **Run:** the operating system loads the executable and calls `main`.
+2. **Compile:** check C and translate it to target assembly.
+3. **Assemble:** encode assembly instructions and data into an object file.
+4. **Link:** combine object files and libraries into one executable.
+
+At run time, the operating system loader maps the executable and required
+libraries into memory, establishes the process environment, and transfers
+control through the language implementation to `main`. A compiler driver such
+as `cc` normally runs several of these tools for us, but we can stop after each
+stage:
+
+```sh
+cc -std=c17 -E hello.c -o hello.i  # preprocessed C
+cc -std=c17 -O0 -S hello.c -o hello.s
+cc -std=c17 -c hello.c -o hello.o
+cc hello.o -o hello
+```
 
 `-Wall -Wextra -Wpedantic` requests useful warnings. `-g` records information
 for a debugger. A program that compiles with a warning is not necessarily safe.
@@ -87,10 +102,53 @@ int twice(int value)
 2. Keep the prototype but remove the definition — link-time undefined reference.
 3. Change the format to `%s` — compile warning and undefined run-time behavior.
 4. Run `cc -E` and locate the original source among preprocessed declarations.
-5. Run `cc -c`, inspect the object filename, and link it in a separate command.
+5. Run `cc -S`, find the code for `twice`, and then compare it with an `-O2`
+   build without expecting a line-for-line correspondence.
+6. Run `cc -c`, inspect the object filename, and link it in a separate command.
 
 Students should record the stage, diagnostic evidence, and smallest repair. The
 goal is not to memorize messages but to locate responsibility in the pipeline.
+
+### Assembly is an observation window
+
+Generated assembly exposes the compiler's choices, not a portable translation
+recipe. Instruction names, register names, symbol spelling, calling conventions,
+and section names depend on the target architecture, object format, compiler,
+options, and optimization level. On an x86 target, `-masm=intel` may request
+Intel syntax; it is not meaningful for every target.
+
+Common object-file regions make C storage duration visible:
+
+| Common section | Typical contents |
+|----------------|------------------|
+| `.text` | executable machine instructions |
+| `.rodata` | read-only constants, including some string literals |
+| `.data` | writable static-storage objects with nonzero initial data |
+| `.bss` | zero-initialized static-storage objects represented compactly |
+
+These names are common in ELF-based systems, not promises made by C. An
+uninitialized or explicitly zero-initialized object with static storage duration
+starts as zero even when the executable does not store every zero byte. An
+automatic local variable has different duration and is not initialized merely
+because a platform happens to obtain stack memory from the operating system.
+
+Compile this file with both `-O0 -S` and `-O2 -S`:
+
+```c
+static int zero_count;
+static int initial_count = 7;
+
+int add_one(int value)
+{
+    int result = value + 1;
+    return result;
+}
+```
+
+Locate evidence for the two static objects and for the calculation. At `-O2`,
+`result` may have no memory location at all. Record semantic observations such
+as “the returned value is one greater,” not fragile claims about an exact
+register or instruction sequence.
 
 ### 3. First program
 
@@ -371,15 +429,18 @@ even when `value` is negative? What special output does zero receive?
 ## Check yourself
 
 1. Where does an “undefined reference” diagnostic occur in the pipeline?
-2. What are the values of `7 / 3` and `(double)7 / 3`?
-3. Why must the argument for `%d` have the expected integer type?
-4. Translate a Python `while` loop that repeatedly reads until `0` into C.
-5. Compile one example with a deliberate `=`/`==` mistake and inspect warnings.
+2. What distinct artifacts do `-E`, `-S`, and `-c` produce?
+3. What are the values of `7 / 3` and `(double)7 / 3`?
+4. Why must the argument for `%d` have the expected integer type?
+5. Translate a Python `while` loop that repeatedly reads until `0` into C.
+6. Why can the assembly produced at `-O2` omit a named local variable?
 
 ## Summary
 
 - Your programming knowledge transfers; C exposes types, storage, and failures.
-- A C program is preprocessed, compiled, linked, and then executed.
+- A C program is preprocessed, compiled, assembled, linked, and then executed.
+- Generated assembly is target- and option-dependent evidence, not the C
+  language definition.
 - Declarations, format strings, and conversions are contracts.
 - Warnings, exit status, and tests are part of normal development.
 - Avoiding undefined behavior is a correctness requirement.
