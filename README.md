@@ -209,7 +209,6 @@ before the syllabus is finalized. Lecture notes are assigned in Weeks 1–8 and
 | [13](week13/) | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
 | [14](week14/) | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Testable logic, FSM, or search extension |
 | [15](week15/) | Dec. 15 | Integration, review, and final project clinic | Dec. 17 | Final project lab |
-| [16](week16/) | Dec. 22 | **Final exam** | — | No scheduled Thursday meeting |
 
 The final project demo will take place on a date after December 22.
 
@@ -342,8 +341,8 @@ the 12% and 23% entries in this table are their respective contributions to the
 final course grade. Late policies, team-size rules, and project grade caps remain
 to be finalized.
 
-The schedule also includes a final exam on December 22. Its relationship to the
-100% distribution above must be confirmed before the syllabus is finalized.
+A final exam is planned for December 22. Its relationship to the 100%
+distribution above must be confirmed before the syllabus is finalized.
 
 ## Development Expectations
 
