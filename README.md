@@ -184,13 +184,13 @@ Two Thursday labs will be replaced by in-person midterm exams.
 The two in-person computer-lab quizzes are scheduled on the Thursday exactly two
 weeks before the corresponding midterm: Quiz 1 before Midterm 1 and Quiz 2
 before Midterm 2. Under the current proposed midterm dates, these are October 1
-and November 12, respectively.
+and November 19, respectively.
 
 ## Weekly Schedule
 
 The following topic placement is proposed. The midterm dates must be confirmed
-before the syllabus is finalized. Lecture notes are assigned in Weeks 1–8 and
-10–14; Week 9 is reserved for the midterm project demo.
+before the syllabus is finalized. Lecture notes are assigned in Weeks 1–9 and
+11–14; Week 10 is reserved for the midterm project demo.
 
 | Week | Tuesday | Tuesday topic or event | Thursday | Lab or exam |
 |------|---------|------------------------|----------|-------------|
@@ -202,11 +202,11 @@ before the syllabus is finalized. Lecture notes are assigned in Weeks 1–8 and
 | [6](week06/) | Oct. 13 | Recursion and binary trees; in-lecture AST checkpoint | Oct. 15 | **Midterm Exam 1** |
 | [7](week07/) | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | Lab |
 | [8](week08/) | Oct. 27 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Lab |
-| [9](week09/) | Nov. 3 | **Proposed midterm project demo; no lecture** | Nov. 5 | Lab |
-| [10](week10/) | Nov. 10 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2 + Lab** |
-| [11](week11/) | Nov. 17 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | Lab |
-| [12](week12/) | Nov. 24 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | **Midterm Exam 2** |
-| [13](week13/) | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Lab |
+| [9](week09/) | Nov. 3 | Classes, invariants, constructors, member functions, and operators | Nov. 5 | Lab |
+| [10](week10/) | Nov. 10 | **Proposed midterm project demo; no lecture** | Nov. 12 | Lab |
+| [11](week11/) | Nov. 17 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | **Quiz 2 + Lab** |
+| [12](week12/) | Nov. 24 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | Lab |
+| [13](week13/) | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Midterm Exam 2** |
 | [14](week14/) | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Lab |
 | [15](week15/) | Dec. 15 | Integration, review, and final project clinic | Dec. 17 | Lab |
 | [16](week16/) | — | **Final project demo (date TBD after Dec. 22)** | — | — |
@@ -214,11 +214,12 @@ before the syllabus is finalized. Lecture notes are assigned in Weeks 1–8 and
 The proposed Midterm 1 scope is lecture material from Weeks 1–5, so material
 first presented in the Week 6 lecture notes on October 13 is excluded from the
 October 15 exam. The proposed Midterm 2 scope is lecture material from Weeks 8,
-10, and 11—including templates, STL containers, iterators, algorithms, boundary
-searches, `optional`, invalidation, and complexity—so ownership and copy/move
-material first presented in the Week 12 lecture notes on November 24 is excluded
-from the November 26 exam. This keeps each exam causally downstream of its tested
-instruction rather than assessing a topic after only two days.
+9, 11, and 12—including templates, STL containers, iterators, algorithms,
+boundary searches, `optional`, invalidation, complexity, ownership, and
+copy/move semantics. Material first presented in the Week 13 lecture notes on
+December 1 is excluded from the December 3 exam. This keeps each exam causally
+downstream of its tested instruction rather than assessing a topic after only
+two days.
 
 ## Midterm Project: C Expression Compiler
 
@@ -329,7 +330,7 @@ The following components determine the final course grade:
 | Component | Weight | Notes |
 |-----------|-------:|-------|
 | Midterm Exams | 25% + 25% | Two in-person midterm examinations |
-| Quizzes | 5% + 5% | Quiz 1: Oct. 1; Quiz 2: Nov. 12—each two weeks before its midterm |
+| Quizzes | 5% + 5% | Quiz 1: Oct. 1; Quiz 2: Nov. 19—each two weeks before its midterm |
 | Midterm Project | 12% | C expression-compiler project and demo |
 | Written Exam | 5% | Written assessment administered with the midterm exams |
 | Final Project | 23% | C++ final project and demo |
@@ -389,7 +390,7 @@ project milestone, verification requirements, and a concrete submission
 artifact. Exam weeks use asynchronous checkpoints instead of pretending that a
 Thursday lab is available.
 
-The 13 lecture notes are placed in Weeks 1–8 and 10–14. Weeks 9, 15, and 16 are
+The 13 lecture notes are placed in Weeks 1–9 and 11–14. Weeks 10, 15, and 16 are
 reserved for the midterm project demo, integration/review, and final exam.
 
 ## Items to Finalize

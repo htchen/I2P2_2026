@@ -31,7 +31,7 @@ week rather than first exposure.
 | 5 | Linked lists and pointer-to-pointer mutation | Trace token-list creation/conversion; test empty, invalid, and boundary inputs | Token trace and student test table |
 | 6 | Recursion and tree ownership | Tuesday AST checkpoint: construct, traverse, and destroy a small tree | Hand trace plus memory-clean run; no Thursday lab |
 | 7 | Grammar, recursive descent, semantics, code generation | Integrate one parser level, lvalue checks, ISA emission, and ASMC/differential tests | Grammar trace, semantic cases, instruction trace, final verification |
-| 9 | No lecture; Tuesday is reserved for the midterm project demo | Individual demonstration and small AI-free modification | Working program, explanation, AI audit |
+| 10 | No lecture; Tuesday is reserved for the midterm project demo | Individual demonstration and small AI-free modification | Working program, explanation, AI audit |
 
 Required project-specific emphasis includes prefix/postfix effects, lvalue
 rules, evaluation order, simulated-register use, instruction tracing, cleanup on
@@ -46,12 +46,12 @@ integration, not onboarding.
 | Week | Lecture foundation | Project practice | Evidence |
 |------|--------------------|------------------|----------|
 | 8 | Values, references, exceptions, RAII | Clone/build/run; identify event loop, centers, entities, resources, and major directories | Reproducible build record and architecture map |
-| 9 | No new lecture; apply the Week 8 C++ foundation | Trace input → event/state → update → draw; trace one resource on normal/failure paths | Event trace and resource-lifecycle table |
-| 10 | Classes, invariants, headers | Quiz 2; add a small non-graphical component across header/source/test files | Quiz result, change-impact map, tests, invariant explanation |
-| 11 | Templates, containers, algorithms, invalidation | Implement a bounded standard-library pipeline; audit one project container mutation | Tests, complexity argument, and invalidation trace |
-| 12 | Copy/move, Rule of Zero, smart pointers | Asynchronously map one raw-owning collection or resource boundary and propose a bounded improvement | Ownership map and proposal; no Thursday lab |
-| 13 | Inheritance, composition, `variant` | Add one thin vertical slice through creation, registration, update/interaction, and draw | Working slice, hierarchy/design justification |
-| 14 | Graph/state-space search and test boundaries | Add a testable FSM, game rule, or approved search/pathfinding extension | Automated logic tests and manual graphics plan |
+| 9 | Classes, invariants, headers | Trace input → event/state → update → draw; trace one resource on normal/failure paths | Event trace and resource-lifecycle table |
+| 10 | No lecture; Tuesday is reserved for the midterm project demo | Add a small non-graphical component across header/source/test files | Change-impact map, tests, invariant explanation |
+| 11 | Templates, containers, algorithms, invalidation | Quiz 2; implement a bounded standard-library pipeline; audit one project container mutation | Quiz result, tests, complexity argument, and invalidation trace |
+| 12 | Copy/move, Rule of Zero, smart pointers | Map one raw-owning collection or resource boundary and implement one bounded improvement | Ownership map, tests, and sanitizer evidence |
+| 13 | Inheritance, composition, `variant` | Midterm 2; asynchronously design one polymorphic or composed vertical slice | Design map and test plan; no Thursday lab |
+| 14 | Graph/state-space search and test boundaries | Implement the approved vertical slice, testable FSM, game rule, or search/pathfinding extension | Working slice, automated logic tests, and manual graphics plan |
 | 15 | Integration and review | Failure handling, regression pass, feature freeze, demo rehearsal | Release checklist, known-limitations list, rehearsal change |
 | 16+ | Final exam, then project demo | Individual explanation and AI-free modification | Final release and demonstration |
 
@@ -69,10 +69,10 @@ published project guide. The staff alignment check is:
 | C judge correctness | Lecture material from Weeks 1–7 and Weeks 3–7 milestone tests |
 | C memory safety | Week 4 lecture notes; Weeks 4 and 6 sanitizer runs |
 | Parser/semantic/codegen reasoning | Week 7 lecture notes and Week 7 studio |
-| C++ architecture and integration | Lecture material from Weeks 10–13 and Weeks 8–13 maps/slices |
+| C++ architecture and integration | Lecture material from Weeks 9 and 11–13; Weeks 8–13 maps/slices |
 | C++ ownership | Week 8 and Week 12 lecture notes; Weeks 9, 12, and 13 audits |
-| Container correctness | Week 11 lecture notes; Week 11 lab and Week 13 consolidation |
-| Non-graphical testing | Lecture material from Weeks 10–12 and 14; Weeks 10, 11, and 14 labs |
+| Container correctness | Week 11 lecture notes and lab; Week 12 implementation work |
+| Non-graphical testing | Lecture material from Weeks 9, 11, 12, and 14; Weeks 10, 11, and 14 labs |
 | AI accountability | Every project milestone and both demonstrations |
 
 ## Staff review checklist

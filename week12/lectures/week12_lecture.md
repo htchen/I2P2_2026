@@ -380,12 +380,11 @@ site. Flag raw owning pointers, reference captures that may outlive objects, and
 `shared_ptr` without genuine shared lifetime. Propose the smallest Rule-of-Zero
 or `unique_ptr` improvement and describe its integration risk.
 
-Because Thursday is Midterm 2, this lecture is excluded from that exam and does
-not require a same-week implementation milestone. Complete only the bounded
-asynchronous ownership map: identify the owner, borrowers, transfers, removal,
-and destruction path for one project object. The December 3 lab may then carry
-one approved improvement through construction, observation, removal, cleanup,
-and sanitizer verification without rushing a repository-wide pointer rewrite.
+In Thursday's lab, turn the ownership map into one bounded improvement. Carry it
+through construction, observation, removal, cleanup, tests, and sanitizer
+verification without attempting a repository-wide pointer rewrite. This Week
+12 material is included in the proposed Midterm 2 scope; Week 13 material is
+excluded because it is first presented two days before the exam.
 
 ## Check yourself
 

@@ -1,14 +1,14 @@
 # Week 13: Runtime Polymorphism
 
 - **Tuesday, December 1:** [Week 13 Lecture Notes — Inheritance and Runtime Polymorphism](lectures/week13_lecture.md)
-- **Thursday, December 3:** [Ownership/STL consolidation and vertical-slice lab](labs/README.md)
+- **Thursday, December 3:** Proposed Midterm 2 — lecture material from Weeks 8, 9, 11, and 12; Tuesday's Week 13 lecture notes are excluded
+- **Asynchronous:** [Bounded polymorphism and vertical-slice design checkpoint](labs/README.md), due on the project schedule rather than during the exam
 
 Focus: abstract interfaces, virtual dispatch, polymorphic destruction, object
 slicing, recursive Composite design, transformation ownership, composition, and
-closed alternatives with `std::variant`. The lab reinforces container practice
-from the Week 11 lecture notes and carries the bounded ownership proposal from
-the Week 12 lecture notes into the Week 13
-hierarchy.
+closed alternatives with `std::variant`. Because Thursday is occupied by the
+midterm, the asynchronous checkpoint is limited to design and verification
+planning; implementation continues in Week 14.
 
-Project milestone: carry one new object or behavior through construction,
+Project milestone: map one new object or behavior through construction,
 registration, update/interaction, rendering, and destruction.

@@ -1,10 +1,12 @@
-# Week 10: Classes and Invariants
+# Week 10: Midterm Project Demo
 
-- **Tuesday, November 10:** [Week 10 Lecture Notes — Classes, Invariants, and Operators](lectures/week10_lecture.md)
-- **Thursday, November 12:** **Quiz 2 (5%)** and [cross-file component and invariant lab](labs/README.md)
+- **Tuesday, November 10:** **Proposed midterm project demo; no lecture**
+- **Thursday, November 12:** [Cross-file component and invariant lab](labs/README.md)
 
-Focus: constructors, member-initializer lists, access control, `const` member
-functions, named factories, operators, interfaces, and representation invariants.
+No new lecture note is assigned this week. Tuesday is reserved for demonstrating
+the C midterm project, explaining submitted code, and completing a small AI-free
+modification.
 
-Project milestone: add and test one small non-graphical class while practicing
-self-contained headers, forward declarations, factories, and change-impact mapping.
+Final-project milestone: apply the Week 9 class model by adding and testing one
+small non-graphical class while practicing self-contained headers, forward
+declarations, factories, and change-impact mapping.

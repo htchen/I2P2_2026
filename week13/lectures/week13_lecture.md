@@ -399,18 +399,19 @@ Propose three alternatives: add a virtual operation, introduce a composed
 strategy, or use a variant/visitor. Evaluate extension direction, ownership,
 testability, number of affected files, and migration risk before choosing.
 
-### Final-project handoff — Build a thin vertical slice
+### Final-project handoff — Design a thin vertical slice
 
-Thursday's milestone adds one small object or behavior through the complete
-runtime path: construction, ownership/registration, input if needed, update,
-interaction, draw, removal, and destruction. A thin slice exposes integration
-assumptions earlier than several isolated classes.
+Because Thursday is Midterm 2, the asynchronous milestone designs—but does not
+yet implement—one small object or behavior through the complete runtime path:
+construction, ownership/registration, input if needed, update, interaction,
+draw, removal, and destruction. Week 13 material is excluded from the exam.
 
-Before coding, decide whether the extension is best represented by an existing
-virtual interface, a composed strategy, or a closed variant. After coding,
-trace one dynamic dispatch and one lifetime end. An LLM may compare designs or
-review affected files, but the student must reject suggestions that invent
-interfaces or bypass the template's actual control flow.
+Decide whether the extension is best represented by an existing virtual
+interface, a composed strategy, or a closed variant. List affected files,
+ownership edges, incremental build steps, and test cases. Implementation begins
+in Week 14. An LLM may compare designs or review affected files, but the student
+must reject suggestions that invent interfaces or bypass the template's actual
+control flow.
 
 ## Check yourself
 

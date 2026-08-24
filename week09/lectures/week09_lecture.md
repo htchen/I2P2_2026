@@ -1,6 +1,6 @@
-# Week 10 Lecture Notes — Classes, Invariants, and Operators
+# Week 9 Lecture Notes — Classes, Invariants, and Operators
 
-> November 10, 2026 · Source lineage: the legacy Classes I notes and Rational
+> November 3, 2026 · Source lineage: the legacy Classes I notes and Rational
 > examples from the 2025 C++ notebook
 
 ## Learning objectives

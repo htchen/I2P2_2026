@@ -21,9 +21,10 @@ illegal state.
 
 ## Part B — Select an approved extension
 
-Choose one bounded behavior such as an enemy mode, cooldown, targeting policy,
-wave FSM, or pathfinding rule. Define state, inputs, outputs, invariants, tie
-rules, and impossible states without Allegro handles.
+Continue the approved Week 13 vertical-slice design or choose one bounded
+behavior such as an enemy mode, cooldown, targeting policy, wave FSM, or
+pathfinding rule. Define state, inputs, outputs, invariants, tie rules, and
+impossible states without Allegro handles.
 
 ## Part C — Implement and verify
 

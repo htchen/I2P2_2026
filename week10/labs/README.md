@@ -1,9 +1,5 @@
 # Week 10 Lab — Cross-File Component and Invariant
 
-This Thursday session also includes **Quiz 2**, scheduled two weeks before
-Midterm 2. Staff will announce which lab parts use the remaining in-person time
-and which, if any, are completed asynchronously.
-
 ## Outcomes
 
 Students can introduce a small C++ class with a stable invariant, deliberate

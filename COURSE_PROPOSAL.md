@@ -61,7 +61,7 @@ to preserve every previous topic.
   structures, including linked lists and binary trees, before moving to C++.
 
 The dates of the two midterms are not yet confirmed. The midterm project demo
-is placed on Tuesday of Week 9 in the working schedule.
+is placed on Tuesday of Week 10 in the working schedule.
 
 ## 3. Curriculum Strategy
 
@@ -117,7 +117,7 @@ By the end of the course, students should be able to:
 ## 5. Proposed 16-Week Schedule
 
 The following is a working schedule, not a confirmed calendar. Lecture notes
-are assigned in Weeks 1–8 and 10–14. Week 9 is proposed for the midterm project
+are assigned in Weeks 1–9 and 11–14. Week 10 is proposed for the midterm project
 demo, Week 15 reuses existing notes for integration and review, and Week 16 is
 the final exam.
 
@@ -131,11 +131,11 @@ the final exam.
 | 6 | Oct. 13 | Recursion and binary trees; AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
 | 7 | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | Midterm-project studio |
 | 8 | Oct. 27 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
-| 9 | Nov. 3 | **Proposed midterm project demo; no lecture** | Nov. 5 | Event-loop and resource-lifecycle trace |
-| 10 | Nov. 10 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2**; small cross-file project component |
-| 11 | Nov. 17 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | Container, algorithm, and invalidation lab |
-| 12 | Nov. 24 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | **Proposed Midterm 2**; asynchronous ownership checkpoint |
-| 13 | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
+| 9 | Nov. 3 | Classes, invariants, constructors, member functions, and operators | Nov. 5 | Event-loop and resource-lifecycle trace |
+| 10 | Nov. 10 | **Proposed midterm project demo; no lecture** | Nov. 12 | Small cross-file project component |
+| 11 | Nov. 17 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | **Quiz 2**; container, algorithm, and invalidation lab |
+| 12 | Nov. 24 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | Ownership implementation and sanitizer lab |
+| 13 | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Proposed Midterm 2**; asynchronous polymorphism checkpoint |
 | 14 | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Testable game logic, FSM, or search extension |
 | 15 | Dec. 15 | Integration, review, and final-project clinic | Dec. 17 | Final-project lab |
 | 16 | Dec. 22 | **Final exam** | — | No scheduled Thursday meeting |
@@ -157,7 +157,7 @@ prevent concepts from appearing without enough prior model:
   composites.
 
 Students may use `vector<T>` as library clients in the Week 8 lecture notes
-before learning to author templates; the class model in the Week 10 lecture
+before learning to author templates; the class model in the Week 9 lecture
 notes provides the needed foundation for template definitions in the Week 11
 lecture notes. The Week 8 lecture notes preview value returns and `std::move`,
 while the Week 12 lecture notes supply the full copy/move and ownership model.
@@ -224,10 +224,11 @@ assessment dates are confirmed.
   the Tuesday immediately before the exam should not be tested.
 - **Midterm project:** Lecture material from Weeks 4–7; ownership, linked structures, recursion,
   binary trees, parsing, and cleanup.
-- **Midterm 2:** Lecture material from Weeks 8, 10, and 11; the C-to-C++
+- **Midterm 2:** Lecture material from Weeks 8, 9, 11, and 12; the C-to-C++
   transition, classes, templates, STL
   containers, iterators, algorithms, boundary searches, `optional`, complexity,
-  and invalidation. It may include comparisons with the C implementation.
+  invalidation, ownership, and copy/move semantics. It may include comparisons
+  with the C implementation. Week 13 material is excluded.
 - **Final exam:** Cumulative conceptual coverage with greater emphasis on the
   lecture material from Weeks 12–14 and integration across C and C++.
 - **Final project:** Correctness, ownership and resource safety, data-structure
@@ -311,7 +312,7 @@ lifetime, linked structures, trees, and copy/move behavior.
 | C++ becomes a list of unrelated features | Connect each feature to a concrete ownership, architecture, container, or dispatch decision in the final-project template |
 | Copy/move semantics overwhelm students | Use one small resource-owning class, then emphasize Rule of Zero in normal code |
 | Projects and labs create excessive workload | Make labs incremental project milestones; keep each deliverable small and reuse it in the final submission |
-| Thursday exams remove prerequisite labs | Move the Week 6 AST and Week 12 ownership checkpoints into bounded Tuesday/asynchronous work |
+| Thursday exams remove prerequisite labs | Move the Week 6 AST and Week 13 polymorphism checkpoints into bounded Tuesday/asynchronous work |
 | AI produces plausible but unverified code | Require prediction, tests, an AI audit, explanation, and an AI-free live modification |
 | Advanced material crowds out fundamentals | Treat modern C++, interoperability, CUDA, and systems topics as enrichment |
 

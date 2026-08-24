@@ -7,5 +7,6 @@ Focus: adjacency lists, implicit geometric graphs, DFS connected components,
 BFS shortest-path reconstruction, multi-source grid arrival times, unreachable
 target detection, state graphs, successor generation, and search testing.
 
-Project milestone: isolate and test a game rule, finite-state machine, or
-approved pathfinding/search feature without depending on the graphics window.
+Project milestone: implement the approved Week 13 vertical-slice design or
+isolate and test a game rule, finite-state machine, or approved
+pathfinding/search feature without depending on the graphics window.
