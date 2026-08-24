@@ -21,16 +21,17 @@ copyable implementation of a graded TODO.
 
 ## Midterm project alignment
 
-The C expression compiler is released in Week 3 so that Week 7 is an integration
-week rather than first exposure.
+The C expression compiler is released in Week 3 so that Week 7 begins
+integration rather than first exposure; full verification continues before the
+Week 10 demo.
 
 | Week | Lecture foundation | Project practice | Evidence |
 |------|--------------------|------------------|----------|
 | 3 | Modules, headers, builds, debugging | Build scaffold; trace input → tokens → AST → semantics → instructions; classify TODO contracts | Build record, pipeline map, baseline tests |
-| 4 | Pointers, lifetime, allocation | Quiz 1; mark owners and borrowers; trace success/error cleanup; run sanitizers | Quiz result, ownership table, sanitizer log, repaired seeded defect |
-| 5 | Linked lists and pointer-to-pointer mutation | Trace token-list creation/conversion; test empty, invalid, and boundary inputs | Token trace and student test table |
-| 6 | Recursion and tree ownership | Tuesday AST checkpoint: construct, traverse, and destroy a small tree | Hand trace plus memory-clean run; no Thursday lab |
-| 7 | Grammar, recursive descent, semantics, code generation | Integrate one parser level, lvalue checks, ISA emission, and ASMC/differential tests | Grammar trace, semantic cases, instruction trace, final verification |
+| 4 | Pointers, lifetime, allocation | Mark owners and borrowers; trace success/error cleanup; run sanitizers | Ownership table, sanitizer log, repaired seeded defect |
+| 5 | Linked lists and pointer-to-pointer mutation | Quiz 1; trace token-list creation/conversion; test empty, invalid, and boundary inputs | Quiz result, token trace, and student test table |
+| 6 | Recursion and tree ownership | Construct, traverse, and destroy a small AST; verify partial-construction cleanup | Hand trace plus memory-clean normal and failure runs |
+| 7 | Grammar, recursive descent, semantics, code generation | Midterm 1; asynchronously verify parser stages, lvalue checks, ISA emission, and ASMC tests | Stage-gate plan, grammar/instruction trace, and AI audit; no Thursday lab |
 | 10 | No lecture; Tuesday is reserved for the midterm project demo | Individual demonstration and small AI-free modification | Working program, explanation, AI audit |
 
 Required project-specific emphasis includes prefix/postfix effects, lvalue
@@ -68,7 +69,7 @@ published project guide. The staff alignment check is:
 |----------------------|-------------------------|
 | C judge correctness | Lecture material from Weeks 1–7 and Weeks 3–7 milestone tests |
 | C memory safety | Week 4 lecture notes; Weeks 4 and 6 sanitizer runs |
-| Parser/semantic/codegen reasoning | Week 7 lecture notes and Week 7 studio |
+| Parser/semantic/codegen reasoning | Week 7 lecture notes and asynchronous checkpoint |
 | C++ architecture and integration | Lecture material from Weeks 9 and 11–13; Weeks 8–13 maps/slices |
 | C++ ownership | Week 8 and Week 12 lecture notes; Weeks 9, 12, and 13 audits |
 | Container correctness | Week 11 lecture notes and lab; Week 12 implementation work |

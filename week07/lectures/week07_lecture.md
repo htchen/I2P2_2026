@@ -463,6 +463,12 @@ require it to name the grammar production and ownership contract being
 implemented, then verify those claims manually. The demo may ask for an
 AI-free explanation or a small modification in any of these stages.
 
+Because Thursday is Midterm 1, the asynchronous checkpoint covers a bounded
+stage-gate plan and representative traces rather than a scheduled integration
+lab. Week 7 material is excluded from the exam. Complete the remaining parser,
+semantic, code-generation, and verification gates incrementally before the
+Week 10 demo.
+
 ## Check yourself
 
 1. Draw the AST for `-1 + 2 * (3 - 4)`.

@@ -1,9 +1,14 @@
-# Week 7 Lab — Midterm Integration Studio
+# Week 7 Checkpoint — Parser and Code-Generation Integration
+
+Thursday is Midterm 1, so this is a bounded asynchronous verification
+checkpoint, not a scheduled lab. The Week 7 lecture notes are excluded from the
+midterm scope. Full project integration continues before the Week 10 demo.
 
 ## Outcomes
 
-Students can integrate parser, semantic, and instruction-generation changes,
-verify each stage independently, and prepare evidence for the demonstration.
+Students can plan parser, semantic, and instruction-generation integration,
+verify representative stages independently, and prepare evidence for the
+demonstration.
 
 ## Part A — AI-free readiness
 
@@ -11,9 +16,11 @@ Given a grammar and short token sequence, draw the AST and identify precedence,
 associativity, and any required lvalue check. This exercise is structurally
 similar to, but not copied from, a graded hidden case.
 
-## Part B — Stage gates
+## Part B — Stage-gate plan and representative checks
 
-Do not debug the complete pipeline as one black box. Pass these gates in order:
+Do not debug the complete pipeline as one black box. Plan these gates in order
+and complete the instructor-assigned representative subset during the
+checkpoint:
 
 1. lexer/token tests from Week 5;
 2. AST-shape traces for every precedence level;
@@ -33,7 +40,7 @@ test, or inspect an ownership path. Require the response to cite the relevant
 grammar production or function contract. Verify it and add any valid
 counterexample to the regression suite.
 
-## Part D — Demo rehearsal
+## Part D — Demo preparation
 
 Each student must be able to:
 
@@ -53,3 +60,6 @@ Each student must be able to:
 
 Instruction-cycle optimization is optional until every required correctness and
 memory-safety gate passes.
+
+Expected checkpoint effort: 45–60 minutes outside the midterm examination. The
+remaining stage gates are completed incrementally before the Week 10 demo.

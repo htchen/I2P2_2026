@@ -502,14 +502,14 @@ Useful properties include “inorder output of a BST is strictly increasing” a
 
 An abstract syntax tree uses the same recursive ownership model as the trees in
 this lecture, but its node kind determines which children and payload are
-valid. In a bounded in-class or asynchronous checkpoint, construct a small tree
-for a supplied expression, traverse it in evaluation order, and destroy it in
-postorder. Include one deliberately failed child allocation and show how the
-partial tree is released.
+valid. In Thursday's lab, construct a small tree for a supplied expression,
+traverse it in evaluation order, and destroy it in postorder. Include one
+deliberately failed child allocation and show how the partial tree is released.
 
 This is a non-graded miniature rather than a solution to the project parser.
-Because Thursday is Midterm 1, the checkpoint supplies the tree-ownership
-practice that would otherwise be lost before the Week 7 integration studio.
+The full lab supplies tree-ownership practice before Week 7 parsing. Week 6
+material is included in the proposed Midterm 1 scope; Week 7 material is
+excluded because it is first presented two days before the exam.
 
 ## Check yourself
 

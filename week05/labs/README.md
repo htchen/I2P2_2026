@@ -1,5 +1,9 @@
 # Week 5 Lab — Token Lists and Adversarial Tests
 
+This Thursday session also includes **Quiz 1**, scheduled two weeks before
+Midterm 1. Staff will announce which lab parts use the remaining in-person time
+and which, if any, are completed asynchronously.
+
 ## Outcomes
 
 Students can trace token-list invariants, verify list-to-array conversion, and
@@ -37,7 +41,8 @@ State which representation owns token storage before and after conversion.
 
 Create a table containing input, expected tokens or rejection, targeted rule,
 and observed result. Include normal, boundary, invalid, and cleanup-oriented
-cases. Preserve these tests for the Week 7 integration studio.
+cases. Preserve these tests for the Week 7 asynchronous integration checkpoint
+and the verification work leading to the Week 10 demo.
 
 ## Part E — AI-assisted adversarial review
 

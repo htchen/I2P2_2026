@@ -1,12 +1,12 @@
 # Week 6: Recursion and Binary Trees
 
 - **Tuesday, October 13:** [Week 6 Lecture Notes — Recursion and Binary Trees](lectures/week06_lecture.md)
-- **Thursday, October 15:** Proposed Midterm 1 — lecture material from Weeks 1–5; Tuesday's Week 6 lecture notes are excluded
-- **Asynchronous:** [Bounded AST checkpoint](labs/README.md), due on the project schedule rather than during the exam
+- **Thursday, October 15:** [Recursive AST ownership lab](labs/README.md)
 
 Focus: recursive contracts, ABI-aware stack-frame interpretation, tree
 traversals, BST construction, postorder destruction, traversal reconstruction
 and ambiguity, bounded backtracking, and height-dependent complexity.
 
-Project milestone: construct, traverse, and release a small non-graded AST so
-that Week 7 can focus on integration rather than first exposure to tree ownership.
+Project milestone: construct, traverse, and release a small non-graded AST,
+including cleanup after partial construction failure, so Week 7 can focus on
+parser integration rather than first exposure to tree ownership.

@@ -183,7 +183,7 @@ accountability policy.
 Two Thursday labs will be replaced by in-person midterm exams.
 The two in-person computer-lab quizzes are scheduled on the Thursday exactly two
 weeks before the corresponding midterm: Quiz 1 before Midterm 1 and Quiz 2
-before Midterm 2. Under the current proposed midterm dates, these are October 1
+before Midterm 2. Under the current proposed midterm dates, these are October 8
 and November 19, respectively.
 
 ## Weekly Schedule
@@ -197,10 +197,10 @@ before the syllabus is finalized. Lecture notes are assigned in Weeks 1–9 and
 | [1](week01/) | Sep. 8 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Lab |
 | [2](week02/) | Sep. 15 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Lab |
 | [3](week03/) | Sep. 22 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Lab |
-| [4](week04/) | Sep. 29 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | **Quiz 1 + Lab** |
-| [5](week05/) | Oct. 6 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Lab |
-| [6](week06/) | Oct. 13 | Recursion and binary trees; in-lecture AST checkpoint | Oct. 15 | **Midterm Exam 1** |
-| [7](week07/) | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | Lab |
+| [4](week04/) | Sep. 29 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Lab |
+| [5](week05/) | Oct. 6 | Linked lists and pointer-to-pointer techniques | Oct. 8 | **Quiz 1 + Lab** |
+| [6](week06/) | Oct. 13 | Recursion, binary trees, and AST ownership | Oct. 15 | Lab |
+| [7](week07/) | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | **Midterm Exam 1** |
 | [8](week08/) | Oct. 27 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Lab |
 | [9](week09/) | Nov. 3 | Classes, invariants, constructors, member functions, and operators | Nov. 5 | Lab |
 | [10](week10/) | Nov. 10 | **Proposed midterm project demo; no lecture** | Nov. 12 | Lab |
@@ -211,9 +211,9 @@ before the syllabus is finalized. Lecture notes are assigned in Weeks 1–9 and
 | [15](week15/) | Dec. 15 | Integration, review, and final project clinic | Dec. 17 | Lab |
 | [16](week16/) | — | **Final project demo (date TBD after Dec. 22)** | — | — |
 
-The proposed Midterm 1 scope is lecture material from Weeks 1–5, so material
-first presented in the Week 6 lecture notes on October 13 is excluded from the
-October 15 exam. The proposed Midterm 2 scope is lecture material from Weeks 8,
+The proposed Midterm 1 scope is lecture material from Weeks 1–6, so material
+first presented in the Week 7 lecture notes on October 20 is excluded from the
+October 22 exam. The proposed Midterm 2 scope is lecture material from Weeks 8,
 9, 11, and 12—including templates, STL containers, iterators, algorithms,
 boundary searches, `optional`, invalidation, complexity, ownership, and
 copy/move semantics. Material first presented in the Week 13 lecture notes on
@@ -246,10 +246,10 @@ and an AI audit. Each student must complete an individual code explanation or
 small live modification during the demo.
 
 The scaffold is released in Week 3. Weeks 3–5 establish its module map,
-ownership model, token representation, and test workflow. Because Midterm 1
-replaces the Week 6 lab, a small AST construction/traversal checkpoint occurs
-during Tuesday's lecture. Week 7 is an integration studio rather than the
-students' first contact with the project.
+ownership model, token representation, and test workflow. Week 6 provides a
+full AST construction, traversal, and cleanup lab. Because Midterm 1 replaces
+the Week 7 lab, parser and code-generation verification continues through a
+bounded asynchronous checkpoint before the Week 10 demonstration.
 
 ### Proposed midterm project rubric
 
@@ -330,7 +330,7 @@ The following components determine the final course grade:
 | Component | Weight | Notes |
 |-----------|-------:|-------|
 | Midterm Exams | 25% + 25% | Two in-person midterm examinations |
-| Quizzes | 5% + 5% | Quiz 1: Oct. 1; Quiz 2: Nov. 19—each two weeks before its midterm |
+| Quizzes | 5% + 5% | Quiz 1: Oct. 8; Quiz 2: Nov. 19—each two weeks before its midterm |
 | Midterm Project | 12% | C expression-compiler project and demo |
 | Written Exam | 5% | Written assessment administered with the midterm exams |
 | Final Project | 23% | C++ final project and demo |

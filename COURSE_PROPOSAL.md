@@ -126,16 +126,16 @@ the final exam.
 | 1 | Sep. 8 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
 | 2 | Sep. 15 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
 | 3 | Sep. 22 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
-| 4 | Sep. 29 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | **Quiz 1**; midterm ownership and sanitizer milestone |
-| 5 | Oct. 6 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Token-list tracing and testing milestone |
-| 6 | Oct. 13 | Recursion and binary trees; AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
-| 7 | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | Midterm-project studio |
+| 4 | Sep. 29 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Midterm ownership and sanitizer milestone |
+| 5 | Oct. 6 | Linked lists and pointer-to-pointer techniques | Oct. 8 | **Quiz 1**; token-list tracing and testing milestone |
+| 6 | Oct. 13 | Recursion, binary trees, and AST ownership | Oct. 15 | Recursive AST ownership lab |
+| 7 | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | **Proposed Midterm Exam 1**; asynchronous parser-integration checkpoint |
 | 8 | Oct. 27 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
 | 9 | Nov. 3 | Classes, invariants, constructors, member functions, and operators | Nov. 5 | Event-loop and resource-lifecycle trace |
 | 10 | Nov. 10 | **Proposed midterm project demo; no lecture** | Nov. 12 | Small cross-file project component |
 | 11 | Nov. 17 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | **Quiz 2**; container, algorithm, and invalidation lab |
 | 12 | Nov. 24 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | Ownership implementation and sanitizer lab |
-| 13 | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Proposed Midterm 2**; asynchronous polymorphism checkpoint |
+| 13 | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Proposed Midterm Exam 2**; asynchronous polymorphism checkpoint |
 | 14 | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Testable game logic, FSM, or search extension |
 | 15 | Dec. 15 | Integration, review, and final-project clinic | Dec. 17 | Final-project lab |
 | 16 | Dec. 22 | **Final exam** | — | No scheduled Thursday meeting |
@@ -187,9 +187,10 @@ a shared purpose. Weekly labs should build components of the project rather than
 introduce an unrelated assignment each time.
 
 Release the scaffold by Week 3. Use Weeks 3–5 for code mapping, ownership, token
-structures, and verification. Since the Week 6 Thursday meeting is Midterm 1,
-place a bounded AST checkpoint in Tuesday's lecture or asynchronous work. Week 7
-then integrates parser, semantic, and code-generation work before the demo.
+structures, and verification. Week 6 provides a full recursive-AST ownership
+lab. Since the Week 7 Thursday meeting is Midterm 1, use a bounded asynchronous
+checkpoint for parser, semantic, and code-generation verification before the
+Week 10 demo.
 
 ### C++ phase and final project
 
@@ -218,10 +219,11 @@ C++ mechanisms and end with short project connections.
 The following scopes are proposals and should be revised after the remaining
 assessment dates are confirmed.
 
-- **Midterm 1:** Lecture material from Weeks 1–5; C syntax, compilation,
+- **Midterm 1:** Lecture material from Weeks 1–6; C syntax, compilation,
   arrays/strings, structures,
-  pointers, allocation, and linked-list reasoning. Material first presented on
-  the Tuesday immediately before the exam should not be tested.
+  pointers, allocation, linked-list reasoning, recursion, and binary trees.
+  Week 7 parsing material is excluded because it is first presented on the
+  Tuesday immediately before the exam.
 - **Midterm project:** Lecture material from Weeks 4–7; ownership, linked structures, recursion,
   binary trees, parsing, and cleanup.
 - **Midterm 2:** Lecture material from Weeks 8, 9, 11, and 12; the C-to-C++
@@ -312,7 +314,7 @@ lifetime, linked structures, trees, and copy/move behavior.
 | C++ becomes a list of unrelated features | Connect each feature to a concrete ownership, architecture, container, or dispatch decision in the final-project template |
 | Copy/move semantics overwhelm students | Use one small resource-owning class, then emphasize Rule of Zero in normal code |
 | Projects and labs create excessive workload | Make labs incremental project milestones; keep each deliverable small and reuse it in the final submission |
-| Thursday exams remove prerequisite labs | Move the Week 6 AST and Week 13 polymorphism checkpoints into bounded Tuesday/asynchronous work |
+| Thursday exams remove prerequisite labs | Move the Week 7 parser and Week 13 polymorphism checkpoints into bounded Tuesday/asynchronous work |
 | AI produces plausible but unverified code | Require prediction, tests, an AI audit, explanation, and an AI-free live modification |
 | Advanced material crowds out fundamentals | Treat modern C++, interoperability, CUDA, and systems topics as enrichment |
 
