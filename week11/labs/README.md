@@ -1,41 +1,42 @@
-# Week 11 Lab — Ownership Audit and Bounded Refactor
+# Week 11 Lab — Containers, Algorithms, and Invalidation
 
 ## Outcomes
 
-Students can compare recursive-object ownership models, trace one project
-lifetime end-to-end, and improve ownership without performing an unsafe
-repository-wide pointer replacement.
+Students can apply template and standard-library contracts independently before
+Midterm 2, then audit one real final-project container mutation.
 
-## Part A — AI-free readiness
+## Part A — AI-free exam readiness
 
-Classify supplied examples as value, unique owner, shared owner, or borrower.
-Find one shallow-copy defect and refactor it toward the Rule of Zero.
-For a small recursive composite diagram, compare unique-tree and immutable-
-shared ownership and mark where a transformation would clone or share children.
+Complete a short function-template instantiation trace and select containers for
+three supplied workloads. For a sorted range with duplicates, compute
+`lower_bound`, `upper_bound`, and `equal_range` results by hand and state the
+ordering precondition. No AI is used in this part.
 
-## Part B — Ownership audit
+## Part B — Algorithm implementation
 
-Choose one entity collection or external resource. Record creation, owner,
-observers, transfers, callbacks, removal, destruction, and scene-shutdown
-behavior. Include iterator/reference invalidation when removal occurs during an
-update loop.
+Implement one bounded word-frequency or record-query pipeline using standard
+containers and algorithms. Test empty input, absent keys, duplicates, ties, and
+keys outside the stored range. Explain every asymptotic complexity claim.
 
-## Part C — Bounded improvement
+## Part C — Final-project invalidation trace
 
-With instructor approval, improve one boundary—for example, a scoped resource
-wrapper or one owning collection. Update construction, observation, removal,
-and destruction sites together. Raw non-owning pointers may remain when their
-lifetime contract is clear.
+Select one final-template loop that inserts, removes, or reorders objects:
 
-## Part D — Verification and AI audit
+1. identify the container and element type;
+2. state whether elements own objects or borrow them;
+3. mark iterators, pointers, and references invalidated by the mutation;
+4. trace object destruction and later callbacks or uses;
+5. compare erase-return, erase/remove, and mark-then-sweep where applicable.
 
-Test normal use, removal, shutdown, and relevant initialization failure with
-warnings and sanitizers. Ask AI to review the ownership map, then document one
-mechanical or overbroad suggestion that you rejected.
+## Part D — AI audit
+
+Predict invalidation before asking AI. Check its answer against the standard
+library contract and the repository's actual mutation order, then retain one
+accepted or rejected claim with evidence.
 
 ## Deliverable
 
-- before/after ownership map;
-- focused code change;
-- sanitizer and regression evidence;
-- integration-risk note and AI audit.
+- AI-free template/boundary-algorithm trace;
+- tested standard-library pipeline;
+- annotated project loop and recommended safe mutation pattern;
+- complexity justification and AI-audit entry.

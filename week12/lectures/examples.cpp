@@ -1,1 +1,1 @@
-// Week 12 lecture examples.
+// Week 12 ownership, copy, and move examples.

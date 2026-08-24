@@ -1,1 +1,1 @@
-// Week 12 lecture exercise starter.
+// Week 12 ownership and value-semantics exercise starter.

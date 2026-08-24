@@ -1,13 +1,4 @@
-# Week 12 Lecture Exercises: TBD
+# Week 12 Lecture Exercises: Ownership and Value Semantics
 
-## Exercise Overview
-
-- TBD
-
----
-
-## Exercise 1: TBD
-
-### Task
-
-TBD.
+Exercises will diagnose a shallow-copy defect and refactor a raw owning class
+toward the Rule of Zero. Detailed starter code will be added with the lab.

@@ -1,1 +1,1 @@
-// Week 11 ownership, copy, and move examples.
+// Week 11 template and standard-library lecture examples.

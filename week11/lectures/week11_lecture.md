@@ -1,414 +1,399 @@
-# Lecture 10 — Ownership, Copying, Moving, and the Rule of Zero
+# Lecture 10 — Templates, Containers, Iterators, and Algorithms
 
-> November 17, 2026 · Source lineage: the legacy Classes II notes and IntVec
-> implementation from the 2025 Week 8/10 notebooks
+> November 17, 2026 · Source lineage: the legacy template and standard-library
+> notes plus the 2025 Week 11 and Week 14 notebooks
 
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
 
-1. Explain destruction, copying, moving, and assignment for an owning class.
-2. Diagnose shallow-copy and double-free defects.
-3. Implement or deliberately disable special member functions.
-4. Apply the Rule of Zero and use smart pointers appropriately.
-5. Explain exception-safe resource transfer at a conceptual level.
-6. Choose between a uniquely owned tree and a deliberately shared immutable
-   object graph when composite operations reuse substructure.
+1. Write a small function or class template.
+2. Select a standard container from its operations and complexity.
+3. Use iterators as a range abstraction.
+4. Compose algorithms with lambdas instead of rewriting loops.
+5. Represent an expected missing result with `std::optional`.
+6. Recognize iterator invalidation and accidental insertion into a map.
+7. Use `lower_bound`, `upper_bound`, and `equal_range` with a consistent
+   ordering and interpret their iterator results.
 
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
 |------|---------------|---------------------|
-| 1 | Why does an owning class need coordinated lifetime operations? | Trace the legacy IntVec representation and destructor |
-| 2 | What are the exact semantics of copy, assignment, and move? | Implement/test special members including failure paths |
-| 3 | How should production code express ownership with Rule of Zero and smart pointers? | Refactor IntVec and map recursive/final-project lifetimes |
+| 1 | How do templates state operations required from a type? | Generalize concrete functions and diagnose instantiation errors |
+| 2 | Which container and iterator guarantees fit a workload? | Select representations and trace invalidation |
+| 3 | How do algorithms, maps, and optional results form a solution? | Implement and benchmark a frequency/ranking pipeline |
 
-## Hour 1 — Owning representations and deterministic destruction
+## Hour 1 — Compile-time genericity and template requirements
 
-### 1. Ownership must survive value operations
+Earlier lectures used `vector<int>` as a library client, and Week 8 previewed
+value returns and `std::move`. Now that classes are established, we can explain
+the template mechanism behind the angle brackets and write generic abstractions
+ourselves. Note 11 will develop the complete copy/move and smart-pointer
+ownership model; this note uses library value semantics without requiring that
+full implementation machinery first.
 
-Consider a teaching vector that directly owns a dynamic array:
+### 1. Templates describe families of code
 
 ```cpp
-class IntVec {
-public:
-    IntVec();
-    explicit IntVec(std::size_t size);
-    ~IntVec();
+template <typename T>
+T maximum(const T& left, const T& right)
+{
+    return left < right ? right : left;
+}
+```
 
-    friend void swap(IntVec& left, IntVec& right) noexcept;
+The compiler instantiates a version for each used type. The type must support
+the expressions required by the template—here, comparison with `<` and copying
+the selected result. Returning by value avoids handing the caller a reference
+that could outlive a temporary argument.
+
+```cpp
+int largest_int = maximum(3, 8);
+std::string largest_word = maximum(std::string{"ant"}, std::string{"bee"});
+```
+
+Templates are compile-time polymorphism. Unlike a virtual call, the concrete
+operation is normally known during compilation and can be inlined.
+
+### 2. A small class template
+
+```cpp
+template <typename T>
+class Box {
+public:
+    explicit Box(T value) : value_{std::move(value)} {}
+
+    const T& value() const& { return value_; }
+    T value() && { return std::move(value_); }
 
 private:
-    int* data_ = nullptr;
-    std::size_t size_ = 0;
-    std::size_t capacity_ = 0;
+    T value_;
 };
 ```
 
-The destructor can release the array:
+Template definitions normally live in headers because a translation unit needs
+the definition when instantiating a concrete type.
+
+Avoid making a template merely to avoid naming the actual abstraction. Generic
+code is valuable when multiple types share the same meaningful operation.
+
+### Requirements before C++20 concepts
+
+In C++17, template requirements are implicit in expressions. For `maximum<T>`,
+`left < right` must be valid and usable as a condition. A compiler error may be
+long because it reports the failed instantiation path. Read from the first
+expression involving your type, not only the final diagnostic line.
+
+Create three types: one with a valid `<`, one with equality only, and one whose
+comparison returns an unsuitable type. Instantiate `maximum` and classify the
+errors. Then state the requirement in a comment beside the template.
+
+### Function objects and generic lambdas
 
 ```cpp
-IntVec::~IntVec()
-{
-    delete[] data_;
+auto absolute_less = [](const auto& left, const auto& right) {
+    return std::abs(left) < std::abs(right);
+};
+
+std::sort(values.begin(), values.end(), absolute_less);
+```
+
+The lambda's call operator is a template. Its comparator must provide a strict
+weak ordering; returning `<=` instead of `<` violates the sorting contract.
+For signed integers, `std::abs(INT_MIN)` is not representable. Restrict the input
+domain or compare magnitudes through a checked, wider representation when that
+value is possible.
+
+### Hour 1 template studio
+
+Generalize `contains`, `print_range`, and `count_if` from `vector<int>` to
+iterator pairs. For each, list the minimum iterator and element operations. Use
+the exercise to make standard-algorithm contracts explicit.
+
+## Hour 2 — Containers, iterators, complexity, and invalidation
+
+### 3. Choose containers by required operations
+
+| Container | Strengths | Important costs |
+|-----------|-----------|-----------------|
+| `vector<T>` | contiguous, fast indexing, cache friendly | middle insertion O(n) |
+| `deque<T>` | fast insertion at both ends | not one contiguous block |
+| `list<T>` | stable iterators, O(1) splice/erase at iterator | no indexing, allocation per node |
+| `map<K,V>` | ordered keys, O(log n) operations | tree/node overhead |
+| `unordered_map<K,V>` | average O(1) lookup | no order, rehashing, hash requirements |
+| `set<T>` | ordered unique values | O(log n) operations |
+| `queue<T>` | FIFO interface | intentionally limited access |
+| `stack<T>` | LIFO interface | intentionally limited access |
+
+Default to `vector` unless another container's semantics or complexity solves a
+specific need. The legacy course used `list` frequently; modern code should not
+choose it merely because insertions look O(1)—finding the position is still a
+cost and locality often dominates.
+
+### Container-selection scenarios
+
+Choose and defend a representation for an ordered leaderboard, FIFO event queue,
+entity table by numeric ID, unique visited puzzle states, stable splice-heavy
+sequence, and dense objects updated every frame. Include iteration order,
+lookup/insertion complexity, locality, reference stability, and duplicates.
+
+### 4. Iterators represent positions and ranges
+
+The half-open range `[first, last)` includes `first` and excludes `last`.
+
+```cpp
+auto position = std::find(values.begin(), values.end(), target);
+if (position != values.end()) {
+    std::cout << "found at " << std::distance(values.begin(), position) << '\n';
 }
 ```
 
-But the compiler-generated copy constructor copies the pointer value, not the
-array. Two objects would then believe they own the same allocation and both
-destructors would call `delete[]` on it.
+Half-open ranges compose cleanly: an empty range has `first == last`, and two
+adjacent ranges can share a boundary.
 
-### Size, capacity, and growth invariant
+Iterator categories expose supported movement. A vector iterator supports
+random access; a list iterator does not. Generic algorithms express the weakest
+category they require.
 
-The 2025 IntVec notebook stored begin, logical end, and allocation end pointers.
-This version stores a pointer plus counts; both need the same invariant:
+## Hour 3 — Algorithms, associative containers, and solution pipelines
 
-```text
-0 <= size_ <= capacity_
-data_ == nullptr exactly when capacity_ == 0
-data_[0 .. size_) contains live values owned by this object
-```
+### 5. Algorithms separate traversal from intent
 
 ```cpp
-void IntVec::reserve(std::size_t requested)
-{
-    if (requested <= capacity_) return;
+#include <algorithm>
+#include <numeric>
 
-    int* replacement = new int[requested];
-    if (size_ != 0) std::copy_n(data_, size_, replacement);
-    delete[] data_;
-    data_ = replacement;
-    capacity_ = requested;
+std::sort(values.begin(), values.end());
+
+int threshold = 10;
+auto first_large = std::find_if(values.begin(), values.end(),
+    [threshold](int value) { return value >= threshold; });
+
+int total = std::accumulate(values.begin(), values.end(), 0);
+```
+
+Common algorithms include:
+
+- `find`, `find_if`, `count_if`;
+- `sort`, `stable_sort`, `lower_bound`, `upper_bound`, `equal_range`;
+- `copy`, `transform`, `remove_if`;
+- `all_of`, `any_of`, `none_of`;
+- `accumulate`.
+
+An algorithm name states intent and centralizes boundary handling. A loop is
+still correct when the operation does not fit an algorithm cleanly.
+
+### 6. Boundary algorithms on partitioned ranges
+
+For an ascending sorted range, the standard algorithms express the same
+boundary contracts introduced with C arrays:
+
+```cpp
+auto lower = std::lower_bound(values.begin(), values.end(), target);
+auto upper = std::upper_bound(values.begin(), values.end(), target);
+auto equal = std::equal_range(values.begin(), values.end(), target);
+```
+
+- `lower` is the first iterator whose value is not less than `target`;
+- `upper` is the first iterator whose value is greater than `target`;
+- `equal` returns both boundaries as a pair.
+
+The equal range is `[lower, upper)`. It is empty when the target is absent;
+otherwise it contains every equivalent element. Use `std::distance(lower,
+upper)` for a generic iterator pair. Direct subtraction works only for
+random-access iterators such as `vector` iterators.
+
+The precondition is more precisely that the range is partitioned for the
+algorithm's comparison, usually because it was sorted with the same strict weak
+ordering. Sorting by one key and searching as though another key defined the
+order violates the contract even when the data looks mostly sorted.
+
+For random-access iterators, these algorithms use O(log n) comparisons. With a
+forward iterator they still use logarithmically many comparisons but may perform
+O(n) iterator increments. This is why calling `std::lower_bound` on a linked
+list does not create random access; an ordered associative container's member
+`lower_bound` can follow its tree structure in O(log n).
+
+### Comparator and projection exercise
+
+Sort a vector of records by `(category, identifier)`. Specify, without writing
+a complete query program, the comparator and search key required to find the
+half-open block for one category. Explain why a comparator using `<=`, or one
+that orders during sort by identifier alone, breaks the boundary precondition.
+Test an empty vector, absent key, one match, repeated matches at both ends, and
+a key outside the stored range.
+
+### 7. The erase-remove pattern
+
+`std::remove_if` rearranges retained elements and returns a new logical end; it
+does not resize the container.
+
+```cpp
+values.erase(
+    std::remove_if(values.begin(), values.end(),
+                   [](int value) { return value < 0; }),
+    values.end());
+```
+
+C++20 adds `std::erase_if(values, predicate)` for supported containers, but the
+older form remains important when reading C++17 projects.
+
+### 8. Maps: lookup versus insertion
+
+```cpp
+std::map<std::string, int> frequency;
+for (const std::string& word : words) {
+    ++frequency[word]; /* deliberate default insertion */
 }
 ```
 
-For a generic element type, use an RAII temporary so an exception during copying
-cannot leak. The `int` specialization is a teaching step toward `std::vector<T>`.
-
-### Hour 1 lifetime trace
-
-Instrument every constructor and destructor with object address, data address,
-size, and capacity. Trace default construction, growth, nested scope exit, and
-return-by-value. Separate guaranteed language behavior from optional copy
-elision; log count is not the abstraction's contract.
-
-## Hour 2 — Copy, move, assignment, and exception guarantees
-
-### 2. The special member functions
-
-The ownership-relevant operations are:
+`operator[]` inserts a missing key. For read-only lookup:
 
 ```cpp
-IntVec();                              // default constructor
-IntVec(const IntVec& other);           // copy constructor
-IntVec& operator=(const IntVec& other);// copy assignment
-IntVec(IntVec&& other) noexcept;       // move constructor
-IntVec& operator=(IntVec&& other) noexcept; // move assignment
-~IntVec();                             // destructor
+auto found = frequency.find(query);
+if (found != frequency.end()) {
+    std::cout << found->second << '\n';
+}
 ```
 
-They are invoked in different contexts:
+Or use `.at(query)` when absence should produce an exception. Do not accidentally
+mutate a map while asking whether a key exists.
+
+### Frequency-to-ranking pipeline
 
 ```cpp
-IntVec a{10};
-IntVec b = a;            // copy construction
-b = a;                   // copy assignment
-IntVec c = std::move(a); // move construction; a remains valid but unspecified
+std::vector<std::pair<std::string, int>> ranking{
+    frequency.begin(), frequency.end()
+};
+
+std::sort(ranking.begin(), ranking.end(), [](const auto& left, const auto& right) {
+    if (left.second != right.second) return left.second > right.second;
+    return left.first < right.first;
+});
 ```
 
-`std::move` does not move by itself. It permits overload resolution to select an
-rvalue-reference operation that may transfer resources.
+The map builds counts; the vector supports ranking by a different order. This is
+often clearer than forcing one container to serve incompatible access patterns.
+Prove the comparator is strict for equal pairs.
 
-### 3. Deep copying
+### 9. `optional` makes expected absence explicit
+
+An index such as zero can be a valid answer, so it is a poor “not found”
+sentinel. `std::optional<T>` contains either one `T` or no value:
 
 ```cpp
-IntVec::IntVec(const IntVec& other)
-    : data_{other.capacity_ == 0 ? nullptr : new int[other.capacity_]},
-      size_{other.size_},
-      capacity_{other.capacity_}
+#include <iostream>
+#include <optional>
+#include <vector>
+
+std::optional<std::size_t> index_of(
+    const std::vector<int>& values, int target)
 {
-    if (size_ != 0) {
-        std::copy_n(other.data_, size_, data_);
+    for (std::size_t index = 0; index < values.size(); ++index) {
+        if (values[index] == target) return index;
+    }
+    return std::nullopt;
+}
+
+void report_index(const std::vector<int>& values, int target)
+{
+    if (auto index = index_of(values, target)) {
+        std::cout << "found at " << *index << '\n';
     }
 }
 ```
 
-Each copy owns a different allocation containing equal values. Be careful with
-pointer arithmetic on null pointers. The guard avoids asking the algorithm to
-form or use an empty range from `nullptr`.
+Testing an optional as a condition asks whether it contains a value. Dereference
+with `*` only after that check; `.value()` instead throws `std::bad_optional_access`
+when empty. Use `optional` when absence is an expected result, exceptions when an
+operation cannot fulfill its contract, and a richer result type when callers
+need distinct failure reasons. The graph lecture will use this distinction for
+“no path exists.”
 
-Copy assignment must handle existing resources and self-assignment. The
-copy-and-swap idiom gives a strong structure:
+### 10. Iterator invalidation
 
-```cpp
-void swap(IntVec& left, IntVec& right) noexcept
-{
-    using std::swap;
-    swap(left.data_, right.data_);
-    swap(left.size_, right.size_);
-    swap(left.capacity_, right.capacity_);
-}
-
-IntVec& IntVec::operator=(const IntVec& other)
-{
-    IntVec copy{other};
-    swap(*this, copy);
-    return *this;
-}
-```
-
-If copying throws, the original object is unchanged. On success, `copy` later
-destroys the old allocation.
-
-### Construction versus assignment
-
-| Operation | Destination already owns a resource? | Required behavior |
-|-----------|---------------------------------------|-------------------|
-| Copy construction | No | allocate and copy from source |
-| Copy assignment | Yes | preserve source and replace destination safely |
-| Move construction | No | acquire source resource and leave source valid |
-| Move assignment | Yes | release destination, acquire source, handle self-move |
-
-Construction creates lifetime; assignment operates within an existing lifetime.
-This distinction is why one implementation cannot blindly serve every case.
-
-### 4. Moving transfers ownership
+After a vector reallocates, pointers, references, and iterators to its elements
+are invalid. Inserting or erasing can invalidate additional positions even
+without reallocation.
 
 ```cpp
-IntVec::IntVec(IntVec&& other) noexcept
-    : data_{other.data_},
-      size_{other.size_},
-      capacity_{other.capacity_}
-{
-    other.data_ = nullptr;
-    other.size_ = 0;
-    other.capacity_ = 0;
-}
-
-IntVec& IntVec::operator=(IntVec&& other) noexcept
-{
-    if (this != &other) {
-        delete[] data_;
-        data_ = other.data_;
-        size_ = other.size_;
-        capacity_ = other.capacity_;
-        other.data_ = nullptr;
-        other.size_ = 0;
-        other.capacity_ = 0;
-    }
-    return *this;
-}
+auto position = values.begin();
+values.push_back(42);
+/* position may now be invalid */
 ```
 
-After a move, the source must remain valid and destructible. Its exact value is
-usually unspecified unless the class documents something stronger.
+Read the operation's invalidation rules. A valid iterator is a lifetime and
+ownership claim just as a valid C pointer is.
 
-Mark resource-transfer moves `noexcept` when true. Standard containers can then
-move elements during reallocation without risking loss of the original data.
+Use indices when a vector mutation may relocate storage and the index remains a
+meaningful position, or reacquire the iterator after mutation.
 
-### Exception-safety levels
+### Invalidation trace
 
-- **No-throw guarantee:** operation cannot fail by exception.
-- **Strong guarantee:** failure leaves the original observable state unchanged.
-- **Basic guarantee:** failure preserves invariants and leaks nothing, but the
-  value may change.
-- **No guarantee:** even invariants may be lost.
+For a vector with size 3 and capacity 4, take iterators to all elements, then
+push a fourth element, insert at index 1 without reallocation, push a fifth
+element with reallocation, and erase index 2. Mark valid handles after each
+operation. Repeat for `list` and `map` and compare their guarantees.
 
-Copy-and-swap commonly provides the strong guarantee. A direct assignment that
-deletes old storage before allocating new storage loses the original value when
-allocation throws.
+### 11. Complexity belongs to the interface
 
-### Aliasing and self-assignment lab
+For an ordered map, lookup is O(log n). For an unordered map, lookup is average
+O(1) but worst-case O(n). `lower_bound` on a sorted vector is O(log n), but
+inserting into the middle is O(n). A good design considers the whole workload:
+build frequency, query frequency, ordering requirements, and memory overhead.
 
-Test `value = value`, `value = std::move(value)`, assignment between empty and
-nonempty vectors, and copying when capacity exceeds size. Use distinct values to
-detect copying uninitialized capacity instead of logical elements. Force an
-allocation failure through a teaching hook and verify the promised guarantee.
+The standard library specifies both semantics and complexity. Use those
+guarantees instead of assuming an internal implementation.
 
-## Hour 3 — Rule of Zero, smart pointers, and project ownership
+### Hour 3 integration task
 
-### 5. Rule of Three, Five, and Zero
+Read words, normalize case, count with a map/unordered map, remove stop words,
+rank by frequency then spelling, and print the top `k`. Test empty input, ties,
+repeated punctuation policy, and very large counts. Benchmark ordered versus
+unordered counting on supplied data and explain results without overgeneralizing
+from one machine.
 
-- **Rule of Three:** if a class needs a custom destructor, copy constructor, or
-  copy assignment, it probably needs all three.
-- **Rule of Five:** in modern C++, also make a deliberate move-constructor and
-  move-assignment decision.
-- **Rule of Zero:** prefer members that already manage resources so your class
-  needs none of these custom operations.
+## Final project connection — Container mutation is a lifetime event
 
-The best production `IntVec` representation is usually:
+Locate one template loop that updates or removes game objects from a container.
+Record the container type, element ownership, mutation operation, invalidated
+iterators/references, and destruction point. Then compare three safe designs:
+the container's erase-return idiom, erase/remove where appropriate, and a
+two-phase mark-then-sweep update. Choose based on the actual container and
+whether callbacks or collisions still borrow the object.
 
-```cpp
-class IntVec {
-public:
-    /* domain-specific operations */
-
-private:
-    std::vector<int> values_;
-};
-```
-
-Now generated copy, move, assignment, and destruction have the correct meaning.
-We implement a raw owning class once to understand the mechanism, then prefer
-the Rule of Zero.
-
-### 6. Smart pointers encode ownership
-
-```cpp
-#include <memory>
-
-auto node = std::make_unique<Node>(value);
-std::unique_ptr<Node> owner = std::move(node);
-```
-
-- `std::unique_ptr<T>`: exactly one owner; movable, not copyable.
-- `std::shared_ptr<T>`: shared ownership using reference counting.
-- `std::weak_ptr<T>`: observes a shared object without keeping it alive.
-
-Do not use `shared_ptr` as a default replacement for deciding ownership. It has
-run-time overhead and cycles of shared owners leak unless broken with `weak_ptr`.
-
-Borrow with `T&`, `const T&`, or a non-owning `T*` according to nullability.
-Ownership and access are different questions.
-
-### Unique ownership in a tree
-
-```cpp
-struct Node {
-    int value;
-    std::unique_ptr<Node> left;
-    std::unique_ptr<Node> right;
-};
-
-auto root = std::make_unique<Node>();
-root->value = 10;
-root->left = std::make_unique<Node>();
-```
-
-Recursive destruction is automatic. The type is movable but not copyable unless
-deep copy is explicitly implemented. Search functions can return `Node*` or
-`const Node*` as borrowers while the tree retains ownership.
-
-### Recursive composites: tree or shared graph?
-
-A composite model may contain leaf objects and branch objects whose children
-share the same abstract interface. Evaluation merely borrows the children, but
-destruction, copying, and transformations force an ownership decision.
-
-Choose one coherent model:
-
-1. **Unique tree:** each parent stores uniquely owned children. Destruction is
-   automatic and local. Reusing an unchanged subtree in a new result requires a
-   deep clone or a move that removes it from the original.
-2. **Shared immutable graph:** nodes are immutable and held through shared
-   ownership. A transformation may safely reuse unchanged subtrees, but cycles
-   must be impossible or broken with weak references, and sharing must be a
-   deliberate semantic property.
-3. **Borrowed graph:** an external arena or document owns all nodes and edges
-   borrow them. This can be valid, but the arena lifetime must exceed every
-   evaluation and transformation.
-
-Do not combine owning raw child pointers with ad hoc subtree reuse. Adding a
-destructor later can turn leaks into double deletion, while omitting one leaves
-the entire graph leaked. A raw pointer may still be a clear non-owning observer
-after owners are established elsewhere.
-
-### Exception-safe composite construction
-
-Build owned children into RAII objects before publishing the parent. If later
-allocation or validation throws, already constructed smart pointers release
-their subtrees automatically. Dense expressions containing several raw `new`
-operations hide which allocations survive when one operation throws.
-
-Private constructors introduce another design question: `std::make_unique`
-normally performs construction inside the library template, where private
-access is unavailable. Options include a public constructor with a named free
-factory, a controlled construction token, returning a concrete value, or a
-carefully implemented class factory that returns a smart pointer. Choose the
-smallest mechanism that preserves the invariant; do not fall back to an owning
-raw pointer merely to bypass access control.
-
-### Ownership design exercise
-
-For a generic scoring-rule tree with literal, input, unary, and binary nodes,
-draw both the unique-tree and shared-immutable representations. Then consider a
-transformation that returns a new rule while preserving the original. Mark
-which subtrees must be cloned, may be shared, or may only be borrowed. Stop at
-the ownership map and exception paths; no transformation implementation is
-provided.
-
-### Shared ownership cycles
-
-If two `shared_ptr` objects own each other, neither reference count reaches zero.
-Model a parent observer as `weak_ptr` when children own descendants. Draw strong
-and weak edges; “shared because many places use it” is not a lifetime design.
-
-### 7. Explicitly disable unsupported operations
-
-Some resources cannot sensibly be copied:
-
-```cpp
-class Connection {
-public:
-    Connection(const Connection&) = delete;
-    Connection& operator=(const Connection&) = delete;
-    Connection(Connection&&) noexcept = default;
-    Connection& operator=(Connection&&) noexcept = default;
-};
-```
-
-Compile-time rejection is better than an accidental shallow copy.
-
-### 8. Ownership in the final project
-
-For each game object, answer:
-
-- Which subsystem owns it?
-- Is its lifetime scoped, unique, or shared?
-- Which references are only observers?
-- What happens when a scene changes or an entity is removed?
-- Can a callback outlive the object it captures?
-
-The demo may ask you to trace one object's creation, registration, use, removal,
-and destruction through the multi-file codebase.
-
-### Hour 3 final-project audit
-
-Choose one tower, monster, scene, and asset. For each, record owner type,
-creation site, transfers, borrowers/callbacks, removal event, and destruction
-site. Flag raw owning pointers, reference captures that may outlive objects, and
-`shared_ptr` without genuine shared lifetime. Propose the smallest Rule-of-Zero
-or `unique_ptr` improvement and describe its integration risk.
-
-Thursday's project milestone carries one proposal through implementation. Keep
-the change bounded: update the owner, construction, observation, removal, and
-destruction sites together; do not mechanically replace every raw pointer. A
-raw observer can be appropriate when a documented owner outlives it. Verify the
-normal path, removal during update, scene shutdown, and early initialization
-failure where applicable.
+Thursday's lab turns these contracts into AI-free exam practice followed by a
+container-mutation trace in the final-project template. Since this note is in
+the Midterm 2 scope, students must be able to state the ordering, range,
+complexity, and invalidation rules without AI. AI may review additional tests
+only after the student records an independent prediction.
 
 ## Check yourself
 
-1. Why does memberwise copying fail for an owning raw pointer?
-2. What must be true of a moved-from object?
-3. Why can `noexcept` affect vector reallocation?
-4. When is `unique_ptr` better than `shared_ptr`?
-5. Why can reusing a raw child pointer make ownership ambiguous?
-6. When is immutable subtree sharing preferable to deep cloning?
-7. Refactor a raw owning member to satisfy the Rule of Zero.
+1. What operation does the `maximum` template require from `T`?
+2. Select containers for a FIFO worklist, ordered dictionary, and dense table.
+3. Why is `[begin, end)` easier to represent than an inclusive end?
+4. Distinguish the results of `lower_bound`, `upper_bound`, and `equal_range`.
+5. Why can `std::lower_bound` perform linear iterator movement on a list?
+6. What exactly does `map[key]` do when `key` is absent?
+7. When should a search return `optional<T>` rather than throw an exception?
+8. Identify invalid iterators after a vector insertion in the middle.
 
 ## Summary
 
-- Destruction alone is insufficient when an owning object can be copied.
-- Deep copy duplicates a resource; move transfers it and resets the source.
-- Special member functions collectively define value and ownership semantics.
-- The Rule of Zero delegates resource management to proven member types.
-- Smart pointers express ownership; references and raw pointers commonly borrow.
-- Recursive composites require one coherent tree, shared-graph, or arena
-  lifetime model before transformations are implemented.
+- Templates express type-safe compile-time generality.
+- Container selection follows operations, guarantees, and data layout.
+- Iterators generalize positions and half-open ranges.
+- Algorithms expose intent and reduce repeated traversal code.
+- Boundary algorithms require a consistently partitioned range and return
+  iterators delimiting an equal block.
+- `optional<T>` distinguishes an expected missing result from a stored value.
+- Mutation can invalidate iterators; complexity and lifetime remain correctness concerns.
 
 ## References and legacy sources
 
-- [Classes II](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20II/README.md>)
-- [2025 Week 8 notebook (Colab)](https://colab.research.google.com/drive/1qkDyeCDzzislM1BN8XSoUJxiomuT3cv8)
-- [2025 Week 10 notebook (Colab)](https://colab.research.google.com/drive/1WzsdyfHgyjojg6DsJm_NH5pANk2GB18t)
+- [Classes III: templates and related material](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20III/README.md>)
+- [Standard library](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/week%2012%20Standard%20library/week%2012%20Standard%20library.md>)
+- [2025 Week 11 notebook (Colab)](https://colab.research.google.com/drive/1RjtHSu-82v1dQt-p2teRmKwjV9bLlQsK)
+- [2025 Week 14 notebook: `optional` and modern C++ (Colab)](https://colab.research.google.com/drive/1CEwhynoePTk_ZG6pgAxJH4mMqsQsZyzu)

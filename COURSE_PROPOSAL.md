@@ -133,14 +133,14 @@ reuses existing notes for integration and review, and Week 16 is the final exam.
 | 8 | Oct. 27 | 8 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
 | 9 | Nov. 3 | — | **Proposed midterm project demo; no lecture** | Nov. 5 | Event-loop and resource-lifecycle trace |
 | 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2**; small cross-file project component |
-| 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Final-project ownership audit and refactor |
-| 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2**; asynchronous container checkpoint |
+| 11 | Nov. 17 | 10 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | Container, algorithm, and invalidation lab |
+| 12 | Nov. 24 | 11 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | **Proposed Midterm 2**; asynchronous ownership checkpoint |
 | 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
 | 14 | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Testable game logic, FSM, or search extension |
 | 15 | Dec. 15 | — | Integration, review, and final-project clinic | Dec. 17 | Final-project lab |
 | 16 | Dec. 22 | — | **Final exam** | — | No scheduled Thursday meeting |
 
-The lecture files now follow this dependency order. Three deliberate bridges
+The lecture files now follow this dependency order. Four deliberate bridges
 prevent concepts from appearing without enough prior model:
 
 - Note 2 gives the minimal `&`/`*` address-passing vocabulary needed by ordinary
@@ -148,13 +148,16 @@ prevent concepts from appearing without enough prior model:
   treatment.
 - Note 8 introduces throwing, handler selection, and stack unwinding before
   constructors and copy operations depend on exception behavior.
-- Note 11 explains templates and `std::optional` before Note 12 uses generic
+- Note 10 explains templates and `std::optional` before Note 12 uses generic
   polymorphic containers/`variant` and Note 13 returns optional search results.
+- Note 11 makes copy/move and smart-pointer ownership explicit before Note 12
+  combines polymorphism with owning base pointers and recursive composites.
 
 Students may use `vector<T>` as library clients in Note 8 before learning to
-author templates; classes and move semantics in Notes 9–10 provide the needed
-foundation for template definitions. Both midterms exclude material first
-presented on the Tuesday immediately before the exam.
+author templates; the class model in Note 9 provides the needed foundation for
+template definitions in Note 10. Note 8 previews value returns and `std::move`,
+while Note 11 supplies the full copy/move and ownership model. Both midterms
+exclude material first presented on the Tuesday immediately before the exam.
 
 ## 6. Proposed Project Spine
 
@@ -215,8 +218,9 @@ assessment dates are confirmed.
   the Tuesday immediately before the exam should not be tested.
 - **Midterm project:** Notes 4–7; ownership, linked structures, recursion,
   binary trees, parsing, and cleanup.
-- **Midterm 2:** Notes 8–10; the C-to-C++ transition, classes, RAII, and resource
-  management. It may include comparisons with the C implementation.
+- **Midterm 2:** Notes 8–10; the C-to-C++ transition, classes, templates, STL
+  containers, iterators, algorithms, boundary searches, `optional`, complexity,
+  and invalidation. It may include comparisons with the C implementation.
 - **Final exam:** Cumulative conceptual coverage with greater emphasis on Notes
   11–13 and integration across C and C++.
 - **Final project:** Correctness, ownership and resource safety, data-structure
@@ -300,7 +304,7 @@ lifetime, linked structures, trees, and copy/move behavior.
 | C++ becomes a list of unrelated features | Connect each feature to a concrete ownership, architecture, container, or dispatch decision in the final-project template |
 | Copy/move semantics overwhelm students | Use one small resource-owning class, then emphasize Rule of Zero in normal code |
 | Projects and labs create excessive workload | Make labs incremental project milestones; keep each deliverable small and reuse it in the final submission |
-| Thursday exams remove prerequisite labs | Move the Week 6 AST and Week 12 STL checkpoints into bounded Tuesday/asynchronous work |
+| Thursday exams remove prerequisite labs | Move the Week 6 AST and Week 12 ownership checkpoints into bounded Tuesday/asynchronous work |
 | AI produces plausible but unverified code | Require prediction, tests, an AI audit, explanation, and an AI-free live modification |
 | Advanced material crowds out fundamentals | Treat modern C++, interoperability, CUDA, and systems topics as enrichment |
 

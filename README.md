@@ -38,8 +38,9 @@ The course follows one conceptual progression:
 The first three weeks form a C crash course taught through direct comparisons
 with Python. Students then study pointers, dynamic allocation, linked lists,
 recursion, binary trees, parsing, and syntax trees. The second half transitions
-to C++ references, RAII, classes, value semantics, templates, the standard
-library, polymorphism, and problem solving in a multi-file C++ codebase.
+to C++ references, RAII, classes, templates, the standard library, value
+semantics and ownership, polymorphism, and problem solving in a multi-file C++
+codebase.
 
 ## Learning Outcomes
 
@@ -203,8 +204,8 @@ Notes 1–7 in Weeks 1–7, Note 8 in Week 8, and Notes 9–13 in Weeks 10–14.
 | 8 | Oct. 27 | 8 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
 | 9 | Nov. 3 | — | **Proposed midterm project demo; no lecture** | Nov. 5 | Event-loop and resource-lifecycle trace |
 | 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2**; small cross-file final-project component |
-| 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Final-project ownership audit and refactor |
-| 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2**; asynchronous STL reading checkpoint |
+| 11 | Nov. 17 | 10 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | Container, algorithm, and invalidation lab |
+| 12 | Nov. 24 | 11 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | **Proposed Midterm 2**; asynchronous ownership checkpoint |
 | 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
 | 14 | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Testable logic, FSM, or search extension |
 | 15 | Dec. 15 | — | Integration, review, and final project clinic | Dec. 17 | Final project lab |
@@ -214,9 +215,11 @@ The final project demo will take place on a date after December 22.
 
 The proposed Midterm 1 scope is Notes 1–5, so Note 6 material first presented
 on October 13 is excluded from the October 15 exam. The proposed Midterm 2 scope
-is Notes 8–10, so Note 11 material first presented on November 24 is excluded
-from the November 26 exam. This keeps each exam causally downstream of its
-tested instruction rather than assessing a topic after only two days.
+is Notes 8–10—including templates, STL containers, iterators, algorithms,
+boundary searches, `optional`, invalidation, and complexity—so ownership and
+copy/move material in Note 11, first presented on November 24, is excluded from
+the November 26 exam. This keeps each exam causally downstream of its tested
+instruction rather than assessing a topic after only two days.
 
 ## Midterm Project: C Expression Compiler
 
@@ -283,10 +286,10 @@ understanding rather than the number of visible features.
 
 The template is introduced in the Week 8 Thursday meeting. Subsequent labs
 trace the event/update/draw lifecycle, add a small cross-file component, audit
-ownership, and deliver one thin vertical slice before the Week 15 integration
-clinic. Allegro-specific setup and codebase navigation belong primarily in the
-labs; Tuesday notes retain transferable C++ concepts and include short project
-connections.
+container mutation, map ownership, and deliver one thin vertical slice before
+the Week 15 integration clinic. Allegro-specific setup and codebase navigation
+belong primarily in the labs; Tuesday notes retain transferable C++ concepts
+and include short project connections.
 
 ### Proposed final project rubric
 

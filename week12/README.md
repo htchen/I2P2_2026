@@ -1,11 +1,10 @@
-# Week 12: Templates and the Standard Library
+# Week 12: Ownership and Value Semantics
 
-- **Tuesday, November 24:** [Lecture 11 — Templates, Containers, Iterators, and Algorithms](lectures/week12_lecture.md)
+- **Tuesday, November 24:** [Lecture 11 — Ownership, Copying, Moving, and the Rule of Zero](lectures/week12_lecture.md)
 - **Thursday, November 26:** Proposed Midterm 2 — Notes 8–10; Tuesday's Note 11 is excluded
-- **Asynchronous:** [Container and invalidation checkpoint](labs/README.md), due on the project schedule rather than during the exam
+- **Asynchronous:** [Bounded ownership checkpoint](labs/README.md), due on the project schedule rather than during the exam
 
-Focus: compile-time genericity, container selection, half-open ranges,
-algorithms, lower/upper bounds, lambdas, `std::optional`, iterator invalidation,
-and complexity.
-Hands-on template/STL practice continues in the December 3 lab because this
-week's Thursday meeting is occupied by the midterm.
+Focus: destruction, deep copy, moves, exception safety, smart pointers, and
+explicit ownership in recursive object graphs and the final-project codebase.
+The ownership checkpoint remains bounded because Thursday is occupied by the
+midterm; implementation and sanitizer work continue in the December 3 lab.

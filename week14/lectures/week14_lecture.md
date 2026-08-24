@@ -253,7 +253,7 @@ std::optional<std::vector<int>> shortest_path(
 }
 ```
 
-As established in Note 11, the optional result distinguishes “no path exists”
+As established in Note 10, the optional result distinguishes “no path exists”
 from every valid path, including one that starts at vertex zero or uses zero
 edges because `start == goal`.
 

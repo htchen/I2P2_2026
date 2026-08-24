@@ -48,8 +48,8 @@ integration, not onboarding.
 | 8 | Values, references, exceptions, RAII | Clone/build/run; identify event loop, centers, entities, resources, and major directories | Reproducible build record and architecture map |
 | 9 | No new lecture; apply the Week 8 C++ foundation | Trace input → event/state → update → draw; trace one resource on normal/failure paths | Event trace and resource-lifecycle table |
 | 10 | Classes, invariants, headers | Quiz 2; add a small non-graphical component across header/source/test files | Quiz result, change-impact map, tests, invariant explanation |
-| 11 | Copy/move, Rule of Zero, smart pointers | Audit one raw-owning collection or resource boundary; make one bounded improvement | Before/after ownership map and sanitizer evidence |
-| 12 | Templates, containers, algorithms, invalidation | Asynchronous code-reading checkpoint on a project container mutation | Invalidation trace; no Thursday lab |
+| 11 | Templates, containers, algorithms, invalidation | Implement a bounded standard-library pipeline; audit one project container mutation | Tests, complexity argument, and invalidation trace |
+| 12 | Copy/move, Rule of Zero, smart pointers | Asynchronously map one raw-owning collection or resource boundary and propose a bounded improvement | Ownership map and proposal; no Thursday lab |
 | 13 | Inheritance, composition, `variant` | Add one thin vertical slice through creation, registration, update/interaction, and draw | Working slice, hierarchy/design justification |
 | 14 | Graph/state-space search and test boundaries | Add a testable FSM, game rule, or approved search/pathfinding extension | Automated logic tests and manual graphics plan |
 | 15 | Integration and review | Failure handling, regression pass, feature freeze, demo rehearsal | Release checklist, known-limitations list, rehearsal change |
@@ -70,9 +70,9 @@ published project guide. The staff alignment check is:
 | C memory safety | Note 4, Weeks 4 and 6 sanitizer runs |
 | Parser/semantic/codegen reasoning | Note 7 and Week 7 studio |
 | C++ architecture and integration | Notes 9–12 and Weeks 8–13 maps/slices |
-| C++ ownership | Notes 8 and 10; Weeks 9 and 11 audits |
-| Container correctness | Note 11; Week 12 checkpoint and Week 13 lab |
-| Non-graphical testing | Notes 9, 11, and 13; Weeks 10 and 14 labs |
+| C++ ownership | Notes 8 and 11; Weeks 9, 12, and 13 audits |
+| Container correctness | Note 10; Week 11 lab and Week 13 consolidation |
+| Non-graphical testing | Notes 9–11 and 13; Weeks 10, 11, and 14 labs |
 | AI accountability | Every project milestone and both demonstrations |
 
 ## Staff review checklist

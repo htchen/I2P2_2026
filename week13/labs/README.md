@@ -1,19 +1,20 @@
-# Week 13 Lab — Templates, Polymorphism, and a Vertical Slice
+# Week 13 Lab — Ownership, STL, Polymorphism, and a Vertical Slice
 
 ## Outcomes
 
-Students consolidate delayed STL practice, trace a recursive Composite, and
-integrate one small polymorphic or composed feature through the final project's
-complete runtime path.
+Students consolidate ownership and STL practice, trace a recursive Composite,
+and integrate one small polymorphic or composed feature through the final
+project's complete runtime path.
 
-## Part A — Delayed AI-free readiness
+## Part A — AI-free readiness and ownership follow-through
 
 Complete a short container/algorithm exercise using `lower_bound`,
 `upper_bound`, or `equal_range`; state the ordering precondition and interpret
 the returned half-open range. Identify all invalidated iterators after a later
 mutation. Then trace one virtual call through a leaf and a recursive composite,
 identify every owning child edge, and explain why destruction through the base
-is safe or unsafe.
+is safe or unsafe. Revisit the Week 12 ownership proposal and identify the
+smallest approved change that can be verified during this lab.
 
 ## Part B — Design the slice
 
