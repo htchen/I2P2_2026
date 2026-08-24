@@ -209,8 +209,7 @@ before the syllabus is finalized. Lecture notes are assigned in Weeks 1–8 and
 | [13](week13/) | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
 | [14](week14/) | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Testable logic, FSM, or search extension |
 | [15](week15/) | Dec. 15 | Integration, review, and final project clinic | Dec. 17 | Final project lab |
-
-The final project demo will take place on a date after December 22.
+| [16](week16/) | — | **Final project demo (date TBD after Dec. 22)** | — | No scheduled Thursday meeting |
 
 The proposed Midterm 1 scope is lecture material from Weeks 1–5, so material
 first presented in the Week 6 lecture notes on October 13 is excluded from the
