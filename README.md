@@ -194,22 +194,22 @@ Notes 1–7 in Weeks 1–7, Note 8 in Week 8, and Notes 9–13 in Weeks 10–14.
 
 | Week | Tuesday | Note | Tuesday topic or event | Thursday | Lab or exam |
 |------|---------|------|------------------------|----------|-------------|
-| 1 | Sep. 8 | 1 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
-| 2 | Sep. 15 | 2 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
-| 3 | Sep. 22 | 3 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
-| 4 | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | **Quiz 1**; midterm ownership and sanitizer milestone |
-| 5 | Oct. 6 | 5 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Token-list tracing and testing milestone |
-| 6 | Oct. 13 | 6 | Recursion and binary trees; in-lecture AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
-| 7 | Oct. 20 | 7 | Expression parsing and syntax trees | Oct. 22 | Midterm project studio |
-| 8 | Oct. 27 | 8 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
-| 9 | Nov. 3 | — | **Proposed midterm project demo; no lecture** | Nov. 5 | Event-loop and resource-lifecycle trace |
-| 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2**; small cross-file final-project component |
-| 11 | Nov. 17 | 10 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | Container, algorithm, and invalidation lab |
-| 12 | Nov. 24 | 11 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | **Proposed Midterm 2**; asynchronous ownership checkpoint |
-| 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
-| 14 | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Testable logic, FSM, or search extension |
-| 15 | Dec. 15 | — | Integration, review, and final project clinic | Dec. 17 | Final project lab |
-| 16 | Dec. 22 | — | **Final exam** | — | No scheduled Thursday meeting |
+| [1](week01/) | Sep. 8 | 1 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
+| [2](week02/) | Sep. 15 | 2 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
+| [3](week03/) | Sep. 22 | 3 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
+| [4](week04/) | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | **Quiz 1**; midterm ownership and sanitizer milestone |
+| [5](week05/) | Oct. 6 | 5 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Token-list tracing and testing milestone |
+| [6](week06/) | Oct. 13 | 6 | Recursion and binary trees; in-lecture AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
+| [7](week07/) | Oct. 20 | 7 | Expression parsing and syntax trees | Oct. 22 | Midterm project studio |
+| [8](week08/) | Oct. 27 | 8 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
+| [9](week09/) | Nov. 3 | — | **Proposed midterm project demo; no lecture** | Nov. 5 | Event-loop and resource-lifecycle trace |
+| [10](week10/) | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2**; small cross-file final-project component |
+| [11](week11/) | Nov. 17 | 10 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | Container, algorithm, and invalidation lab |
+| [12](week12/) | Nov. 24 | 11 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | **Proposed Midterm 2**; asynchronous ownership checkpoint |
+| [13](week13/) | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
+| [14](week14/) | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Testable logic, FSM, or search extension |
+| [15](week15/) | Dec. 15 | — | Integration, review, and final project clinic | Dec. 17 | Final project lab |
+| [16](week16/) | Dec. 22 | — | **Final exam** | — | No scheduled Thursday meeting |
 
 The final project demo will take place on a date after December 22.
 
