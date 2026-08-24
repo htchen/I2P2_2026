@@ -27,7 +27,7 @@ week rather than first exposure.
 | Week | Lecture foundation | Project practice | Evidence |
 |------|--------------------|------------------|----------|
 | 3 | Modules, headers, builds, debugging | Build scaffold; trace input → tokens → AST → semantics → instructions; classify TODO contracts | Build record, pipeline map, baseline tests |
-| 4 | Pointers, lifetime, allocation | Mark owners and borrowers; trace success/error cleanup; run sanitizers | Ownership table, sanitizer log, repaired seeded defect |
+| 4 | Pointers, lifetime, allocation | Quiz 1; mark owners and borrowers; trace success/error cleanup; run sanitizers | Quiz result, ownership table, sanitizer log, repaired seeded defect |
 | 5 | Linked lists and pointer-to-pointer mutation | Trace token-list creation/conversion; test empty, invalid, and boundary inputs | Token trace and student test table |
 | 6 | Recursion and tree ownership | Tuesday AST checkpoint: construct, traverse, and destroy a small tree | Hand trace plus memory-clean run; no Thursday lab |
 | 7 | Grammar, recursive descent, semantics, code generation | Integrate one parser level, lvalue checks, ISA emission, and ASMC/differential tests | Grammar trace, semantic cases, instruction trace, final verification |
@@ -47,7 +47,7 @@ integration, not onboarding.
 |------|--------------------|------------------|----------|
 | 8 | C++ setup bridge | Clone/build/run; identify event loop, centers, entities, resources, and major directories | Reproducible build record and architecture map |
 | 9 | Values, references, exceptions, RAII | Trace input → event/state → update → draw; trace one resource on normal/failure paths | Event trace and resource-lifecycle table |
-| 10 | Classes, invariants, headers | Add a small non-graphical component across header/source/test files | Change-impact map, tests, invariant explanation |
+| 10 | Classes, invariants, headers | Quiz 2; add a small non-graphical component across header/source/test files | Quiz result, change-impact map, tests, invariant explanation |
 | 11 | Copy/move, Rule of Zero, smart pointers | Audit one raw-owning collection or resource boundary; make one bounded improvement | Before/after ownership map and sanitizer evidence |
 | 12 | Templates, containers, algorithms, invalidation | Asynchronous code-reading checkpoint on a project container mutation | Invalidation trace; no Thursday lab |
 | 13 | Inheritance, composition, `variant` | Add one thin vertical slice through creation, registration, update/interaction, and draw | Working slice, hierarchy/design justification |

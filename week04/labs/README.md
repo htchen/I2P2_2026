@@ -1,5 +1,9 @@
 # Week 4 Lab — Midterm Ownership and Sanitizers
 
+This Thursday session also includes **Quiz 1**, scheduled two weeks before
+Midterm 1. Staff will announce which lab parts use the remaining in-person time
+and which, if any, are completed asynchronously.
+
 ## Outcomes
 
 Students can distinguish owners from borrowers in the compiler scaffold, trace

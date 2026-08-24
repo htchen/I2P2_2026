@@ -481,6 +481,7 @@ AI-free explanation or a small modification in any of these stages.
 
 ## References and legacy sources
 
+- [Instructor handout: *From C to Assembly*](../../assets/references/from_c_to_assembly.pdf)
 - [Syntax trees](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/5-syntax_tree.md>)
 - [A simple computer model](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/6-Computer.md>)
 - [Assembly language](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/7-Assembly.md>)

@@ -421,6 +421,7 @@ report without restoring the ownership rule.
 
 ## References and legacy sources
 
+- [Instructor handout: *From C to Assembly*](../../assets/references/from_c_to_assembly.pdf)
 - [Pointers](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/pointer/Pointer.md>)
 - [Supplementary C material: memory and pointers](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Supplementary%20Material%201/README.md>)
 - [2025 Week 1 notebook: linked-list foundations (Colab)](https://colab.research.google.com/drive/1Asu-XpzM8EfrB8ANf4ze4ejDUdgIFGq0)

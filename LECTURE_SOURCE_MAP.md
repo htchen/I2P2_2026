@@ -12,11 +12,11 @@ during the C/C++ course merger.
 2. [`I2P2_2025`](https://drive.google.com/drive/u/0/folders/1kIu5d8L7o3Dj5aY5_76_M_2SXgPSm6w9)
    — the 2025 Colab notebooks (`Week01.ipynb` through `Week15.ipynb`, with some
    week numbers intentionally absent or split).
-3. Instructor-provided `assembly.pdf` (2020), *From C to Assembly* — a compact
-   x86-oriented handout on the compilation pipeline, program sections,
-   addresses and memory access, control flow, calls, stack frames, recursion,
-   and optimization. The architecture-specific examples are adapted as
-   observation exercises rather than presented as portable C rules.
+3. Instructor-provided [*From C to Assembly* handout](assets/references/from_c_to_assembly.pdf)
+   (2020) — a compact x86-oriented source on the compilation pipeline, program
+   sections, addresses and memory access, control flow, calls, stack frames,
+   recursion, and optimization. The architecture-specific examples are adapted
+   as observation exercises rather than presented as portable C rules.
 
 The new notes are a condensed adaptation, not a week-for-week copy. Explanations
 were rewritten around students who already know Python, examples were updated to

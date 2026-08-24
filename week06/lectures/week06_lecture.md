@@ -537,6 +537,7 @@ practice that would otherwise be lost before the Week 7 integration studio.
 
 ## References and legacy sources
 
+- [Instructor handout: *From C to Assembly*](../../assets/references/from_c_to_assembly.pdf)
 - [Recursion](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Recursive/README.md>)
 - [Binary trees](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/4-binary_tree.md>)
 - [2025 Week 3 notebook (Colab)](https://colab.research.google.com/drive/1QnjMWtqSx2WqZ2AUDUln_Na3LxJ4YX2m)

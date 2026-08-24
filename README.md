@@ -2,9 +2,9 @@
 
 **Draft syllabus — Fall 2026**
 
-This syllabus is a working document. Confirmed course rules are stated as such;
-proposed assessment dates, weights, and detailed requirements remain subject to
-revision before the semester begins.
+This syllabus is a working document. Confirmed course rules and overall grading
+weights are stated as such; proposed assessment dates and detailed requirements
+remain subject to revision before the semester begins.
 
 ## Course at a Glance
 
@@ -71,8 +71,10 @@ The course deliberately develops two complementary abilities.
 ### Independent programming fluency
 
 Students must be able to read, trace, debug, and write C and C++ without AI.
-This ability is assessed through in-person exams conducted in a secured,
-programming-contest-like judge environment with no outward network connection.
+This ability is assessed through in-person quizzes and the programming portions
+of exams, conducted in a secured, programming-contest-like judge environment
+with no outward network connection, together with an in-person written
+assessment.
 
 ### AI-assisted software engineering
 
@@ -178,6 +180,10 @@ The remainder of the lab may use AI without restriction, subject to the course
 accountability policy.
 
 Two Thursday labs will be replaced by in-person midterm exams.
+The two in-person computer-lab quizzes are scheduled on the Thursday exactly two
+weeks before the corresponding midterm: Quiz 1 before Midterm 1 and Quiz 2
+before Midterm 2. Under the current proposed midterm dates, these are October 1
+and November 12, respectively.
 
 ## Weekly Schedule
 
@@ -190,13 +196,13 @@ demo date must be confirmed before the syllabus is finalized. This sequence uses
 | 1 | Sep. 8 | 1 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
 | 2 | Sep. 15 | 2 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
 | 3 | Sep. 22 | 3 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
-| 4 | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Midterm ownership and sanitizer milestone |
+| 4 | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | **Quiz 1**; midterm ownership and sanitizer milestone |
 | 5 | Oct. 6 | 5 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Token-list tracing and testing milestone |
 | 6 | Oct. 13 | 6 | Recursion and binary trees; in-lecture AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
 | 7 | Oct. 20 | 7 | Expression parsing and syntax trees | Oct. 22 | Midterm project studio |
 | 8 | Oct. 27 | — | **Proposed midterm project demo; no lecture** | Oct. 29 | Final-template build and architecture map |
 | 9 | Nov. 3 | 8 | From C to C++: values, references, exceptions, and RAII | Nov. 5 | Event-loop and resource-lifecycle trace |
-| 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | Small cross-file final-project component |
+| 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2**; small cross-file final-project component |
 | 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Final-project ownership audit and refactor |
 | 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2**; asynchronous STL reading checkpoint |
 | 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
@@ -298,10 +304,11 @@ connections.
 ## Exams
 
 There will be two midterm exams on Thursdays and one final exam on Tuesday,
-December 22. Exams are held in person using a programming-contest-like judge
-system without outward network access. AI tools, external LLM services,
-communication software, and unapproved network resources are unavailable and
-may not be used.
+December 22. Programming portions are held in person using a
+programming-contest-like judge system without outward network access. A written
+assessment is administered in person alongside the midterm exams. AI tools,
+external LLM services, communication software, and unapproved network resources
+are unavailable and may not be used during any secured assessment.
 
 Exam tasks assess independent ability to:
 
@@ -319,17 +326,24 @@ midterm will not be tested on that midterm.
 
 ## Overall Assessment
 
-The course includes:
+The following components determine the final course grade:
 
-- Thursday labs and AI-free judge exercises
-- Two in-person midterm exams
-- The C midterm project and individual demo
-- The C++ final project and individual demo
-- The in-person final exam
+| Component | Weight | Notes |
+|-----------|-------:|-------|
+| Midterm Exams | 25% + 25% | Two in-person midterm examinations |
+| Quizzes | 5% + 5% | Quiz 1: Oct. 1; Quiz 2: Nov. 12—each two weeks before its midterm |
+| Midterm Project | 12% | C expression-compiler project and demo |
+| Written Exam | 5% | Written assessment administered with the midterm exams |
+| Final Project | 23% | C++ final project and demo |
+| **Total** | **100%** | |
 
-Overall category weights, late policies, team-size rules, and project grade caps
-remain TBD. Project rubrics above describe the proposed distribution within
-each project, not the percentage of the final course grade.
+The project rubrics above describe how each project's own score is calculated;
+the 12% and 23% entries in this table are their respective contributions to the
+final course grade. Late policies, team-size rules, and project grade caps remain
+to be finalized.
+
+The schedule also includes a final exam on December 22. Its relationship to the
+100% distribution above must be confirmed before the syllabus is finalized.
 
 ## Development Expectations
 
@@ -384,7 +398,8 @@ reserved for the midterm project demo, integration/review, and final exam.
 
 - Dates of Midterm 1 and Midterm 2
 - Date of the midterm project demo
-- Overall assessment weights
+- Relationship of the December 22 final exam to the published 100% grading
+  distribution
 - Project team sizes and individual-grade adjustment policy
 - Late submission and attendance policies
 - Official compiler versions and C/C++ standards

@@ -447,6 +447,7 @@ even when `value` is negative? What special output does zero receive?
 
 ## References and legacy sources
 
+- [Instructor handout: *From C to Assembly*](../../assets/references/from_c_to_assembly.pdf)
 - [Introduction to programming](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Introduction%20to%20programming/README.md>)
 - [Operators, expressions, and statements](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Operators%2C%20Expressions%2C%20and%20Statements/README.md>)
 - [Looping](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Looping/README.md>)
