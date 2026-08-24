@@ -60,8 +60,8 @@ to preserve every previous topic.
 - After the crash course, the course will cover C pointers and dynamic data
   structures, including linked lists and binary trees, before moving to C++.
 
-The dates of the two midterms and the midterm project demo are not yet
-confirmed.
+The dates of the two midterms are not yet confirmed. The midterm project demo
+is placed on Tuesday of Week 9 in the working schedule.
 
 ## 3. Curriculum Strategy
 
@@ -117,22 +117,22 @@ By the end of the course, students should be able to:
 ## 5. Proposed 16-Week Schedule
 
 The following is a working schedule, not a confirmed calendar. It deliberately
-uses 13 new lecture notes: Notes 1–7 in Weeks 1–7 and Notes 8–13 in Weeks 9–14.
-Week 8 is proposed for the midterm project demo, Week 15 reuses existing notes
-for integration and review, and Week 16 is the final exam.
+uses 13 new lecture notes: Notes 1–7 in Weeks 1–7, Note 8 in Week 8, and Notes
+9–13 in Weeks 10–14. Week 9 is proposed for the midterm project demo, Week 15
+reuses existing notes for integration and review, and Week 16 is the final exam.
 
 | Week | Tuesday | Note | Proposed Tuesday topic | Thursday | Proposed Thursday activity |
 |------|---------|------|--------------------------|----------|-----------------------------|
 | 1 | Sep. 8 | 1 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
 | 2 | Sep. 15 | 2 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
 | 3 | Sep. 22 | 3 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
-| 4 | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Midterm ownership and sanitizer milestone |
+| 4 | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | **Quiz 1**; midterm ownership and sanitizer milestone |
 | 5 | Oct. 6 | 5 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Token-list tracing and testing milestone |
 | 6 | Oct. 13 | 6 | Recursion and binary trees; AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
 | 7 | Oct. 20 | 7 | Expression parsing and syntax trees | Oct. 22 | Midterm-project studio |
-| 8 | Oct. 27 | — | **Proposed midterm project demo; no lecture** | Oct. 29 | Final-template build and architecture map |
-| 9 | Nov. 3 | 8 | From C to C++: values, references, exceptions, and RAII | Nov. 5 | Event-loop and resource-lifecycle trace |
-| 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | Small cross-file project component |
+| 8 | Oct. 27 | 8 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
+| 9 | Nov. 3 | — | **Proposed midterm project demo; no lecture** | Nov. 5 | Event-loop and resource-lifecycle trace |
+| 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2**; small cross-file project component |
 | 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Final-project ownership audit and refactor |
 | 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2**; asynchronous container checkpoint |
 | 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
@@ -207,8 +207,8 @@ C++ mechanisms and end with short project connections.
 
 ## 7. Suggested Assessment Alignment
 
-The following scopes are proposals and should be revised after the assessment
-weights and dates are confirmed.
+The following scopes are proposals and should be revised after the remaining
+assessment dates are confirmed.
 
 - **Midterm 1:** Notes 1–5; C syntax, compilation, arrays/strings, structures,
   pointers, allocation, and linked-list reasoning. Material first presented on
@@ -315,9 +315,7 @@ story but creates more room for STL, testing, exceptions, and modern ownership.
 ## 13. Open Decisions
 
 - Which Thursdays will contain Midterm 1 and Midterm 2?
-- Which Tuesday will contain the midterm project demo?
 - Should Midterm 2 be cumulative or C++-focused?
-- What are the assessment weights?
 - Will projects be individual or team-based?
 - Which compiler, language standards, operating systems, and development tools
   will be officially supported?

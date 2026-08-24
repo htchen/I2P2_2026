@@ -1,10 +1,10 @@
-# Week 9: From C to C++
+# Week 9: Midterm Project Demo
 
-- **Tuesday, November 3:** [Lecture 8 — From C to C++: Values, References, and RAII](lectures/week09_lecture.md)
+- **Tuesday, November 3:** **Proposed midterm project demo; no lecture**
 - **Thursday, November 5:** [Event-loop and resource-lifecycle lab](labs/README.md)
 
-Focus: strings, vectors, references, `const`, range loops, lambdas, exceptions,
-stack unwinding, value returns, and deterministic resource management.
-
-Project milestone: trace one input event through update and draw, then trace one
-Allegro resource through normal initialization, failure, and cleanup.
+No new lecture note is assigned this week. Tuesday is reserved for demonstrating
+the C midterm project, explaining submitted code, and completing a small AI-free
+modification. Thursday applies the C++ and RAII foundation from Week 8 by tracing
+one input event through update and draw and one Allegro resource through normal
+initialization, failure, and cleanup.

@@ -1,4 +1,4 @@
-# Week 9 Lecture Exercises: TBD
+# Week 8 Lecture Exercises: TBD
 
 ## Exercise Overview
 

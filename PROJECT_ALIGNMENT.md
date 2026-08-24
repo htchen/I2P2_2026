@@ -31,7 +31,7 @@ week rather than first exposure.
 | 5 | Linked lists and pointer-to-pointer mutation | Trace token-list creation/conversion; test empty, invalid, and boundary inputs | Token trace and student test table |
 | 6 | Recursion and tree ownership | Tuesday AST checkpoint: construct, traverse, and destroy a small tree | Hand trace plus memory-clean run; no Thursday lab |
 | 7 | Grammar, recursive descent, semantics, code generation | Integrate one parser level, lvalue checks, ISA emission, and ASMC/differential tests | Grammar trace, semantic cases, instruction trace, final verification |
-| 8 | No lecture | Individual demonstration and small AI-free modification | Working program, explanation, AI audit |
+| 9 | No lecture; Tuesday is reserved for the midterm project demo | Individual demonstration and small AI-free modification | Working program, explanation, AI audit |
 
 Required project-specific emphasis includes prefix/postfix effects, lvalue
 rules, evaluation order, simulated-register use, instruction tracing, cleanup on
@@ -45,8 +45,8 @@ integration, not onboarding.
 
 | Week | Lecture foundation | Project practice | Evidence |
 |------|--------------------|------------------|----------|
-| 8 | C++ setup bridge | Clone/build/run; identify event loop, centers, entities, resources, and major directories | Reproducible build record and architecture map |
-| 9 | Values, references, exceptions, RAII | Trace input → event/state → update → draw; trace one resource on normal/failure paths | Event trace and resource-lifecycle table |
+| 8 | Values, references, exceptions, RAII | Clone/build/run; identify event loop, centers, entities, resources, and major directories | Reproducible build record and architecture map |
+| 9 | No new lecture; apply the Week 8 C++ foundation | Trace input → event/state → update → draw; trace one resource on normal/failure paths | Event trace and resource-lifecycle table |
 | 10 | Classes, invariants, headers | Quiz 2; add a small non-graphical component across header/source/test files | Quiz result, change-impact map, tests, invariant explanation |
 | 11 | Copy/move, Rule of Zero, smart pointers | Audit one raw-owning collection or resource boundary; make one bounded improvement | Before/after ownership map and sanitizer evidence |
 | 12 | Templates, containers, algorithms, invalidation | Asynchronous code-reading checkpoint on a project container mutation | Invalidation trace; no Thursday lab |

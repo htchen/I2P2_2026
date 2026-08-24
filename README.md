@@ -187,9 +187,9 @@ and November 12, respectively.
 
 ## Weekly Schedule
 
-The following topic placement is proposed. The midterm dates and midterm project
-demo date must be confirmed before the syllabus is finalized. This sequence uses
-13 new lecture notes: Notes 1–7 in Weeks 1–7 and Notes 8–13 in Weeks 9–14.
+The following topic placement is proposed. The midterm dates must be confirmed
+before the syllabus is finalized. This sequence uses 13 new lecture notes:
+Notes 1–7 in Weeks 1–7, Note 8 in Week 8, and Notes 9–13 in Weeks 10–14.
 
 | Week | Tuesday | Note | Tuesday topic or event | Thursday | Lab or exam |
 |------|---------|------|------------------------|----------|-------------|
@@ -200,8 +200,8 @@ demo date must be confirmed before the syllabus is finalized. This sequence uses
 | 5 | Oct. 6 | 5 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Token-list tracing and testing milestone |
 | 6 | Oct. 13 | 6 | Recursion and binary trees; in-lecture AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
 | 7 | Oct. 20 | 7 | Expression parsing and syntax trees | Oct. 22 | Midterm project studio |
-| 8 | Oct. 27 | — | **Proposed midterm project demo; no lecture** | Oct. 29 | Final-template build and architecture map |
-| 9 | Nov. 3 | 8 | From C to C++: values, references, exceptions, and RAII | Nov. 5 | Event-loop and resource-lifecycle trace |
+| 8 | Oct. 27 | 8 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
+| 9 | Nov. 3 | — | **Proposed midterm project demo; no lecture** | Nov. 5 | Event-loop and resource-lifecycle trace |
 | 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2**; small cross-file final-project component |
 | 11 | Nov. 17 | 10 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 19 | Final-project ownership audit and refactor |
 | 12 | Nov. 24 | 11 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 26 | **Proposed Midterm 2**; asynchronous STL reading checkpoint |
@@ -391,13 +391,12 @@ project milestone, verification requirements, and a concrete submission
 artifact. Exam weeks use asynchronous checkpoints instead of pretending that a
 Thursday lab is available.
 
-The 13 lecture notes are placed in Weeks 1–7 and 9–14. Weeks 8, 15, and 16 are
+The 13 lecture notes are placed in Weeks 1–8 and 10–14. Weeks 9, 15, and 16 are
 reserved for the midterm project demo, integration/review, and final exam.
 
 ## Items to Finalize
 
 - Dates of Midterm 1 and Midterm 2
-- Date of the midterm project demo
 - Relationship of the December 22 final exam to the published 100% grading
   distribution
 - Project team sizes and individual-grade adjustment policy
