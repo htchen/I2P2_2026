@@ -1,4 +1,4 @@
-# Lecture 1 — From Python to C
+# Week 1 Lecture Notes — From Python to C
 
 > September 8, 2026 · C17 · Source lineage: the legacy C introduction,
 > formatted-I/O, operators, and looping notes plus the instructor-provided
@@ -264,7 +264,7 @@ printf("%d\n", a + b);
 ```
 
 `scanf` needs the **addresses** of `a` and `b` so it can modify them. We will
-explain addresses in Lecture 4. Until then, treat the format string and each
+explain addresses in the Week 4 lecture notes. Until then, treat the format string and each
 corresponding argument as a checked pair.
 
 ### Format-contract reference

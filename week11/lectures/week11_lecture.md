@@ -1,4 +1,4 @@
-# Lecture 10 — Templates, Containers, Iterators, and Algorithms
+# Week 11 Lecture Notes — Templates, Containers, Iterators, and Algorithms
 
 > November 17, 2026 · Source lineage: the legacy template and standard-library
 > notes plus the 2025 Week 11 and Week 14 notebooks
@@ -29,7 +29,7 @@ By the end of this lecture, you should be able to:
 Earlier lectures used `vector<int>` as a library client, and Week 8 previewed
 value returns and `std::move`. Now that classes are established, we can explain
 the template mechanism behind the angle brackets and write generic abstractions
-ourselves. Note 11 will develop the complete copy/move and smart-pointer
+ourselves. The Week 12 lecture notes will develop the complete copy/move and smart-pointer
 ownership model; this note uses library value semantics without requiring that
 full implementation machinery first.
 

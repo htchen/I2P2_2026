@@ -1,4 +1,4 @@
-# Lecture 11 — Ownership, Copying, Moving, and the Rule of Zero
+# Week 12 Lecture Notes — Ownership, Copying, Moving, and the Rule of Zero
 
 > November 24, 2026 · Source lineage: the legacy Classes II notes and IntVec
 > implementation from the 2025 Week 8/10 notebooks

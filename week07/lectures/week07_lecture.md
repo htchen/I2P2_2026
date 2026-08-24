@@ -1,4 +1,4 @@
-# Lecture 7 — Expression Parsing and Syntax Trees
+# Week 7 Lecture Notes — Expression Parsing and Syntax Trees
 
 > October 20, 2026 · Source lineage: the legacy syntax-tree, computer, and
 > assembly notes, the 2025 Week 4–5 compiler notebooks, and the

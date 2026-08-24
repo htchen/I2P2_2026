@@ -1,4 +1,4 @@
-# Lecture 2 — Functions, Arrays, and Strings in C
+# Week 2 Lecture Notes — Functions, Arrays, and Strings in C
 
 > September 15, 2026 · Source lineage: the legacy function, array, string, and
 > input notes, reorganized around comparisons with Python sequences
@@ -125,7 +125,7 @@ void example(void)
 ```
 
 Both pointers are borrowed and must designate valid `int` objects for the whole
-call. Lecture 4 develops the complete model: pointer arithmetic, nullability,
+call. The Week 4 lecture notes develop the complete model: pointer arithmetic, nullability,
 array relationships, lifetime, dynamic allocation, and ownership. Until then,
 do not infer that every address may be dereferenced or retained.
 
@@ -175,7 +175,7 @@ structure when the state is part of the abstraction.
 Write a prototype and five-line contract for a function that finds a target in
 an integer array. Compare three result designs: return an index with a sentinel,
 return success plus an output parameter, or return a pointer to the element.
-The third design will be analyzed fully after Lecture 4.
+The third design will be analyzed fully after the Week 4 lecture notes.
 
 ## Hour 2 — Array layout, multidimensional storage, and algorithms
 

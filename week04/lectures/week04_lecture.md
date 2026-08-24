@@ -1,4 +1,4 @@
-# Lecture 4 — Pointers, Lifetime, and Dynamic Memory
+# Week 4 Lecture Notes — Pointers, Lifetime, and Dynamic Memory
 
 > September 29, 2026 · Source lineage: the legacy pointer, dynamic allocation,
 > double-pointer, and linked-data notes plus the instructor-provided

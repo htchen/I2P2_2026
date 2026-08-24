@@ -1,4 +1,4 @@
-# Lecture 6 — Recursion and Binary Trees
+# Week 6 Lecture Notes — Recursion and Binary Trees
 
 > October 13, 2026 · Source lineage: the legacy recursion and binary-tree notes,
 > the 2025 Week 3–4 notebooks, and the instructor-provided *From C to Assembly*

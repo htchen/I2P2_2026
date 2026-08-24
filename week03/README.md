@@ -1,6 +1,6 @@
 # Week 3: Structures and Modular C
 
-- **Tuesday, September 22:** [Lecture 3 — Structures, Modules, Builds, and Debugging](lectures/week03_lecture.md)
+- **Tuesday, September 22:** [Week 3 Lecture Notes — Structures, Modules, Builds, and Debugging](lectures/week03_lecture.md)
 - **Thursday, September 24:** [Midterm scaffold build and code-map lab](labs/README.md)
 
 Focus: structures, enums, invariants, public headers, separate compilation,

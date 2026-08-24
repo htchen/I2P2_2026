@@ -1,4 +1,4 @@
-# Lecture 3 — Structures, Modules, Builds, and Debugging
+# Week 3 Lecture Notes — Structures, Modules, Builds, and Debugging
 
 > September 22, 2026 · Source lineage: the legacy structures, multi-file build,
 > program-style, and debugging notes

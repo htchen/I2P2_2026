@@ -1,6 +1,6 @@
 # Week 10: Classes and Invariants
 
-- **Tuesday, November 10:** [Lecture 9 — Classes, Invariants, and Operators](lectures/week10_lecture.md)
+- **Tuesday, November 10:** [Week 10 Lecture Notes — Classes, Invariants, and Operators](lectures/week10_lecture.md)
 - **Thursday, November 12:** **Quiz 2 (5%)** and [cross-file component and invariant lab](labs/README.md)
 
 Focus: constructors, member-initializer lists, access control, `const` member

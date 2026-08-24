@@ -1,4 +1,4 @@
-# Lecture 12 — Inheritance and Runtime Polymorphism
+# Week 13 Lecture Notes — Inheritance and Runtime Polymorphism
 
 > December 1, 2026 · Source lineage: the legacy Classes III material and the
 > class-hierarchy/variant sections of the 2025 Week 7 and Week 14 notebooks

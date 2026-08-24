@@ -1,6 +1,6 @@
 # Week 8: From C to C++
 
-- **Tuesday, October 27:** [Lecture 8 — From C to C++: Values, References, and RAII](lectures/week08_lecture.md)
+- **Tuesday, October 27:** [Week 8 Lecture Notes — From C to C++: Values, References, and RAII](lectures/week08_lecture.md)
 - **Thursday, October 29:** [Final-template build and architecture-map lab](labs/README.md)
 
 Focus: strings, vectors, references, `const`, range loops, lambdas, exceptions,

@@ -116,48 +116,53 @@ By the end of the course, students should be able to:
 
 ## 5. Proposed 16-Week Schedule
 
-The following is a working schedule, not a confirmed calendar. It deliberately
-uses 13 new lecture notes: Notes 1–7 in Weeks 1–7, Note 8 in Week 8, and Notes
-9–13 in Weeks 10–14. Week 9 is proposed for the midterm project demo, Week 15
-reuses existing notes for integration and review, and Week 16 is the final exam.
+The following is a working schedule, not a confirmed calendar. Lecture notes
+are assigned in Weeks 1–8 and 10–14. Week 9 is proposed for the midterm project
+demo, Week 15 reuses existing notes for integration and review, and Week 16 is
+the final exam.
 
-| Week | Tuesday | Note | Proposed Tuesday topic | Thursday | Proposed Thursday activity |
-|------|---------|------|--------------------------|----------|-----------------------------|
-| 1 | Sep. 8 | 1 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
-| 2 | Sep. 15 | 2 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
-| 3 | Sep. 22 | 3 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
-| 4 | Sep. 29 | 4 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | **Quiz 1**; midterm ownership and sanitizer milestone |
-| 5 | Oct. 6 | 5 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Token-list tracing and testing milestone |
-| 6 | Oct. 13 | 6 | Recursion and binary trees; AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
-| 7 | Oct. 20 | 7 | Expression parsing and syntax trees | Oct. 22 | Midterm-project studio |
-| 8 | Oct. 27 | 8 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
-| 9 | Nov. 3 | — | **Proposed midterm project demo; no lecture** | Nov. 5 | Event-loop and resource-lifecycle trace |
-| 10 | Nov. 10 | 9 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2**; small cross-file project component |
-| 11 | Nov. 17 | 10 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | Container, algorithm, and invalidation lab |
-| 12 | Nov. 24 | 11 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | **Proposed Midterm 2**; asynchronous ownership checkpoint |
-| 13 | Dec. 1 | 12 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
-| 14 | Dec. 8 | 13 | Graph and state-space search using modern C++ | Dec. 10 | Testable game logic, FSM, or search extension |
-| 15 | Dec. 15 | — | Integration, review, and final-project clinic | Dec. 17 | Final-project lab |
-| 16 | Dec. 22 | — | **Final exam** | — | No scheduled Thursday meeting |
+| Week | Tuesday | Proposed Tuesday topic | Thursday | Proposed Thursday activity |
+|------|---------|--------------------------|----------|-----------------------------|
+| 1 | Sep. 8 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
+| 2 | Sep. 15 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
+| 3 | Sep. 22 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
+| 4 | Sep. 29 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | **Quiz 1**; midterm ownership and sanitizer milestone |
+| 5 | Oct. 6 | Linked lists and pointer-to-pointer techniques | Oct. 8 | Token-list tracing and testing milestone |
+| 6 | Oct. 13 | Recursion and binary trees; AST checkpoint | Oct. 15 | **Proposed Midterm 1** |
+| 7 | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | Midterm-project studio |
+| 8 | Oct. 27 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
+| 9 | Nov. 3 | **Proposed midterm project demo; no lecture** | Nov. 5 | Event-loop and resource-lifecycle trace |
+| 10 | Nov. 10 | Classes, invariants, constructors, member functions, and operators | Nov. 12 | **Quiz 2**; small cross-file project component |
+| 11 | Nov. 17 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | Container, algorithm, and invalidation lab |
+| 12 | Nov. 24 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | **Proposed Midterm 2**; asynchronous ownership checkpoint |
+| 13 | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | Polymorphic vertical-slice milestone |
+| 14 | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Testable game logic, FSM, or search extension |
+| 15 | Dec. 15 | Integration, review, and final-project clinic | Dec. 17 | Final-project lab |
+| 16 | Dec. 22 | **Final exam** | — | No scheduled Thursday meeting |
 
 The lecture files now follow this dependency order. Four deliberate bridges
 prevent concepts from appearing without enough prior model:
 
-- Note 2 gives the minimal `&`/`*` address-passing vocabulary needed by ordinary
-  C interfaces, while Note 4 retains the full pointer, lifetime, and ownership
-  treatment.
-- Note 8 introduces throwing, handler selection, and stack unwinding before
-  constructors and copy operations depend on exception behavior.
-- Note 10 explains templates and `std::optional` before Note 12 uses generic
-  polymorphic containers/`variant` and Note 13 returns optional search results.
-- Note 11 makes copy/move and smart-pointer ownership explicit before Note 12
-  combines polymorphism with owning base pointers and recursive composites.
+- The Week 2 lecture notes give the minimal `&`/`*` address-passing vocabulary
+  needed by ordinary C interfaces, while the Week 4 lecture notes retain the
+  full pointer, lifetime, and ownership treatment.
+- The Week 8 lecture notes introduce throwing, handler selection, and stack
+  unwinding before constructors and copy operations depend on exception
+  behavior.
+- The Week 11 lecture notes explain templates and `std::optional` before the
+  Week 13 lecture notes use generic polymorphic containers/`variant` and the
+  Week 14 lecture notes return optional search results.
+- The Week 12 lecture notes make copy/move and smart-pointer ownership explicit
+  before Week 13 combines polymorphism with owning base pointers and recursive
+  composites.
 
-Students may use `vector<T>` as library clients in Note 8 before learning to
-author templates; the class model in Note 9 provides the needed foundation for
-template definitions in Note 10. Note 8 previews value returns and `std::move`,
-while Note 11 supplies the full copy/move and ownership model. Both midterms
-exclude material first presented on the Tuesday immediately before the exam.
+Students may use `vector<T>` as library clients in the Week 8 lecture notes
+before learning to author templates; the class model in the Week 10 lecture
+notes provides the needed foundation for template definitions in the Week 11
+lecture notes. The Week 8 lecture notes preview value returns and `std::move`,
+while the Week 12 lecture notes supply the full copy/move and ownership model.
+Both midterms exclude material first presented on the Tuesday immediately before
+the exam.
 
 ## 6. Proposed Project Spine
 
@@ -213,16 +218,18 @@ C++ mechanisms and end with short project connections.
 The following scopes are proposals and should be revised after the remaining
 assessment dates are confirmed.
 
-- **Midterm 1:** Notes 1–5; C syntax, compilation, arrays/strings, structures,
+- **Midterm 1:** Lecture material from Weeks 1–5; C syntax, compilation,
+  arrays/strings, structures,
   pointers, allocation, and linked-list reasoning. Material first presented on
   the Tuesday immediately before the exam should not be tested.
-- **Midterm project:** Notes 4–7; ownership, linked structures, recursion,
+- **Midterm project:** Lecture material from Weeks 4–7; ownership, linked structures, recursion,
   binary trees, parsing, and cleanup.
-- **Midterm 2:** Notes 8–10; the C-to-C++ transition, classes, templates, STL
+- **Midterm 2:** Lecture material from Weeks 8, 10, and 11; the C-to-C++
+  transition, classes, templates, STL
   containers, iterators, algorithms, boundary searches, `optional`, complexity,
   and invalidation. It may include comparisons with the C implementation.
-- **Final exam:** Cumulative conceptual coverage with greater emphasis on Notes
-  11–13 and integration across C and C++.
+- **Final exam:** Cumulative conceptual coverage with greater emphasis on the
+  lecture material from Weeks 12–14 and integration across C and C++.
 - **Final project:** Correctness, ownership and resource safety, data-structure
   choice, use of C++ abstractions, testing, and explanation during the demo.
 
@@ -258,8 +265,8 @@ assessment dates are confirmed.
 - CUDA
 
 The small `std::optional` result model is part of the core because graph search
-uses it in Note 13. Other selected C++17/C++20 features such as structured
-bindings and `std::variant` may be introduced inside relevant examples. They
+uses it in the Week 14 lecture notes. Other selected C++17/C++20 features such
+as structured bindings and `std::variant` may be introduced inside relevant examples. They
 should not displace the ownership, classes, and STL core.
 
 ## 9. Lecture-Note Format

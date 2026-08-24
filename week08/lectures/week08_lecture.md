@@ -1,4 +1,4 @@
-# Lecture 8 — From C to C++: Values, References, and RAII
+# Week 8 Lecture Notes — From C to C++: Values, References, and RAII
 
 > October 27, 2026 · Source lineage: the legacy C++ introduction and 2025 Week 7
 > notebook; examples remain compatible with C++17

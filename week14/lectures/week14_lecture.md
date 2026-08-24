@@ -1,4 +1,4 @@
-# Lecture 13 — Graphs and State-Space Search in Modern C++
+# Week 14 Lecture Notes — Graphs and State-Space Search in Modern C++
 
 > December 8, 2026 · Source lineage: the legacy path-finding, Water Jugs,
 > Missionary/Torch notes and the 2025 Week 11–13 problem-solving notebooks
@@ -253,7 +253,7 @@ std::optional<std::vector<int>> shortest_path(
 }
 ```
 
-As established in Note 10, the optional result distinguishes “no path exists”
+As established in the Week 11 lecture notes, the optional result distinguishes “no path exists”
 from every valid path, including one that starts at vertex zero or uses zero
 edges because `start == goal`.
 

@@ -1,4 +1,4 @@
-# Lecture 9 — Classes, Invariants, and Operators
+# Week 10 Lecture Notes — Classes, Invariants, and Operators
 
 > November 10, 2026 · Source lineage: the legacy Classes I notes and Rational
 > examples from the 2025 C++ notebook
@@ -338,7 +338,7 @@ constructor when there is one obvious, valid interpretation. Use named factories
 for alternate units/formats, fallible parsing, hidden concrete types, or
 polymorphic creation. The return type must state the lifetime contract: value,
 unique owner, shared immutable object, or explicit failure. Returning an owning
-raw pointer leaves that contract unstated; Note 11 develops the smart-pointer
+raw pointer leaves that contract unstated; the Week 12 lecture notes develop the smart-pointer
 alternatives.
 
 ### Factory design checkpoint

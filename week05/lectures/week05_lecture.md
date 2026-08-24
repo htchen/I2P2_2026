@@ -1,4 +1,4 @@
-# Lecture 5 — Linked Lists and Pointer-to-Pointer Techniques
+# Week 5 Lecture Notes — Linked Lists and Pointer-to-Pointer Techniques
 
 > October 6, 2026 · Source lineage: the legacy linked-list notes and the 2025
 > Week 1–3 notebooks; examples were consolidated around explicit ownership

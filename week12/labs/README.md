@@ -1,7 +1,7 @@
 # Week 12 Checkpoint — Ownership and Value Semantics
 
 Thursday is Midterm 2, so this is a bounded asynchronous code-reading
-checkpoint. Note 11 is excluded from the midterm scope.
+checkpoint. The Week 12 lecture notes are excluded from the midterm scope.
 
 ## Task
 

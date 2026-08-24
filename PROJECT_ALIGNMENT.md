@@ -66,13 +66,13 @@ published project guide. The staff alignment check is:
 
 | Assessed requirement | Prior learning evidence |
 |----------------------|-------------------------|
-| C judge correctness | Notes 1–7 and Weeks 3–7 milestone tests |
-| C memory safety | Note 4, Weeks 4 and 6 sanitizer runs |
-| Parser/semantic/codegen reasoning | Note 7 and Week 7 studio |
-| C++ architecture and integration | Notes 9–12 and Weeks 8–13 maps/slices |
-| C++ ownership | Notes 8 and 11; Weeks 9, 12, and 13 audits |
-| Container correctness | Note 10; Week 11 lab and Week 13 consolidation |
-| Non-graphical testing | Notes 9–11 and 13; Weeks 10, 11, and 14 labs |
+| C judge correctness | Lecture material from Weeks 1–7 and Weeks 3–7 milestone tests |
+| C memory safety | Week 4 lecture notes; Weeks 4 and 6 sanitizer runs |
+| Parser/semantic/codegen reasoning | Week 7 lecture notes and Week 7 studio |
+| C++ architecture and integration | Lecture material from Weeks 10–13 and Weeks 8–13 maps/slices |
+| C++ ownership | Week 8 and Week 12 lecture notes; Weeks 9, 12, and 13 audits |
+| Container correctness | Week 11 lecture notes; Week 11 lab and Week 13 consolidation |
+| Non-graphical testing | Lecture material from Weeks 10–12 and 14; Weeks 10, 11, and 14 labs |
 | AI accountability | Every project milestone and both demonstrations |
 
 ## Staff review checklist
