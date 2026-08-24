@@ -254,14 +254,12 @@ students' first contact with the project.
 
 ### Proposed midterm project rubric
 
-| Component | Weight |
-|-----------|-------:|
-| Judge-system correctness | 30% |
-| Staged milestone evidence | 15% |
-| Student-designed tests | 10% |
-| Memory safety and code quality | 15% |
-| Individual demo and code explanation | 25% |
-| AI-use record and audit | 5% |
+- **30%** Judge-system correctness
+- **15%** Staged milestone evidence
+- **10%** Student-designed tests
+- **15%** Memory safety and code quality
+- **25%** Individual demo and code explanation
+- **5%** AI-use record and audit
 
 ## Final Project: C++ Game Extension
 
@@ -294,16 +292,14 @@ and include short project connections.
 
 ### Proposed final project rubric
 
-| Component | Weight |
-|-----------|-------:|
-| Correctness and completeness | 15% |
-| Staged milestone evidence | 10% |
-| Meaningful gameplay extension | 10% |
-| Architecture and integration | 20% |
-| C++ ownership and design quality | 15% |
-| Testing and verification | 10% |
-| Individual demo and code modification | 15% |
-| AI-use record and audit | 5% |
+- **15%** Correctness and completeness
+- **10%** Staged milestone evidence
+- **10%** Meaningful gameplay extension
+- **20%** Architecture and integration
+- **15%** C++ ownership and design quality
+- **10%** Testing and verification
+- **15%** Individual demo and code modification
+- **5%** AI-use record and audit
 
 ## Exams
 
