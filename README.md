@@ -251,7 +251,7 @@ full AST construction, traversal, and cleanup lab. Because Midterm 1 replaces
 the Week 7 lab, parser and code-generation verification continues through a
 bounded asynchronous checkpoint before the Week 10 demonstration.
 
-### Proposed midterm project rubric
+### Proposed midterm project rubric — 20% of course grade
 
 - **30%** Judge-system correctness
 - **15%** Staged milestone evidence
@@ -289,7 +289,7 @@ the Week 15 integration clinic. Allegro-specific setup and codebase navigation
 belong primarily in the labs; Tuesday notes retain transferable C++ concepts
 and include short project connections.
 
-### Proposed final project rubric
+### Proposed final project rubric — 25% of course grade
 
 - **15%** Correctness and completeness
 - **10%** Staged milestone evidence
@@ -329,15 +329,15 @@ The following components determine the final course grade:
 
 | Component | Weight | Notes |
 |-----------|-------:|-------|
-| Midterm Exams | 25% + 25% | Two in-person midterm examinations |
+| Midterm Exams | 20% + 20% | Two in-person midterm examinations |
 | Quizzes | 5% + 5% | Quiz 1: Oct. 8; Quiz 2: Nov. 19—each two weeks before its midterm |
-| Midterm Project | 12% | C expression-compiler project and demo |
+| Midterm Project | 20% | C expression-compiler project and demo |
 | Written Exam | 5% | Written assessment administered with the midterm exams |
-| Final Project | 23% | C++ final project and demo |
+| Final Project | 25% | C++ final project and demo |
 | **Total** | **100%** | |
 
 The project rubrics above describe how each project's own score is calculated;
-the 12% and 23% entries in this table are their respective contributions to the
+the 20% and 25% entries in this table are their respective contributions to the
 final course grade. Late policies, team-size rules, and project grade caps remain
 to be finalized.
 
