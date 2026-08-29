@@ -391,35 +391,6 @@ shapes:
 The final item matters in C: write the bounds test on the left side of `&&` so
 short-circuit evaluation proves the array access is valid.
 
-### Counting interpretations: compare design strategies
-
-For a small label bound, one general strategy is to generate candidate
-arrangements and pass each complete candidate to an independent traversal
-validator. A second strategy reasons directly about legal recursive subtree
-partitions. The first is easier to specify but grows factorially; the second can
-avoid unrelated candidates but requires a careful recurrence and duplicate
-policy.
-
-Do not implement either during the first discussion. Instead, complete this
-design sheet:
-
-| Question | Required decision |
-|----------|-------------------|
-| Counted object | tree shapes, ordered trees, or distinct inorder sequences? |
-| Labels | distinct, repeated, or invalid when repeated? |
-| Empty input | zero interpretations or one empty tree? |
-| Candidate state | what does one recursive call represent? |
-| Base case | what exactly is validated or counted? |
-| Pruning | which partial contradictions are safe to reject? |
-| Complexity | what input bound makes the method feasible? |
-
-For distinct labels, preorder plus a candidate inorder determines at most one
-tree, which provides a useful validator. For preorder `A B C` and postorder
-`C B A`, identify all consistent inorder sequences by hand and compare the
-number of examined arrangements with the number of valid interpretations. The
-exercise stops at traces, contracts, and complexity analysis; students still
-design and implement their own algorithms in later problem-solving work.
-
 ### 8. Shape determines cost
 
 Every full traversal visits `n` nodes: O(n) time. Its additional stack use is
@@ -455,19 +426,6 @@ const struct TreeNode *bst_minimum(const struct TreeNode *node)
 Both return borrowed pointers. They do not transfer ownership, and a later tree
 mutation or destruction may invalidate them.
 
-### Optional extension: deletion cases
-
-BST removal separates three cases:
-
-1. leaf: replace its incoming link with `NULL`;
-2. one child: replace its incoming link with that child;
-3. two children: replace the value with the inorder successor/predecessor, then
-   remove that replacement node from its original one-child position.
-
-Implement deletion with a pointer-to-pointer to the root link. Require students
-to draw ownership before coding; most deletion defects are wrong link updates or
-use-after-free, not incorrect comparisons.
-
 ### Reconstruction implementation plan
 
 Use half-open ranges in the traversal arrays. A helper receives preorder range,
@@ -478,9 +436,9 @@ partial children and the root before returning failure.
 ### Hour 3 integration test
 
 Insert a sequence, verify inorder ordering and recorded size, search present and
-absent values, remove a leaf/one-child/two-child root, and destroy the tree. Run
-the same operation sequence for a balanced insertion order and sorted insertion
-order; compare observed height and maximum recursion depth.
+absent values, reconstruct one tree from two traversals, and destroy both trees.
+Run the insertion sequence for balanced and sorted orders; compare observed
+height and maximum recursion depth.
 
 ### 9. Tree testing strategy
 
@@ -521,7 +479,7 @@ excluded because it is first presented two days before the exam.
 6. Give two different trees with preorder `A B` and postorder `B A`.
 7. What must a choose/recurse/undo generator restore before trying the next
    candidate?
-8. List the checks required before counting traversal interpretations.
+8. (Optional) List the checks required before counting traversal interpretations.
 
 ## Summary
 
@@ -534,6 +492,49 @@ excluded because it is first presented two days before the exam.
   factorial search bound are explicit.
 - Ownership determines destruction order.
 - Complexity depends on tree height as well as node count.
+
+## Optional enrichment
+
+These extensions preserve the original problem-solving ideas but are outside
+the three-hour core. They are suitable for a lab, homework preparation, or a
+later review session.
+
+### Counting traversal interpretations
+
+For a small label bound, one general strategy is to generate candidate inorder
+arrangements and pass each complete candidate to an independent traversal
+validator. A second strategy reasons directly about legal recursive subtree
+partitions. The first is easier to specify but grows factorially; the second can
+avoid unrelated candidates but requires a careful recurrence and duplicate
+policy.
+
+Complete this design sheet before implementing either strategy:
+
+| Question | Required decision |
+|----------|-------------------|
+| Counted object | tree shapes, ordered trees, or distinct inorder sequences? |
+| Labels | distinct, repeated, or invalid when repeated? |
+| Empty input | zero interpretations or one empty tree? |
+| Candidate state | what does one recursive call represent? |
+| Base case | what exactly is validated or counted? |
+| Pruning | which partial contradictions are safe to reject? |
+| Complexity | what input bound makes the method feasible? |
+
+For distinct labels, preorder plus a candidate inorder determines at most one
+tree. For preorder `A B C` and postorder `C B A`, identify all consistent inorder
+sequences by hand and compare examined arrangements with valid interpretations.
+
+### BST deletion cases
+
+BST removal separates three cases:
+
+1. leaf: replace its incoming link with `NULL`;
+2. one child: replace its incoming link with that child;
+3. two children: copy the inorder successor/predecessor value, then remove that
+   replacement node from its original one-child position.
+
+Implement deletion with a pointer-to-pointer to the root link. Draw ownership
+before coding and test leaf, one-child, and two-child roots under a sanitizer.
 
 ## References and legacy sources
 

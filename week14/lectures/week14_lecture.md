@@ -27,6 +27,10 @@ By the end of this lecture, you should be able to:
 
 ## Hour 1 — Graph representation and depth-first exploration
 
+> **Core implementation:** build the geometric connected-component DFS. The
+> explicit adjacency-list DFS below supplies the traversal skeleton; alternative
+> representations and iterative DFS are optional reading after the summary.
+
 ### 1. Graph vocabulary
 
 A graph consists of vertices and edges. Edges may be directed or undirected,
@@ -60,17 +64,6 @@ density and operations.
 
 Validate external vertex numbers before converting them to vector indices.
 
-### Edge list, matrix, or adjacency list
-
-| Representation | Storage | Edge query | Neighbor iteration |
-|----------------|---------|------------|--------------------|
-| Edge list | O(E) | O(E) | O(E) scan |
-| Matrix | O(V²) | O(1) | O(V) per vertex |
-| Adjacency list | O(V+E) | O(degree) typically | O(degree) |
-
-An edge list is convenient when sorting edges, a matrix suits dense graphs, and
-adjacency lists suit sparse traversal. Representation follows operations.
-
 ### 3. Depth-first search
 
 ```cpp
@@ -95,36 +88,6 @@ bool reachable_dfs(const Graph& graph, int start, int goal)
 DFS explores one branch deeply before backtracking. It is useful for reachability,
 connected components, cycle-related algorithms, and exhaustive backtracking.
 Its recursion depth can be O(V); an explicit `std::stack` avoids call-stack limits.
-
-### Iterative DFS and discovery order
-
-```cpp
-std::vector<int> dfs_order(const Graph& graph, int start)
-{
-    std::vector<int> order;
-    std::vector<bool> visited(graph.size(), false);
-    std::stack<int> work;
-    work.push(start);
-
-    while (!work.empty()) {
-        int current = work.top();
-        work.pop();
-        if (visited.at(current)) continue;
-        visited.at(current) = true;
-        order.push_back(current);
-
-        for (auto it = graph.at(current).rbegin();
-             it != graph.at(current).rend(); ++it) {
-            if (!visited.at(*it)) work.push(*it);
-        }
-    }
-    return order;
-}
-```
-
-Reverse neighbor insertion matches a left-to-right recursive traversal for a
-fixed adjacency order. DFS order is not inherently unique; tests should control
-neighbor order or assert reachability rather than one accidental sequence.
 
 ### 4. Geometric proximity defines an implicit graph
 
@@ -187,20 +150,6 @@ neighbors. Marking later permits cycles to rediscover the same vertex and can
 cause repeated work or unbounded recursion. Recursive DFS may reach depth V on
 a chain, so an explicit stack is the robust choice when V can be large.
 
-### Representation and scaling choices
-
-| Approach | Stored edges | Typical proximity work | Main tradeoff |
-|----------|--------------|------------------------|---------------|
-| Adjacency matrix | O(V²) | O(V²) build, O(V) neighbor scan | Simple dense representation |
-| Materialized adjacency lists | O(V+E) | O(V²) naive build, then O(V+E) DFS | Reuse edges across later algorithms |
-| On-demand predicate | None | O(V²) across DFS | Low edge storage, repeated predicate checks |
-| Spatial buckets | Data-dependent | Check nearby cells | More invariants; worst case may remain quadratic |
-
-Do not claim O(V+E) for an on-demand traversal unless neighbor generation truly
-enumerates only the E edges. For very large point sets, a grid or spatial index
-can reduce candidate checks under suitable coordinate/radius assumptions, but
-that optimization belongs after the simple model is verified.
-
 ### Hour 1 graph lab
 
 First read an explicit undirected graph, reject invalid endpoints, and compute
@@ -210,6 +159,10 @@ materializing an adjacency matrix. Test isolated vertices, an exact-boundary
 edge, a transitive chain, duplicate coordinates, and an empty graph.
 
 ## Hour 2 — Breadth-first layers and shortest paths
+
+> **Core implementation:** implement multi-source grid BFS. Read the
+> single-source `shortest_path` as a reference for the queue/visited invariant;
+> do not live-code both programs.
 
 ### 5. Breadth-first search finds shortest unweighted paths
 
@@ -363,24 +316,18 @@ BFS minimizes number of edges only when all edges have equal cost. Weighted
 nonnegative graphs require Dijkstra's algorithm; negative edges require other
 methods.
 
-### Search-policy boundary
-
-- BFS: FIFO queue and unit edge cost.
-- DFS: stack/recursion for reachability or exhaustive exploration.
-- Dijkstra: priority queue and nonnegative weighted cost.
-- A*: priority queue plus an admissible heuristic toward a goal.
-
-Keep successor generation independent so the same model can use another policy.
-Replacing a queue with a priority queue is not enough if visited/finalization
-logic still assumes BFS.
-
 ### Hour 2 checkpoint
 
-Modify `shortest_path` to return path and distance. Then add weighted edges and
-construct a case where BFS uses fewer edges but higher total cost. State the
-additional data and invariant Dijkstra needs.
+Trace the multi-source implementation by queue layer and verify the final
+distance matrix against direct shortest paths on a tiny grid. Explain why the
+maximum required-target distance is the completion time and why an unseen target
+must produce failure.
 
 ## Hour 3 — Implicit state graphs and puzzle solving
+
+> **Core implementation:** complete one Water Jugs solver with successor,
+> goal, BFS, parent/action, and reconstruction boundaries. Other classic puzzles
+> and weighted-policy comparisons are optional reading.
 
 ### 7. Puzzles are implicit graphs
 
@@ -510,24 +457,11 @@ Use tiny hand-drawn state graphs and properties to audit generated code.
 For BFS, verify not only that a path works but that no shorter path exists on
 small exhaustively enumerable cases.
 
-### Compare classic state spaces
-
-| Puzzle | State | Critical invariant | Typical action |
-|--------|-------|--------------------|----------------|
-| Water Jugs | `(amount_a, amount_b)` | capacities respected | fill, empty, pour |
-| Missionaries/Cannibals | counts on each side + boat side | missionaries safe on both sides | move one/two people |
-| Bridge and Torch | side-set + torch side + elapsed cost | torch travels with movers | one/two cross |
-| Maze | cell position | open and in bounds | move to neighbor |
-
-Bridge and Torch has weighted actions, so shortest move count and minimum time
-are different objectives. This directly motivates separating model from policy.
-
 ### Hour 3 integration studio
 
 Implement Water Jugs with `State`, `successors`, `goal`, BFS, parent/action
 records, and formatted output. Assert invariants for every successor. Compare
-with hand solutions and exhaustive small cases; then change the objective to
-total poured volume and explain why ordinary BFS is no longer correct.
+with hand solutions and exhaustive small cases.
 
 ## Final project handoff — Test logic without the window
 
@@ -574,6 +508,49 @@ manual integration plan.
 - Parent links turn reachability into an explainable path.
 - State-space search treats puzzles as implicit graphs.
 - Clean separation of model, successors, goal, and policy makes search testable.
+
+## Optional enrichment
+
+These comparisons support further problem solving but are not part of the three
+live implementations in the core lecture.
+
+### Representation choices and iterative DFS
+
+| Representation | Storage | Edge query | Neighbor iteration |
+|----------------|---------|------------|--------------------|
+| Edge list | O(E) | O(E) | O(E) scan |
+| Matrix | O(V²) | O(1) | O(V) per vertex |
+| Adjacency list | O(V+E) | O(degree) typically | O(degree) |
+
+An iterative DFS uses `std::stack<int>` instead of call frames. Mark a vertex at
+discovery or deliberately tolerate duplicate stack entries, and document whether
+neighbor insertion order matters to tests. For proximity graphs, compare an
+O(V²) matrix, materialized lists, an on-demand predicate, and spatial buckets;
+do not claim O(V+E) unless neighbor generation actually enumerates only edges.
+
+### Search-policy comparison
+
+- BFS: FIFO queue and unit edge cost.
+- DFS: stack/recursion for reachability or exhaustive exploration.
+- Dijkstra: priority queue and nonnegative weighted cost.
+- A*: priority queue plus an admissible heuristic toward a goal.
+
+Construct a weighted graph where BFS uses fewer edges but higher total cost.
+Changing the worklist alone is insufficient if visited/finalization logic still
+assumes BFS.
+
+### Additional classic state spaces
+
+| Puzzle | State | Critical invariant | Typical action |
+|--------|-------|--------------------|----------------|
+| Water Jugs | `(amount_a, amount_b)` | capacities respected | fill, empty, pour |
+| Missionaries/Cannibals | counts on each side + boat side | missionaries safe on both sides | move one/two people |
+| Bridge and Torch | side-set + torch side + elapsed cost | torch travels with movers | one/two cross |
+| Maze | cell position | open and in bounds | move to neighbor |
+
+Bridge and Torch has weighted actions, so shortest move count and minimum time
+are different objectives. As a final extension, change Water Jugs from fewest
+moves to least total poured volume and explain why ordinary BFS is insufficient.
 
 ## References and legacy sources
 

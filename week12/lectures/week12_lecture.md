@@ -58,6 +58,22 @@ But the compiler-generated copy constructor copies the pointer value, not the
 array. Two objects would then believe they own the same allocation and both
 destructors would call `delete[]` on it.
 
+### Shallow-copy failure experiment
+
+Before implementing any copy operation, instrument the object and owned pointer
+addresses, then run this sequence under AddressSanitizer:
+
+```cpp
+IntVec original{3};
+IntVec copy = original;   // compiler-generated memberwise copy
+```
+
+Predict both objects' `data_` values and the order of destructor calls before
+running it. Classify the report as an ownership failure rather than merely a bad
+`delete[]`, and state the three legitimate policy choices: deep-copy the
+resource, transfer unique ownership, or disable copying. This experiment gives
+Hour 1 a concrete failure whose repair motivates Hour 2.
+
 ### Size, capacity, and growth invariant
 
 The 2025 IntVec notebook stored begin, logical end, and allocation end pointers.
@@ -289,60 +305,6 @@ Recursive destruction is automatic. The type is movable but not copyable unless
 deep copy is explicitly implemented. Search functions can return `Node*` or
 `const Node*` as borrowers while the tree retains ownership.
 
-### Recursive composites: tree or shared graph?
-
-A composite model may contain leaf objects and branch objects whose children
-share the same abstract interface. Evaluation merely borrows the children, but
-destruction, copying, and transformations force an ownership decision.
-
-Choose one coherent model:
-
-1. **Unique tree:** each parent stores uniquely owned children. Destruction is
-   automatic and local. Reusing an unchanged subtree in a new result requires a
-   deep clone or a move that removes it from the original.
-2. **Shared immutable graph:** nodes are immutable and held through shared
-   ownership. A transformation may safely reuse unchanged subtrees, but cycles
-   must be impossible or broken with weak references, and sharing must be a
-   deliberate semantic property.
-3. **Borrowed graph:** an external arena or document owns all nodes and edges
-   borrow them. This can be valid, but the arena lifetime must exceed every
-   evaluation and transformation.
-
-Do not combine owning raw child pointers with ad hoc subtree reuse. Adding a
-destructor later can turn leaks into double deletion, while omitting one leaves
-the entire graph leaked. A raw pointer may still be a clear non-owning observer
-after owners are established elsewhere.
-
-### Exception-safe composite construction
-
-Build owned children into RAII objects before publishing the parent. If later
-allocation or validation throws, already constructed smart pointers release
-their subtrees automatically. Dense expressions containing several raw `new`
-operations hide which allocations survive when one operation throws.
-
-Private constructors introduce another design question: `std::make_unique`
-normally performs construction inside the library template, where private
-access is unavailable. Options include a public constructor with a named free
-factory, a controlled construction token, returning a concrete value, or a
-carefully implemented class factory that returns a smart pointer. Choose the
-smallest mechanism that preserves the invariant; do not fall back to an owning
-raw pointer merely to bypass access control.
-
-### Ownership design exercise
-
-For a generic scoring-rule tree with literal, input, unary, and binary nodes,
-draw both the unique-tree and shared-immutable representations. Then consider a
-transformation that returns a new rule while preserving the original. Mark
-which subtrees must be cloned, may be shared, or may only be borrowed. Stop at
-the ownership map and exception paths; no transformation implementation is
-provided.
-
-### Shared ownership cycles
-
-If two `shared_ptr` objects own each other, neither reference count reaches zero.
-Model a parent observer as `weak_ptr` when children own descendants. Draw strong
-and weak edges; “shared because many places use it” is not a lifetime design.
-
 ### 7. Explicitly disable unsupported operations
 
 Some resources cannot sensibly be copied:
@@ -392,8 +354,8 @@ excluded because it is first presented two days before the exam.
 2. What must be true of a moved-from object?
 3. Why can `noexcept` affect vector reallocation?
 4. When is `unique_ptr` better than `shared_ptr`?
-5. Why can reusing a raw child pointer make ownership ambiguous?
-6. When is immutable subtree sharing preferable to deep cloning?
+5. (Optional) Why can reusing a raw child pointer make ownership ambiguous?
+6. (Optional) When is immutable subtree sharing preferable to deep cloning?
 7. Refactor a raw owning member to satisfy the Rule of Zero.
 
 ## Summary
@@ -403,8 +365,46 @@ excluded because it is first presented two days before the exam.
 - Special member functions collectively define value and ownership semantics.
 - The Rule of Zero delegates resource management to proven member types.
 - Smart pointers express ownership; references and raw pointers commonly borrow.
-- Recursive composites require one coherent tree, shared-graph, or arena
-  lifetime model before transformations are implemented.
+- Recursive structures need an explicit ownership model before transformations
+  are implemented.
+
+## Optional enrichment — Shared graphs and composite construction
+
+This section preserves the advanced ownership comparison for project design and
+Week 13 preparation, but it is outside the three-hour core.
+
+### Recursive composites: tree or shared graph?
+
+A composite model may contain leaf objects and branch objects whose children
+share one abstract interface. Evaluation merely borrows children, but
+destruction, copying, and transformations force an ownership decision:
+
+1. **Unique tree:** each parent uniquely owns its children; retained results
+   require cloning or moving subtrees.
+2. **Shared immutable graph:** immutable nodes may be reused deliberately, but
+   cycles must be impossible or broken with weak references.
+3. **Borrowed graph:** an external arena owns nodes and must outlive all borrows.
+
+Do not combine owning raw child pointers with ad hoc subtree reuse. A raw pointer
+is appropriate only after ownership is established elsewhere.
+
+### Exception-safe construction and private factories
+
+Build children into RAII owners before publishing a parent. If later allocation
+or validation throws, already constructed smart pointers release their subtrees.
+Because `std::make_unique` performs construction inside a library template, it
+cannot directly invoke a private constructor merely because the call originates
+in a class factory. Prefer the smallest design that preserves the invariant: a
+public constructor, named free factory, controlled construction token, concrete
+value return, or a carefully implemented class factory.
+
+### Ownership design exercise and cycles
+
+For a scoring-rule tree with literal, input, unary, and binary nodes, draw both
+the unique-tree and shared-immutable representations. Mark which subtrees a
+non-mutating transformation must clone, may share, or may only borrow. Then add
+one parent observer and decide whether it must be a `weak_ptr`; a cycle of
+`shared_ptr` owners prevents reference counts from reaching zero.
 
 ## References and legacy sources
 

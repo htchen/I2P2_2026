@@ -20,8 +20,8 @@ By the end of this lecture, you should be able to:
 | Hour | Main question | In-class production |
 |------|---------------|---------------------|
 | 1 | What contract makes derived objects genuinely substitutable? | Implement and test a Shape hierarchy |
-| 2 | How do dispatch, destruction, and ownership interact? | Trace polymorphic calls and design a recursive Composite |
-| 3 | When should a design use inheritance, composition, or variants? | Refactor one final-project hierarchy and defend the choice |
+| 2 | How do dispatch, destruction, and ownership interact? | Trace polymorphic calls and study one recursive Composite in depth |
+| 3 | When should a design use inheritance, composition, or variants? | Compare alternatives and refactor one final-project hierarchy |
 
 ## Hour 1 — Abstract interfaces and substitutable overrides
 
@@ -205,6 +205,36 @@ extension point.
 Public inheritance normally preserves the public interface. Private inheritance
 is closer to an implementation technique; composition is usually clearer.
 
+### Recursive Composite case study
+
+Composite is the hour's one detailed polymorphic design. `std::variant` is
+retained later as a comparison, not developed as a second full implementation.
+
+Some domains contain leaf and branch objects that clients should treat through
+one interface. Consider a scoring expression with this conceptual hierarchy:
+
+```text
+Rule (abstract)
+├── literal value
+├── input lookup
+├── unary rule  ── owns one child Rule
+└── binary rule ── owns left and right Rule objects plus an operation tag
+```
+
+This is the **Composite** pattern: a branch contains objects satisfying the same
+interface as the branch itself. A read-only operation such as
+`evaluate(context)` recursively dispatches through the children. Its interface
+should be `const` because evaluation observes the model rather than changing its
+structure.
+
+The abstract base needs a virtual destructor and a precise domain/error
+contract. Every concrete override must handle its valid state or report failure
+consistently; falling out of a non-void override or silently accepting an unknown
+operation is not a valid default. Store operation choices with `enum class`
+rather than loosely interpreted characters when the set is closed.
+
+## Hour 3 — Composition, variants, and brownfield architecture
+
 ### 6. Composition before inheritance
 
 “A game entity has a position” suggests composition:
@@ -251,88 +281,6 @@ Monster type and movement policy now vary independently. The monster uniquely
 owns its strategy; a shared immutable strategy could instead be borrowed or
 shared under an explicit lifetime design.
 
-### Recursive Composite case study
-
-Some domains contain leaf and branch objects that clients should treat through
-one interface. Consider a scoring expression with this conceptual hierarchy:
-
-```text
-Rule (abstract)
-├── literal value
-├── input lookup
-├── unary rule  ── owns one child Rule
-└── binary rule ── owns left and right Rule objects plus an operation tag
-```
-
-This is the **Composite** pattern: a branch contains objects satisfying the same
-interface as the branch itself. A read-only operation such as
-`evaluate(context)` recursively dispatches through the children. Its interface
-should be `const` because evaluation observes the model rather than changing its
-structure.
-
-The abstract base needs a virtual destructor and a precise domain/error
-contract. Every concrete override must handle its valid state or report failure
-consistently; falling out of a non-void override or silently accepting an unknown
-operation is not a valid default. Store operation choices with `enum class`
-rather than loosely interpreted characters when the set is closed.
-
-### Evaluation and transformation are different operations
-
-Evaluation returns a number for one context. A transformation—such as constant
-folding, variable renaming, validation, or normalization—returns a new model or
-an explicit failure. Decide whether the original remains usable before choosing
-an ownership design:
-
-- with `unique_ptr<Rule>` children, unchanged structure must be cloned when both
-  original and transformed trees remain alive;
-- with `shared_ptr<const Rule>`, immutable subtrees can be reused deliberately;
-- with arena ownership, returned nodes borrow the arena and cannot outlive it.
-
-A virtual `clone` operation can express deep copying for a unique tree, but it
-must be implemented by every concrete type and return a unique base owner. A
-shared immutable design may avoid cloning but introduces reference-count and
-cycle considerations. Neither choice is automatically correct.
-
-### Factory boundary for polymorphic objects
-
-Clients cannot create an abstract base by value. A factory can validate an
-operation and return a polymorphic owner while hiding the concrete class. Keep
-construction, ownership, and failure in one contract. If a factory allocates
-children and then rejects an operation, RAII owners must clean up every partial
-object.
-
-Draw the call and ownership paths for one leaf and one binary branch. Then
-design—but do not implement—a factory table containing accepted operation,
-concrete type, child count, invalid-input behavior, and returned ownership.
-
-### Operation-axis tradeoff
-
-A virtual hierarchy makes it easy to add another concrete node when existing
-virtual operations are sufficient. Adding a new operation requires changing
-the base and every derived type. A `variant` plus visitors reverses that tradeoff:
-the set of node types is closed, while another visitor can add an operation.
-This axis-of-change question is more important than avoiding a `switch` at all
-costs.
-
-### Composite verification matrix
-
-Test the abstraction rather than private fields:
-
-| Concern | Representative evidence |
-|---------|-------------------------|
-| Dispatch | each leaf and branch is exercised through `Rule&` or `Rule*` |
-| Construction | invalid tag/arity is rejected without leaks |
-| Evaluation | nested branches, boundary values, and domain failures |
-| Transformation | original remains valid and semantic properties are preserved |
-| Ownership | destruction through the base releases every node exactly once |
-| Copy/share policy | cloned nodes are independent or shared nodes are immutable |
-
-For a normalization transform, useful properties include idempotence and
-preservation of evaluation on representative contexts. These properties test
-the public contract without revealing a particular recursive implementation.
-
-## Hour 3 — Downcasting, variants, and brownfield architecture
-
 ### 7. Downcasting is a design signal
 
 ```cpp
@@ -349,7 +297,8 @@ invariant proves the dynamic type; otherwise behavior is undefined.
 ### 8. Closed alternatives with `std::variant`
 
 When the set of alternatives is small and known, value-based polymorphism can be
-clearer:
+clearer. This is a comparison example; the lecture does not build a second
+full shape architecture:
 
 ```cpp
 using ShapeValue = std::variant<Circle, Rectangle>;
@@ -419,8 +368,8 @@ control flow.
 2. Explain object slicing with a concrete example.
 3. Why does `unique_ptr<Base>` require a virtual base destructor?
 4. Model “monster has movement behavior” using composition.
-5. Why must a Composite decide between cloning and immutable subtree sharing?
-6. What should a polymorphic factory return, and what does that return type say
+5. (Optional) Why must a Composite decide between cloning and immutable subtree sharing?
+6. (Optional) What should a polymorphic factory return, and what does that return type say
    about lifetime?
 7. When would `variant` be preferable to a virtual hierarchy?
 
@@ -430,9 +379,51 @@ control flow.
 - Virtual dispatch operates through references and pointers.
 - Polymorphic bases need a deliberate destruction policy.
 - `override`, private state, and ownership-aware containers prevent common bugs.
-- Composite treats leaves and branches uniformly, but evaluation and structural
-  transformation require different contracts.
+- Composite treats leaves and branches uniformly through one interface.
 - Prefer composition unless run-time substitutability provides real value.
+
+## Optional enrichment — Composite transformations and factories
+
+The core Composite example covers recursive dispatch and unique ownership. The
+following design questions matter when a project also transforms or constructs
+heterogeneous trees, but they are outside the three-hour core.
+
+### Evaluation and transformation are different operations
+
+Evaluation returns a number for one context. A transformation returns a new
+model or an explicit failure. With `unique_ptr<Rule>` children, retained
+unchanged structure must be cloned; `shared_ptr<const Rule>` can deliberately
+reuse immutable subtrees; arena-owned results cannot outlive their arena.
+
+A virtual `clone` operation expresses deep copying for a unique tree but must be
+implemented by every concrete type. Sharing avoids some cloning while adding a
+stronger immutability and cycle contract.
+
+### Factory and operation-axis tradeoffs
+
+A factory can validate an operation and return a polymorphic owner while hiding
+the concrete class. RAII owners must clean partial children when validation or
+later allocation fails. Draw one leaf and branch construction path and specify
+accepted operation, child count, failure behavior, and returned ownership.
+
+A virtual hierarchy makes adding a concrete node comparatively local, while a
+new virtual operation affects every derived type. A closed `variant` reverses
+that axis: adding a visitor is local, while adding an alternative affects every
+visitor.
+
+### Composite verification matrix
+
+| Concern | Representative evidence |
+|---------|-------------------------|
+| Dispatch | leaves and branches exercised through `Rule&` or `Rule*` |
+| Construction | invalid tag/arity rejected without leaks |
+| Evaluation | nested branches, boundary values, and domain failures |
+| Transformation | original remains valid; semantics are preserved |
+| Ownership | base-pointer destruction releases every node once |
+| Copy/share policy | clones are independent or shared nodes are immutable |
+
+For normalization, idempotence and preservation of evaluation test the public
+contract without exposing a particular recursive implementation.
 
 ## References and legacy sources
 

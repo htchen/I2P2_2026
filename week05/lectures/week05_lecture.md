@@ -21,7 +21,7 @@ By the end of this lecture, you should be able to:
 |------|---------------|---------------------|
 | 1 | How is a linked structure represented and owned? | Build, print, and validate a list by hand |
 | 2 | How can one algorithm update the head or an interior link? | Implement insertion, removal, and reversal with pointer-to-pointer reasoning |
-| 3 | When are circular/doubly linked variants justified? | Solve and compare Josephus implementations, then run memory tests |
+| 3 | When is a circular linked representation justified? | Solve and compare Josephus implementations, then run memory tests |
 
 ## Hour 1 — Representation, construction, and ownership
 
@@ -158,6 +158,29 @@ Removing a node usually requires either changing `list->head` or changing a
 previous node's `next`. A pointer-to-pointer lets one loop treat both as “the
 link that points to the current node.”
 
+Linus Torvalds used this linked-list deletion contrast in his TED2016 interview
+as an example of programming “taste.” A conventional traversal remembers the
+previous node and then needs a special branch for the head:
+
+```c
+struct Node *previous = NULL;
+struct Node *current = list->head;
+while (current != NULL && current->value != target) {
+    previous = current;
+    current = current->next;
+}
+if (current != NULL) {
+    if (previous == NULL) list->head = current->next;
+    else previous->next = current->next;
+    free(current);
+    --list->size;
+}
+```
+
+The issue is not that this version cannot work. Its state describes nodes, while
+the actual mutation target is a **link**. Representing that link directly removes
+the artificial head/interior distinction:
+
 ```c
 int list_remove_first(struct List *list, int target)
 {
@@ -184,7 +207,9 @@ Trace three cases:
 3. the target does not exist.
 
 There is no special head-removal branch because `link` initially points to the
-head field itself.
+head field itself. “Good taste” here means choosing a representation that makes
+the invariant and exceptional cases disappear; it is not a rule that additional
+indirection is always preferable.
 
 ### 6. Insert in sorted order
 
@@ -423,14 +448,6 @@ For `n` participants and step `k`, compare:
 The structure-simulation version is still valuable when the complete
 elimination order is required. Algorithm selection follows the requested output.
 
-### Doubly linked lists
-
-A doubly linked node adds `previous`. Every mutation must update two directions;
-the invariant requires `node->next->previous == node` and
-`node->previous->next == node` where neighbors exist. It enables O(1) removal
-from a known node without searching for its predecessor but adds memory and more
-ways to corrupt links.
-
 ### Hour 3 verification
 
 Run empty, singleton, adjacent-removal, head/tail, and full-destruction cases
@@ -472,8 +489,17 @@ will be reused in Week 7.
 - Mutation should preserve invariants even when allocation fails.
 - Choose a representation using access patterns and real costs, not Big-O alone.
 
+## Optional enrichment — Doubly linked lists
+
+A doubly linked node adds `previous`. Every mutation must update two directions;
+the invariant requires `node->next->previous == node` and
+`node->previous->next == node` where neighbors exist. It enables O(1) removal
+from a known node without searching for its predecessor but adds memory and more
+ways to corrupt links.
+
 ## References and legacy sources
 
+- [Linus Torvalds, *The mind behind Linux* (TED2016)](https://www.ted.com/talks/linus_torvalds_the_mind_behind_linux)
 - [Linked lists](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/2-linked_list.md>)
 - [Linked-list supplementary notes](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/2-linked_list_sup.md>)
 - [Josephus problem](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/3-josephus_problem.md>)

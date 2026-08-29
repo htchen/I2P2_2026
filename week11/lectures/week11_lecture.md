@@ -156,9 +156,49 @@ Iterator categories expose supported movement. A vector iterator supports
 random access; a list iterator does not. Generic algorithms express the weakest
 category they require.
 
+### 5. Iterator invalidation
+
+After a vector reallocates, pointers, references, and iterators to its elements
+are invalid. Inserting or erasing can invalidate additional positions even
+without reallocation.
+
+```cpp
+auto position = values.begin();
+values.push_back(42);
+/* position may now be invalid */
+```
+
+Read the operation's invalidation rules. A valid iterator is a lifetime and
+ownership claim just as a valid C pointer is. Use indices when a vector mutation
+may relocate storage and the index remains meaningful, or reacquire the iterator
+after mutation.
+
+### Invalidation trace
+
+For a vector with size 3 and capacity 4, take iterators to all elements, then
+push a fourth element, insert at index 1 without reallocation, push a fifth
+element with reallocation, and erase index 2. Mark valid handles after each
+operation. Repeat for `list` and `map` and compare their guarantees.
+
+### 6. Complexity belongs to the interface
+
+For an ordered map, lookup is O(log n). For an unordered map, lookup is average
+O(1) but worst-case O(n). `lower_bound` on a sorted vector is O(log n), but
+inserting into the middle is O(n). A good design considers the whole workload:
+build frequency, query frequency, ordering requirements, and memory overhead.
+
+The standard library specifies both semantics and complexity. Use those
+guarantees instead of assuming an internal implementation.
+
+### Hour 2 container-and-handle checkpoint
+
+Choose a container for a supplied workload, then mark every iterator, pointer,
+and reference that survives each proposed mutation. State both the operation's
+complexity and its invalidation rule before running the program.
+
 ## Hour 3 — Algorithms, associative containers, and solution pipelines
 
-### 5. Algorithms separate traversal from intent
+### 7. Algorithms separate traversal from intent
 
 ```cpp
 #include <algorithm>
@@ -184,7 +224,7 @@ Common algorithms include:
 An algorithm name states intent and centralizes boundary handling. A loop is
 still correct when the operation does not fit an algorithm cleanly.
 
-### 6. Boundary algorithms on partitioned ranges
+### 8. Boundary algorithms on partitioned ranges
 
 For an ascending sorted range, the standard algorithms express the same
 boundary contracts introduced with C arrays:
@@ -224,7 +264,7 @@ that orders during sort by identifier alone, breaks the boundary precondition.
 Test an empty vector, absent key, one match, repeated matches at both ends, and
 a key outside the stored range.
 
-### 7. The erase-remove pattern
+### 9. The erase-remove pattern
 
 `std::remove_if` rearranges retained elements and returns a new logical end; it
 does not resize the container.
@@ -239,7 +279,7 @@ values.erase(
 C++20 adds `std::erase_if(values, predicate)` for supported containers, but the
 older form remains important when reading C++17 projects.
 
-### 8. Maps: lookup versus insertion
+### 10. Maps: lookup versus insertion
 
 ```cpp
 std::map<std::string, int> frequency;
@@ -277,7 +317,7 @@ The map builds counts; the vector supports ranking by a different order. This is
 often clearer than forcing one container to serve incompatible access patterns.
 Prove the comparator is strict for equal pairs.
 
-### 9. `optional` makes expected absence explicit
+### 11. `optional` makes expected absence explicit
 
 An index such as zero can be a valid answer, so it is a poor “not found”
 sentinel. `std::optional<T>` contains either one `T` or no value:
@@ -310,41 +350,6 @@ when empty. Use `optional` when absence is an expected result, exceptions when a
 operation cannot fulfill its contract, and a richer result type when callers
 need distinct failure reasons. The graph lecture will use this distinction for
 “no path exists.”
-
-### 10. Iterator invalidation
-
-After a vector reallocates, pointers, references, and iterators to its elements
-are invalid. Inserting or erasing can invalidate additional positions even
-without reallocation.
-
-```cpp
-auto position = values.begin();
-values.push_back(42);
-/* position may now be invalid */
-```
-
-Read the operation's invalidation rules. A valid iterator is a lifetime and
-ownership claim just as a valid C pointer is.
-
-Use indices when a vector mutation may relocate storage and the index remains a
-meaningful position, or reacquire the iterator after mutation.
-
-### Invalidation trace
-
-For a vector with size 3 and capacity 4, take iterators to all elements, then
-push a fourth element, insert at index 1 without reallocation, push a fifth
-element with reallocation, and erase index 2. Mark valid handles after each
-operation. Repeat for `list` and `map` and compare their guarantees.
-
-### 11. Complexity belongs to the interface
-
-For an ordered map, lookup is O(log n). For an unordered map, lookup is average
-O(1) but worst-case O(n). `lower_bound` on a sorted vector is O(log n), but
-inserting into the middle is O(n). A good design considers the whole workload:
-build frequency, query frequency, ordering requirements, and memory overhead.
-
-The standard library specifies both semantics and complexity. Use those
-guarantees instead of assuming an internal implementation.
 
 ### Hour 3 integration task
 

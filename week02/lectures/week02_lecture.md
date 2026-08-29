@@ -177,7 +177,7 @@ an integer array. Compare three result designs: return an index with a sentinel,
 return success plus an output parameter, or return a pointer to the element.
 The third design will be analyzed fully after the Week 4 lecture notes.
 
-## Hour 2 — Array layout, multidimensional storage, and algorithms
+## Hour 2 — Array layout, prefix queries, and boundary algorithms
 
 ### 3. Arrays are contiguous fixed-size storage
 
@@ -293,65 +293,7 @@ For `values = {5, -2, 0, 7, -3}`, build the six boundary totals by hand. Answer
 three invalid boundary pairs. Only after the table and expectations are fixed,
 write the two function bodies and compare their results with a direct loop.
 
-### 6. Two-dimensional arrays
-
-```c
-enum { Rows = 3, Columns = 4 };
-int matrix[Rows][Columns] = {0};
-```
-
-Elements are stored row by row. When passing this array, the compiler must know
-the column stride:
-
-```c
-int sum_matrix(size_t rows, size_t columns, const int matrix[rows][columns])
-{
-    int total = 0;
-    for (size_t r = 0; r < rows; ++r) {
-        for (size_t c = 0; c < columns; ++c) {
-            total += matrix[r][c];
-        }
-    }
-    return total;
-}
-```
-
-### Row-major address calculation
-
-For `int matrix[Rows][Columns]`, the conceptual offset of `matrix[r][c]` is:
-
-```text
-(r * Columns + c) * sizeof(int)
-```
-
-The column count is therefore part of the function's representation contract.
-Draw a `2 x 3` matrix as six consecutive cells, label the offsets, and explain
-why a function cannot traverse rows correctly if it knows only the row count.
-
-### In-place insertion and removal
-
-Arrays make shifts explicit:
-
-```c
-int insert_at(int values[], size_t *count, size_t capacity,
-              size_t index, int value)
-{
-    if (count == NULL || *count >= capacity || index > *count) return 0;
-
-    for (size_t i = *count; i > index; --i) {
-        values[i] = values[i - 1];
-    }
-    values[index] = value;
-    ++*count;
-    return 1;
-}
-```
-
-Trace the loop backward. A forward shift would overwrite values before they are
-copied. Test insertion at the front, middle, end, into an empty array, and into
-a full array.
-
-### 7. Lower and upper boundaries in sorted data
+### 6. Lower and upper boundaries in sorted data
 
 When equal values form one contiguous block in an ascending sorted array, two
 boundary queries describe that block precisely:
@@ -416,39 +358,9 @@ targets `-4`, `-1`, `0`, `5`, and `8`. For each comparison, record `[low, high)`
 and the truth value of the relevant predicate. Then write function contracts
 for the two searches without writing their bodies.
 
-### Optional extension: implementing the sort
-
-The legacy notes used insertion sort before introducing `qsort`. Students
-should be able to implement and reason about the simple algorithm:
-
-```c
-void insertion_sort(int values[], size_t count)
-{
-    for (size_t i = 1; i < count; ++i) {
-        int current = values[i];
-        size_t position = i;
-        while (position > 0 && values[position - 1] > current) {
-            values[position] = values[position - 1];
-            --position;
-        }
-        values[position] = current;
-    }
-}
-```
-
-Loop invariant: before iteration `i`, the prefix `[0, i)` is sorted and contains
-the original prefix's values. The algorithm is O(n²) in the worst case but is a
-useful exercise in bounds and mutation.
-
-### Optional sorting checkpoint
-
-Trace `insertion_sort` on `{4, 2, 2, 1}`. After each outer iteration, record the
-array, `current`, and `position`. Then identify exactly which comparisons make
-the algorithm stable for equal elements.
-
 ## Hour 3 — String representation, bounded input, and parsing
 
-### 8. Strings are character arrays with a sentinel
+### 7. Strings are character arrays with a sentinel
 
 ```c
 char language[] = "C17";
@@ -480,7 +392,7 @@ char name[32] = "Ada";
 
 This distinction returns later as C++ `vector::capacity()` versus `size()`.
 
-### 9. Reading a line safely
+### 8. Reading a line safely
 
 For text, prefer a bounded line read and then parse:
 
@@ -622,6 +534,76 @@ that `count > 0`.
 - Lower and upper bounds locate the edges of an equal block in sorted data.
 - A C string is an array convention: characters followed by `\0`.
 - Pair every array with its length and every output buffer with its capacity.
+
+## Optional enrichment and lab extensions
+
+The following topics are useful applications of the same representation and
+boundary rules, but they are not part of the three-hour lecture core.
+
+### Two-dimensional arrays and row-major layout
+
+```c
+enum { Rows = 3, Columns = 4 };
+int matrix[Rows][Columns] = {0};
+```
+
+Elements are stored row by row. When passing this array, the compiler must know
+the column stride:
+
+```c
+int sum_matrix(size_t rows, size_t columns, const int matrix[rows][columns])
+{
+    int total = 0;
+    for (size_t r = 0; r < rows; ++r) {
+        for (size_t c = 0; c < columns; ++c) {
+            total += matrix[r][c];
+        }
+    }
+    return total;
+}
+```
+
+The conceptual byte offset of `matrix[r][c]` is
+`(r * Columns + c) * sizeof(int)`. Draw a `2 x 3` matrix as six consecutive
+cells and explain why the column count is part of the interface contract.
+
+### In-place array insertion
+
+```c
+int insert_at(int values[], size_t *count, size_t capacity,
+              size_t index, int value)
+{
+    if (count == NULL || *count >= capacity || index > *count) return 0;
+    for (size_t i = *count; i > index; --i) {
+        values[i] = values[i - 1];
+    }
+    values[index] = value;
+    ++*count;
+    return 1;
+}
+```
+
+Trace the shift backward and test front, middle, end, empty, and full cases.
+
+### Implementing a simple sort
+
+```c
+void insertion_sort(int values[], size_t count)
+{
+    for (size_t i = 1; i < count; ++i) {
+        int current = values[i];
+        size_t position = i;
+        while (position > 0 && values[position - 1] > current) {
+            values[position] = values[position - 1];
+            --position;
+        }
+        values[position] = current;
+    }
+}
+```
+
+Before iteration `i`, `[0, i)` is sorted and contains the original prefix's
+values. Trace `{4, 2, 2, 1}` and identify what makes equal elements stable.
 
 ## References and legacy sources
 
