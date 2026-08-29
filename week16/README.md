@@ -1,7 +1,8 @@
-# Week 16: Final Exam
+# Week 16: Final Project Demo
 
-- **Tuesday, December 22, 2026:** Final exam
+- **Final project demo:** Date TBD
 - **Thursday:** [No scheduled lab](labs/README.md)
-- **Final project demo:** Date TBD, after the final exam
 
-No lecture note is assigned to this week.
+No lecture note is assigned this week. Students submit the final release and
+complete the team demonstration, individual explanation, and AI-free code
+modification on the announced date.

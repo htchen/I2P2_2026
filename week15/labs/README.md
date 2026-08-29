@@ -7,8 +7,8 @@ or modify their work without AI assistance.
 
 ## Part A — AI-free readiness
 
-Complete one short judge-style C++ task from the final-exam scope. Then, without
-AI, trace one project object's dynamic dispatch and lifetime.
+Complete one short judge-style C++ task from the cumulative course-review set.
+Then, without AI, trace one project object's dynamic dispatch and lifetime.
 
 ## Part B — Feature freeze and regression pass
 

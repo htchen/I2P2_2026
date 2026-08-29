@@ -51,8 +51,8 @@ to preserve every previous topic.
   labs.
 - A midterm project demo will take place on a Tuesday and replace that day's
   lecture.
-- The final exam will take place on Tuesday, December 22, 2026, during Week 16.
-- The final project demo will be scheduled after the final exam.
+- The final project demo will be scheduled during Week 16 on a date to be
+  announced.
 - The course will have 13 lecture notes.
 - Students are assumed to have completed a 16-week introduction to programming
   in Python.
@@ -119,7 +119,7 @@ By the end of the course, students should be able to:
 The following is a working schedule, not a confirmed calendar. Lecture notes
 are assigned in Weeks 1–9 and 11–14. Week 10 is proposed for the midterm project
 demo, Week 15 reuses existing notes for integration and review, and Week 16 is
-the final exam.
+reserved for the final project demo.
 
 | Week | Tuesday | Proposed Tuesday topic | Thursday | Proposed Thursday activity |
 |------|---------|--------------------------|----------|-----------------------------|
@@ -138,7 +138,7 @@ the final exam.
 | 13 | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Proposed Midterm Exam 2**; asynchronous polymorphism checkpoint |
 | 14 | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Testable game logic, FSM, or search extension |
 | 15 | Dec. 15 | Integration, review, and final-project clinic | Dec. 17 | Final-project lab |
-| 16 | Dec. 22 | **Final exam** | — | No scheduled Thursday meeting |
+| 16 | — | **Final project demo (date TBD)** | — | No scheduled Thursday meeting |
 
 The lecture files now follow this dependency order. Four deliberate bridges
 prevent concepts from appearing without enough prior model:
@@ -208,7 +208,7 @@ Students read and extend the previous Allegro tower-defense template:
 6. Isolate non-graphical logic for automated tests and maintain a manual
    graphical integration plan.
 7. Add an approved gameplay, finite-state-machine, or search extension and
-   demonstrate the final version after the final exam.
+   demonstrate the final version in Week 16.
 
 The template is introduced in Week 8, not Week 15. Allegro setup and
 template-specific navigation are taught in labs; lectures teach the underlying
@@ -231,8 +231,6 @@ assessment dates are confirmed.
   containers, iterators, algorithms, boundary searches, `optional`, complexity,
   invalidation, ownership, and copy/move semantics. It may include comparisons
   with the C implementation. Week 13 material is excluded.
-- **Final exam:** Cumulative conceptual coverage with greater emphasis on the
-  lecture material from Weeks 12–14 and integration across C and C++.
 - **Final project:** Correctness, ownership and resource safety, data-structure
   choice, use of C++ abstractions, testing, and explanation during the demo.
 

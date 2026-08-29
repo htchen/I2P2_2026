@@ -15,12 +15,11 @@ remain subject to revision before the semester begins.
 | Prerequisite | One semester of programming in Python |
 | Duration | 16 weeks |
 | First meeting | Tuesday, September 8, 2026 |
-| Tuesday meeting | Evening lecture, project demo, or exam |
+| Tuesday meeting | Evening lecture or project demo |
 | Regular lecture duration | Three hours |
 | Thursday meeting | Lab or midterm exam |
 | Lecture notes | 13 |
-| Final exam | Tuesday, December 22, 2026 |
-| Final project demo | Date TBD, after the final exam |
+| Final project demo | Date TBD in Week 16 |
 
 ## Course Description
 
@@ -209,7 +208,7 @@ before the syllabus is finalized. Lecture notes are assigned in Weeks 1–9 and
 | [13](week13/) | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Midterm Exam 2** |
 | [14](week14/) | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Lab |
 | [15](week15/) | Dec. 15 | Integration, review, and final project clinic | Dec. 17 | Lab |
-| [16](week16/) | — | **Final project demo (date TBD after Dec. 22)** | — | — |
+| [16](week16/) | — | **Final project demo (date TBD)** | — | — |
 
 The proposed Midterm 1 scope is lecture material from Weeks 1–6, so material
 first presented in the Week 7 lecture notes on October 20 is excluded from the
@@ -300,14 +299,14 @@ and include short project connections.
 - **15%** Individual demo and code modification
 - **5%** AI-use record and audit
 
-## Exams
+## Midterm Exams
 
-There will be two midterm exams on Thursdays and one final exam on Tuesday,
-December 22. Programming portions are held in person using a
-programming-contest-like judge system without outward network access. A written
-assessment is administered in person alongside the midterm exams. AI tools,
-external LLM services, communication software, and unapproved network resources
-are unavailable and may not be used during any secured assessment.
+There will be two midterm exams on Thursdays. Programming portions are held in
+person using a programming-contest-like judge system without outward network
+access. A written assessment is administered in person alongside the midterm
+exams. AI tools, external LLM services, communication software, and unapproved
+network resources are unavailable and may not be used during any secured
+assessment.
 
 Exam tasks assess independent ability to:
 
@@ -340,9 +339,6 @@ The project rubrics above describe how each project's own score is calculated;
 the 20% and 25% entries in this table are their respective contributions to the
 final course grade. Late policies, team-size rules, and project grade caps remain
 to be finalized.
-
-A final exam is planned for December 22. Its relationship to the 100%
-distribution above must be confirmed before the syllabus is finalized.
 
 ## Development Expectations
 
@@ -391,13 +387,12 @@ artifact. Exam weeks use asynchronous checkpoints instead of pretending that a
 Thursday lab is available.
 
 The 13 lecture notes are placed in Weeks 1–9 and 11–14. Weeks 10, 15, and 16 are
-reserved for the midterm project demo, integration/review, and final exam.
+reserved for the midterm project demo, integration/review, and final project
+demo.
 
 ## Items to Finalize
 
 - Dates of Midterm 1 and Midterm 2
-- Relationship of the December 22 final exam to the published 100% grading
-  distribution
 - Project team sizes and individual-grade adjustment policy
 - Late submission and attendance policies
 - Official compiler versions and C/C++ standards
