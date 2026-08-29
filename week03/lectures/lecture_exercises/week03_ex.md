@@ -1,13 +1,20 @@
-# Week 3 Lecture Exercises: TBD
+# Week 3 Lecture Exercises: Structures, Modules, and Debugging
 
-## Exercise Overview
+[Starter code](week03_starter.c)
 
-- TBD
+## Hour 1 — Record invariant
 
----
+Complete `rational_make` so every nonzero rational has a positive denominator
+and is reduced. Write the invariant before the code and include a defined policy
+for a zero denominator.
 
-## Exercise 1: TBD
+## Hour 2 — Interface/build graph
 
-### Task
+Split the starter declaration and implementation into `rational.h`,
+`rational.c`, and `main.c`. Draw the include and link dependencies, then compile
+each translation unit separately.
 
-TBD.
+## Hour 3 — Evidence-driven diagnosis
+
+Seed one violated assertion and one linker error. Record the complete diagnostic,
+form a hypothesis, make the smallest repair, and add a regression assertion.

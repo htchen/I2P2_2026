@@ -57,7 +57,7 @@ The following source topics are useful but do not fit the 13-note core:
 - extended Josephus variants and the Ninety-Nine Problems collection.
 
 These are candidates for labs, project extensions, optional readings, and
-post-final enrichment rather than required Tuesday lectures.
+post-course enrichment rather than required Tuesday lectures.
 
 ## Adaptation principles
 

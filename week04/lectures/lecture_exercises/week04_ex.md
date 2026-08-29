@@ -1,13 +1,21 @@
-# Week 4 Lecture Exercises: TBD
+# Week 4 Lecture Exercises: Pointers and Dynamic Memory
 
-## Exercise Overview
+[Starter code](week04_starter.c)
 
-- TBD
+## Hour 1 — Address and alias trace
 
----
+Draw the objects and arrows created by `int *p = &value` and by a pointer into an
+array. Predict which writes change the original object and identify the valid
+half-open pointer range.
 
-## Exercise 1: TBD
+## Hour 2 — Transactional allocation
 
-### Task
+Implement `make_sequence`. Handle zero length, multiplication overflow, and
+allocation failure without publishing a partial result. State who owns the
+returned block.
 
-TBD.
+## Hour 3 — Cleanup audit
+
+Complete `resize_sequence` using a temporary pointer. Exercise normal and
+failure paths under AddressSanitizer/UndefinedBehaviorSanitizer and show that
+each successful allocation has exactly one eventual `free`.

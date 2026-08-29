@@ -1,10 +1,10 @@
 # Introduction to Programming II in C and C++
 
-**Draft syllabus — Fall 2026**
+**Syllabus — Fall 2026**
 
-This syllabus is a working document. Confirmed course rules and overall grading
-weights are stated as such; proposed assessment dates and detailed requirements
-remain subject to revision before the semester begins.
+This syllabus records the Fall 2026 course schedule and grading structure.
+Operational details explicitly listed under **Items to Finalize** may still be
+updated before the semester begins.
 
 ## Course at a Glance
 
@@ -73,8 +73,8 @@ The course deliberately develops two complementary abilities.
 Students must be able to read, trace, debug, and write C and C++ without AI.
 This ability is assessed through in-person quizzes and the programming portions
 of exams, conducted in a secured, programming-contest-like judge environment
-with no outward network connection, together with an in-person written
-assessment.
+with no outward network connection. Midterm Exam 1 also includes the course's
+in-person written assessment.
 
 ### AI-assisted software engineering
 
@@ -182,14 +182,12 @@ accountability policy.
 Two Thursday labs will be replaced by in-person midterm exams.
 The two in-person computer-lab quizzes are scheduled on the Thursday exactly two
 weeks before the corresponding midterm: Quiz 1 before Midterm 1 and Quiz 2
-before Midterm 2. Under the current proposed midterm dates, these are October 8
-and November 19, respectively.
+before Midterm 2. The quiz dates are October 8 and November 19, respectively.
 
 ## Weekly Schedule
 
-The following topic placement is proposed. The midterm dates must be confirmed
-before the syllabus is finalized. Lecture notes are assigned in Weeks 1–9 and
-11–14; Week 10 is reserved for the midterm project demo.
+Lecture notes are assigned in Weeks 1–9 and 11–14; Week 10 is reserved for the
+midterm project demo.
 
 | Week | Tuesday | Tuesday topic or event | Thursday | Lab or exam |
 |------|---------|------------------------|----------|-------------|
@@ -199,10 +197,10 @@ before the syllabus is finalized. Lecture notes are assigned in Weeks 1–9 and
 | [4](week04/) | Sep. 29 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Lab |
 | [5](week05/) | Oct. 6 | Linked lists and pointer-to-pointer techniques | Oct. 8 | **Quiz 1 + Lab** |
 | [6](week06/) | Oct. 13 | Recursion, binary trees, and AST ownership | Oct. 15 | Lab |
-| [7](week07/) | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | **Midterm Exam 1** |
+| [7](week07/) | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | **Midterm Exam 1 + Written Assessment** |
 | [8](week08/) | Oct. 27 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Lab |
 | [9](week09/) | Nov. 3 | Classes, invariants, constructors, member functions, and operators | Nov. 5 | Lab |
-| [10](week10/) | Nov. 10 | **Proposed midterm project demo; no lecture** | Nov. 12 | Lab |
+| [10](week10/) | Nov. 10 | **Midterm project demo; no lecture** | Nov. 12 | Lab |
 | [11](week11/) | Nov. 17 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | **Quiz 2 + Lab** |
 | [12](week12/) | Nov. 24 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | Lab |
 | [13](week13/) | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Midterm Exam 2** |
@@ -210,9 +208,9 @@ before the syllabus is finalized. Lecture notes are assigned in Weeks 1–9 and
 | [15](week15/) | Dec. 15 | Integration, review, and final project clinic | Dec. 17 | Lab |
 | [16](week16/) | — | **Final project demo (date TBD)** | — | — |
 
-The proposed Midterm 1 scope is lecture material from Weeks 1–6, so material
+The Midterm 1 scope is lecture material from Weeks 1–6, so material
 first presented in the Week 7 lecture notes on October 20 is excluded from the
-October 22 exam. The proposed Midterm 2 scope is lecture material from Weeks 8,
+October 22 exam. The Midterm 2 scope is lecture material from Weeks 8,
 9, 11, and 12—including templates, STL containers, iterators, algorithms,
 boundary searches, `optional`, invalidation, complexity, ownership, and
 copy/move semantics. Material first presented in the Week 13 lecture notes on
@@ -250,7 +248,7 @@ full AST construction, traversal, and cleanup lab. Because Midterm 1 replaces
 the Week 7 lab, parser and code-generation verification continues through a
 bounded asynchronous checkpoint before the Week 10 demonstration.
 
-### Proposed midterm project rubric — 20% of course grade
+### Midterm project rubric — 20% of course grade
 
 - **30%** Judge-system correctness
 - **15%** Staged milestone evidence
@@ -288,7 +286,7 @@ the Week 15 integration clinic. Allegro-specific setup and codebase navigation
 belong primarily in the labs; Tuesday notes retain transferable C++ concepts
 and include short project connections.
 
-### Proposed final project rubric — 25% of course grade
+### Final project rubric — 25% of course grade
 
 - **15%** Correctness and completeness
 - **10%** Staged milestone evidence
@@ -303,10 +301,10 @@ and include short project connections.
 
 There will be two midterm exams on Thursdays. Programming portions are held in
 person using a programming-contest-like judge system without outward network
-access. A written assessment is administered in person alongside the midterm
-exams. AI tools, external LLM services, communication software, and unapproved
-network resources are unavailable and may not be used during any secured
-assessment.
+access. Midterm Exam 1 also includes the single in-person Written Assessment,
+worth 5% of the course grade. Midterm Exam 2 has no written component. AI tools,
+external LLM services, communication software, and unapproved network resources
+are unavailable and may not be used during any secured assessment.
 
 Exam tasks assess independent ability to:
 
@@ -331,7 +329,7 @@ The following components determine the final course grade:
 | Midterm Exams | 20% + 20% | Two in-person midterm examinations |
 | Quizzes | 5% + 5% | Quiz 1: Oct. 8; Quiz 2: Nov. 19—each two weeks before its midterm |
 | Midterm Project | 20% | C expression-compiler project and demo |
-| Written Exam | 5% | Written assessment administered with the midterm exams |
+| Written Assessment | 5% | One written assessment, administered with Midterm Exam 1 only |
 | Final Project | 25% | C++ final project and demo |
 | **Total** | **100%** | |
 
@@ -351,8 +349,9 @@ to be finalized.
 - Keep generated files and build artifacts out of version control.
 - Do not submit code that cannot be explained by the student or team.
 
-The exact compiler versions, C and C++ standards, supported operating systems,
-and submission tools remain to be confirmed.
+Course examples use C17 and C++17. Exact supported compiler versions, operating
+systems, and submission tools remain to be confirmed; see [SETUP.md](SETUP.md)
+for the portable baseline workflow.
 
 ## Course Materials
 
@@ -374,12 +373,14 @@ demos are in [`project_templates/`](project_templates/).
 
 ## Repository Layout
 
-Each `weekXX/` directory contains:
+Each week contains a `README.md` overview and a `labs/` directory. Regular
+lecture weeks additionally contain:
 
-- `README.md` — weekly overview
 - `lectures/` — lecture note and examples
 - `lectures/lecture_exercises/` — in-lecture exercises and starter code
-- `labs/` — Thursday lab material
+
+No-lecture weeks may retain empty `lectures/` directories to keep navigation
+predictable, but they do not contain a lecture note.
 
 Each project-related lab contains an AI-free readiness exercise, a guided
 project milestone, verification requirements, and a concrete submission
@@ -392,10 +393,9 @@ demo.
 
 ## Items to Finalize
 
-- Dates of Midterm 1 and Midterm 2
 - Project team sizes and individual-grade adjustment policy
 - Late submission and attendance policies
-- Official compiler versions and C/C++ standards
+- Official compiler versions
 - Supported operating systems and development environment
 - Judge, learning-management, and project-submission systems
 - Permitted local documentation during exams

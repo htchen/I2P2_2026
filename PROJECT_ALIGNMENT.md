@@ -31,7 +31,7 @@ Week 10 demo.
 | 4 | Pointers, lifetime, allocation | Mark owners and borrowers; trace success/error cleanup; run sanitizers | Ownership table, sanitizer log, repaired seeded defect |
 | 5 | Linked lists and pointer-to-pointer mutation | Quiz 1; trace token-list creation/conversion; test empty, invalid, and boundary inputs | Quiz result, token trace, and student test table |
 | 6 | Recursion and tree ownership | Construct, traverse, and destroy a small AST; verify partial-construction cleanup | Hand trace plus memory-clean normal and failure runs |
-| 7 | Grammar, recursive descent, semantics, code generation | Midterm 1; asynchronously verify parser stages, lvalue checks, ISA emission, and ASMC tests | Stage-gate plan, grammar/instruction trace, and AI audit; no Thursday lab |
+| 7 | Grammar, recursive descent, semantics, code generation | Midterm 1 and the 5% Written Assessment; asynchronously verify parser stages, lvalue checks, ISA emission, and ASMC tests | Stage-gate plan, grammar/instruction trace, and AI audit; no Thursday lab |
 | 10 | No lecture; Tuesday is reserved for the midterm project demo | Individual demonstration and small AI-free modification | Working program, explanation, AI audit |
 
 Required project-specific emphasis includes prefix/postfix effects, lvalue

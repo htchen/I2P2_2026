@@ -1,10 +1,10 @@
 # Course Proposal: Introduction to Programming II in C and C++
 
-**Status:** Draft 0.3 for discussion and revision
+**Status:** Draft 0.4; calendar and assessment placement aligned with the syllabus
 
 **Academic term:** Fall 2026
 
-**Last updated:** August 16, 2026
+**Last updated:** August 29, 2026
 
 This document records the initial curriculum proposal. It distinguishes fixed
 course constraints from working assumptions so that the schedule can be revised
@@ -49,6 +49,10 @@ to preserve every previous topic.
 - Thursday is the regular lab meeting.
 - Two midterm exams will take place on Thursdays and replace the corresponding
   labs.
+- Midterm Exam 1 is scheduled for Thursday, October 22, 2026, and Midterm Exam 2
+  is scheduled for Thursday, December 3, 2026.
+- Quiz 1 is scheduled for Thursday, October 8, and Quiz 2 for Thursday,
+  November 19, exactly two weeks before their respective midterms.
 - A midterm project demo will take place on a Tuesday and replace that day's
   lecture.
 - The final project demo will be scheduled during Week 16 on a date to be
@@ -60,8 +64,7 @@ to preserve every previous topic.
 - After the crash course, the course will cover C pointers and dynamic data
   structures, including linked lists and binary trees, before moving to C++.
 
-The dates of the two midterms are not yet confirmed. The midterm project demo
-is placed on Tuesday of Week 10 in the working schedule.
+The midterm project demo is scheduled for Tuesday of Week 10.
 
 ## 3. Curriculum Strategy
 
@@ -114,28 +117,28 @@ By the end of the course, students should be able to:
 12. Demonstrate independent C and C++ fluency during secured AI-free exams and
     individual project checks.
 
-## 5. Proposed 16-Week Schedule
+## 5. Fall 2026 16-Week Schedule
 
-The following is a working schedule, not a confirmed calendar. Lecture notes
-are assigned in Weeks 1–9 and 11–14. Week 10 is proposed for the midterm project
+The following is the Fall 2026 calendar. Lecture notes are assigned in
+Weeks 1–9 and 11–14. Week 10 is scheduled for the midterm project
 demo, Week 15 reuses existing notes for integration and review, and Week 16 is
 reserved for the final project demo.
 
-| Week | Tuesday | Proposed Tuesday topic | Thursday | Proposed Thursday activity |
-|------|---------|--------------------------|----------|-----------------------------|
+| Week | Tuesday | Tuesday topic | Thursday | Thursday activity |
+|------|---------|---------------|----------|-------------------|
 | 1 | Sep. 8 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
 | 2 | Sep. 15 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
 | 3 | Sep. 22 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
 | 4 | Sep. 29 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Midterm ownership and sanitizer milestone |
 | 5 | Oct. 6 | Linked lists and pointer-to-pointer techniques | Oct. 8 | **Quiz 1**; token-list tracing and testing milestone |
 | 6 | Oct. 13 | Recursion, binary trees, and AST ownership | Oct. 15 | Recursive AST ownership lab |
-| 7 | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | **Proposed Midterm Exam 1**; asynchronous parser-integration checkpoint |
+| 7 | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | **Midterm Exam 1 + Written Assessment**; asynchronous parser-integration checkpoint |
 | 8 | Oct. 27 | From C to C++: values, references, exceptions, and RAII | Oct. 29 | Final-template build and architecture map |
 | 9 | Nov. 3 | Classes, invariants, constructors, member functions, and operators | Nov. 5 | Event-loop and resource-lifecycle trace |
-| 10 | Nov. 10 | **Proposed midterm project demo; no lecture** | Nov. 12 | Small cross-file project component |
+| 10 | Nov. 10 | **Midterm project demo; no lecture** | Nov. 12 | Small cross-file project component |
 | 11 | Nov. 17 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | **Quiz 2**; container, algorithm, and invalidation lab |
 | 12 | Nov. 24 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | Ownership implementation and sanitizer lab |
-| 13 | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Proposed Midterm Exam 2**; asynchronous polymorphism checkpoint |
+| 13 | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Midterm Exam 2**; asynchronous polymorphism checkpoint |
 | 14 | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Testable game logic, FSM, or search extension |
 | 15 | Dec. 15 | Integration, review, and final-project clinic | Dec. 17 | Final-project lab |
 | 16 | — | **Final project demo (date TBD)** | — | No scheduled Thursday meeting |
@@ -216,8 +219,7 @@ C++ mechanisms and end with short project connections.
 
 ## 7. Suggested Assessment Alignment
 
-The following scopes are proposals and should be revised after the remaining
-assessment dates are confirmed.
+The following scopes are aligned with the scheduled assessments.
 
 - **Midterm 1:** Lecture material from Weeks 1–6; C syntax, compilation,
   arrays/strings, structures,
@@ -266,9 +268,10 @@ assessment dates are confirmed.
 - CUDA
 
 The small `std::optional` result model is part of the core because graph search
-uses it in the Week 14 lecture notes. Other selected C++17/C++20 features such
-as structured bindings and `std::variant` may be introduced inside relevant examples. They
-should not displace the ownership, classes, and STL core.
+uses it in the Week 14 lecture notes. Other selected C++17 features, such as
+structured bindings and `std::variant`, may be introduced inside relevant
+examples. C++20 comparisons remain enrichment and should not displace the
+ownership, classes, and STL core.
 
 ## 9. Lecture-Note Format
 
@@ -326,12 +329,10 @@ story but creates more room for STL, testing, exceptions, and modern ownership.
 
 ## 13. Open Decisions
 
-- Which Thursdays will contain Midterm 1 and Midterm 2?
 - Should Midterm 2 be cumulative or C++-focused?
 - Will projects be individual or team-based?
-- Which compiler, language standards, operating systems, and development tools
-  will be officially supported?
-- Should C use C17 and C++ use C++20, or should different standards be selected?
+- Which exact compiler versions, operating systems, and development tools will
+  be officially supported for the C17 and C++17 course baselines?
 - Which online judge or submission system will be used?
 - What final-project extensions are feasible within the available lab support?
 
@@ -342,3 +343,4 @@ story but creates more room for STL, testing, exceptions, and modern ownership.
 | 0.1 | 2026-08-15 | Initial proposal based on the previous C/C++ materials and confirmed scheduling constraints |
 | 0.2 | 2026-08-16 | Reordered templates before polymorphism; added pointer, exception, and `optional` prerequisite bridges; clarified midterm scope |
 | 0.3 | 2026-08-16 | Aligned the separate compiler and game projects with staged labs, corrected the project narrative, and added AI-verification and exam-week mitigations |
+| 0.4 | 2026-08-29 | Confirmed quiz, midterm, and project-demo placement; standardized the C17/C++17 baseline and assessment wording |

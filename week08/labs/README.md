@@ -5,7 +5,13 @@
 Students can build and run the final-project template, reproduce a smoke test,
 and navigate its major subsystems before proposing changes.
 
-## Part A — Environment smoke test
+## Part A — AI-free readiness and environment smoke test
+
+Without AI assistance, explain one semantic difference among a raw C array,
+`std::array`, and `std::vector`, then predict which operations can invalidate a
+`std::vector` reference. Record the prediction before compiling a check. Continue
+the baseline setup below without AI; diagnostics and official setup material are
+permitted.
 
 1. Record the template release/revision, compiler, platform, and Allegro version.
 2. Follow the published setup instructions from a clean checkout.

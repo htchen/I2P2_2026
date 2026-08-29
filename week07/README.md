@@ -1,7 +1,8 @@
 # Week 7: Expression Parsing and Syntax Trees
 
 - **Tuesday, October 20:** [Week 7 Lecture Notes — Expression Parsing and Syntax Trees](lectures/week07_lecture.md)
-- **Thursday, October 22:** Proposed Midterm Exam 1 — lecture material from Weeks 1–6; Tuesday's Week 7 lecture notes are excluded
+- **Lecture support:** [C examples](lectures/examples.c) · [Exercises and starter](lectures/lecture_exercises/week07_ex.md)
+- **Thursday, October 22:** **Midterm Exam 1 + Written Assessment (5%)** — lecture material from Weeks 1–6; Tuesday's Week 7 lecture notes are excluded
 - **Asynchronous:** [Bounded parser and code-generation integration checkpoint](labs/README.md), due on the project schedule rather than during the exam
 
 Focus: compiler stages, tokenization, precedence grammar, recursive descent, AST

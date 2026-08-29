@@ -383,7 +383,7 @@ or `unique_ptr` improvement and describe its integration risk.
 In Thursday's lab, turn the ownership map into one bounded improvement. Carry it
 through construction, observation, removal, cleanup, tests, and sanitizer
 verification without attempting a repository-wide pointer rewrite. This Week
-12 material is included in the proposed Midterm 2 scope; Week 13 material is
+12 material is included in the Midterm 2 scope; Week 13 material is
 excluded because it is first presented two days before the exam.
 
 ## Check yourself

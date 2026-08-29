@@ -508,7 +508,7 @@ deliberately failed child allocation and show how the partial tree is released.
 
 This is a non-graded miniature rather than a solution to the project parser.
 The full lab supplies tree-ownership practice before Week 7 parsing. Week 6
-material is included in the proposed Midterm 1 scope; Week 7 material is
+material is included in the Midterm 1 scope; Week 7 material is
 excluded because it is first presented two days before the exam.
 
 ## Check yourself

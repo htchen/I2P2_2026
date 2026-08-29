@@ -1,13 +1,20 @@
-# Week 13 Lecture Exercises: TBD
+# Week 13 Lecture Exercises: Runtime Polymorphism
 
-## Exercise Overview
+[Starter code](week13_starter.cpp)
 
-- TBD
+## Hour 1 — Substitution contract
 
----
+Complete the abstract `Function` interface and two overrides. Call them through
+base references and mark every override explicitly.
 
-## Exercise 1: TBD
+## Hour 2 — Polymorphic ownership
 
-### Task
+Store heterogeneous functions in `std::unique_ptr<Function>`. Add a virtual
+destructor, trace destruction, and explain why owning raw base pointers are
+unsafe here.
 
-TBD.
+## Hour 3 — Open versus closed alternatives
+
+Model one operation once with virtual dispatch and once with `std::variant` plus
+`std::visit`. Compare the cost of adding a new type with the cost of adding a
+new operation.

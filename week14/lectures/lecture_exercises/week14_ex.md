@@ -1,13 +1,20 @@
-# Week 14 Lecture Exercises: TBD
+# Week 14 Lecture Exercises: Graph and State-Space Search
 
-## Exercise Overview
+[Starter code](week14_starter.cpp)
 
-- TBD
+## Hour 1 — DFS components
 
----
+Build an adjacency list for a small undirected graph and complete recursive DFS.
+Mark a vertex before exploring neighbors and count connected components.
 
-## Exercise 1: TBD
+## Hour 2 — Multi-source BFS
 
-### Task
+Seed all starting cells at distance zero, then compute shortest grid distances.
+Predict the queue contents layer by layer and return absence when a target is
+unreachable.
 
-TBD.
+## Hour 3 — Implicit states
+
+Define state, legal transitions, visited identity, and goal test for a small
+water-jug instance. Reconstruct one shortest path using predecessor information
+without mixing visualization into the solver.
