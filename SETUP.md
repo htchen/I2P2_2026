@@ -17,10 +17,11 @@ Install a command-line C/C++ toolchain that provides one of these pairs:
 - Clang: `clang` and `clang++`
 - GCC: `gcc` and `g++`
 
-The course baseline is **C17** for C and **C++17** for C++. A terminal, Git, a
-text editor, and a debugger are also required. The final-project template has
-additional Allegro 5 dependencies; follow its pinned release instructions after
-the baseline checks below succeed.
+The course baseline is **C17** for C and **C++17** for C++. Python contrast
+companions require **Python 3.9 or newer**. A terminal, Git, a text editor, and a
+debugger are also required. The final-project template has additional Allegro 5
+dependencies; follow its pinned release instructions after the baseline checks
+below succeed.
 
 Do not commit generated executables, object files, IDE metadata, or build
 directories.
@@ -32,6 +33,7 @@ Check that both drivers are available:
 ```sh
 cc --version
 c++ --version
+python3 --version
 ```
 
 On systems where `cc`/`c++` are unavailable, substitute `clang`/`clang++` or
@@ -87,6 +89,10 @@ done
 
 for source in week0[89]/lectures/examples.cpp week1[1-4]/lectures/examples.cpp; do
     c++ -std=c++17 -Wall -Wextra -Wpedantic "$source" -o /tmp/i2p2-example
+done
+
+for source in week*/lectures/python_examples.py; do
+    python3 "$source"
 done
 ```
 

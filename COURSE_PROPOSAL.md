@@ -294,6 +294,22 @@ The notes should emphasize contrasts rather than reteach general programming
 ideas. Diagrams should be used heavily for pointer relationships, object
 lifetime, linked structures, trees, and copy/move behavior.
 
+### Python contrast companions
+
+Each of the 13 lecture weeks adds a separate Python companion rather than
+expanding the already full three-hour lecture note. Each companion accounts for
+every fenced C/C++ example and labels the relationship as direct, a closest
+Python model, or not faithfully translatable. The explanation must name missing
+semantics such as fixed-width overflow, pointer arithmetic, `const`,
+deterministic destruction, copy assignment, move operations, or exclusive
+ownership.
+
+The companions preserve inputs, outputs, and algorithms for direct
+translations and include runnable standard-library-only Python files. They are
+designed to help students reason from familiar Python concepts toward C/C++,
+not to encourage mechanical transliteration. Companion coverage must remain
+synchronized whenever a source lecture example changes.
+
 ## 10. Lab Design Principles
 
 - Begin with a small Python reference or behavior specification when useful.

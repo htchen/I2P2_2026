@@ -3,6 +3,8 @@
 > November 17, 2026 · Source lineage: previous template and standard-library
 > notes plus the 2025 Week 11 and Week 14 notebooks
 
+> Python bridge: [Python Contrast Companion for Week 11](week11_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

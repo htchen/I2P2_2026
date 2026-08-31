@@ -48,6 +48,25 @@ The table below names the notebook examples actually retained. “Adapted” mea
 that the instructional core is reused while the interface, safety checks,
 decomposition, or naming has been revised for this course.
 
+## Python contrast companions
+
+All 13 lecture weeks use a student-facing Python companion format. Together the
+companions cover direct algorithmic translation, C pointers and manual lifetime
+with no faithful equivalent, the C-to-C++ transition, C++ copy/move ownership
+semantics, generic programming, polymorphism, and graph search.
+
+Each companion inventories every fenced example in its source lecture and uses
+one of three treatments:
+
+1. preserve inputs, outputs, and algorithm in a direct Python translation;
+2. show the closest ordinary Python model and name the changed contract; or
+3. explain why translating the mechanism would be misleading.
+
+The runnable `python_examples.py` files test the meaningful translations, while
+the companion prose accounts for shell commands, diagrams, declarations, and
+non-equivalent lifetime mechanisms. Coverage maps must be reviewed whenever a
+fenced example changes in its source lecture.
+
 ## Mapping to Lecture Weeks
 
 | Lecture week | Main legacy GitHub material | 2025 notebook material | Reorganization |

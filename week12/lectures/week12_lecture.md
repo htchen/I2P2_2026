@@ -3,6 +3,8 @@
 > November 24, 2026 · Source lineage: previous Classes II notes and IntVec
 > implementation from the 2025 Week 8/10 notebooks
 
+> Python bridge: [Python Contrast Companion for Week 12](week12_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

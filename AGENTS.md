@@ -8,6 +8,10 @@ This is a course-material repository rather than one production program.
 `weekXX/` directory contains a weekly overview and lab guide. Regular lecture
 weeks additionally contain one three-hour lecture note, a standalone example,
 an exercise guide, and starter code under `lectures/lecture_exercises/`.
+Every regular lecture week also contains a Python contrast companion and
+runnable `python_examples.py`; these must preserve explicit differences from
+C/C++ rather than presenting Python object references as pointers or ownership
+types.
 
 Keep instructor references under `assets/references/` and reusable student forms
 under `project_templates/`. Do not commit generated binaries, object files, or
@@ -25,6 +29,10 @@ done
 
 for source in week0[89]/lectures/examples.cpp week1[1-4]/lectures/examples.cpp; do
     c++ -std=c++17 -Wall -Wextra -Wpedantic "$source" -o /tmp/i2p2-example
+done
+
+for source in week*/lectures/python_examples.py; do
+    python3 "$source"
 done
 ```
 
@@ -54,6 +62,11 @@ Use descriptive Markdown headings, CommonMark-compatible lists, and relative
 links within the repository. Refer to notes by week rather than ordinal lecture
 number. Follow modern C++ ownership practices: prefer RAII, standard-library
 types, and the Rule of Zero.
+
+Python companion code follows the Google Python Style Guide: four-space
+indentation, `snake_case` functions and variables, `CapWords` classes, useful
+type hints, and standard-library-only deterministic examples. Label semantic
+approximations explicitly.
 
 ## Testing Guidelines
 

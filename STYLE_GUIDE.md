@@ -1,11 +1,13 @@
 # Course Programming Style
 
 The course adopts the [Google C++ Style
-Guide](https://google.github.io/styleguide/cppguide.html) for C++ examples and a
-small, explicitly documented adaptation for C17. Google publishes a detailed
-C++ guide but not an equivalent complete C language guide. The C adaptation
-therefore keeps the same visual layout and safety principles while using common
-C naming conventions.
+Guide](https://google.github.io/styleguide/cppguide.html) for C++ examples and
+the [Google Python Style
+Guide](https://google.github.io/styleguide/pyguide.html) for Python companion
+examples. C17 uses a small, explicitly documented adaptation because Google
+does not publish an equivalent complete C language guide. The C adaptation
+keeps the same visual layout and safety principles while using common C naming
+conventions.
 
 Style supports readability; it does not replace correctness. A program must
 first obey the relevant language standard, preserve its invariants, and express
@@ -30,6 +32,25 @@ ownership clearly.
 The repository's `.clang-format` file encodes the mechanical subset of these
 rules. Formatting is necessary but not sufficient: a formatter cannot choose a
 clear name or establish a correct ownership policy.
+
+## Python companion conventions
+
+- Use four spaces for indentation and follow standard `snake_case` naming for
+  functions, variables, and modules; use `CapWords` for classes.
+- Write type hints when they clarify the intended comparison, but explicitly
+  state that hints do not reproduce C/C++ storage, `const`, or ownership rules.
+- Prefer standard Python values and context managers. Do not use `ctypes` or
+  implementation-specific object-address tricks to imitate C pointers.
+- Preserve the C/C++ example's inputs, outputs, and algorithm when a direct
+  translation exists. When it does not, label the Python code as a closest
+  model and explain what semantic property is missing.
+- Keep runnable companion examples deterministic and free of third-party
+  dependencies.
+
+Python companions target Python 3.9 or newer and use modern built-in collection
+annotations. Files that use `X | None` include
+`from __future__ import annotations`, so the annotations are also accepted by
+the Python 3.9 baseline.
 
 ## C17 conventions for Weeks 1–7
 

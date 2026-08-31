@@ -3,6 +3,8 @@
 > December 8, 2026 · Source lineage: previous path-finding, Water Jugs,
 > Missionary/Torch notes and the 2025 Week 11–13 problem-solving notebooks
 
+> Python bridge: [Python Contrast Companion for Week 14](week14_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

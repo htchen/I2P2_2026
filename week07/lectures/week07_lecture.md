@@ -4,6 +4,8 @@
 > assembly notes, the 2025 Week 4–5 compiler notebooks, and the
 > instructor-provided *From C to Assembly* handout
 
+> Python bridge: [Python Contrast Companion for Week 7](week07_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

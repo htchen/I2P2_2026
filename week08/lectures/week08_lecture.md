@@ -3,6 +3,8 @@
 > October 27, 2026 · Source lineage: previous C++ introduction and 2025 Week 7
 > notebook; examples remain compatible with C++17
 
+> Python bridge: [Python Contrast Companion for Week 8](week08_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

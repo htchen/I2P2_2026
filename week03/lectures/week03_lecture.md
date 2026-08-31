@@ -3,6 +3,8 @@
 > September 22, 2026 · Source lineage: previous structures, multi-file build,
 > program-style, and debugging notes
 
+> Python bridge: [Python Contrast Companion for Week 3](week03_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

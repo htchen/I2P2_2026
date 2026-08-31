@@ -4,6 +4,8 @@
 > formatted-I/O, operators, and looping notes plus the instructor-provided
 > *From C to Assembly* handout
 
+> Python bridge: [Python Contrast Companion for Week 1](week01_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

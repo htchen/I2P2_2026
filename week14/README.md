@@ -1,7 +1,9 @@
 # Week 14: Graph and State-Space Search
 
 - **Tuesday, December 8:** [Week 14 Lecture Notes — Graphs and State-Space Search in Modern C++](lectures/week14_lecture.md)
-- **Lecture support:** [C++ examples](lectures/examples.cpp) · [Exercises and starter](lectures/lecture_exercises/week14_ex.md)
+- **Lecture support:** [C++ examples](lectures/examples.cpp) ·
+  [Python contrast companion](lectures/week14_python_companion.md) ·
+  [Exercises and starter](lectures/lecture_exercises/week14_ex.md)
 - **Thursday, December 10:** [Testable game-logic, FSM, or search-extension lab](labs/README.md)
 
 Focus: adjacency lists, implicit geometric graphs, DFS connected components,

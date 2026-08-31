@@ -1,0 +1,161 @@
+"""Runnable Python contrasts for the Week 13 polymorphism examples."""
+
+from __future__ import annotations
+
+import math
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+
+@dataclass
+class Point:
+    x: float
+    y: float
+
+
+class Shape(ABC):
+    @property
+    @abstractmethod
+    def center(self) -> Point:
+        raise NotImplementedError
+
+    @abstractmethod
+    def translate(self, offset: Point) -> None:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def area(self) -> float:
+        raise NotImplementedError
+
+
+class Circle(Shape):
+    def __init__(self, center: Point, radius: float) -> None:
+        if radius < 0.0:
+            raise ValueError("negative radius")
+        self._center = center
+        self._radius = radius
+
+    @property
+    def center(self) -> Point:
+        return self._center
+
+    def translate(self, offset: Point) -> None:
+        self._center.x += offset.x
+        self._center.y += offset.y
+
+    @property
+    def area(self) -> float:
+        return math.pi * self._radius * self._radius
+
+
+class Rectangle(Shape):
+    def __init__(self, corner: Point, width: float, height: float) -> None:
+        if width < 0.0 or height < 0.0:
+            raise ValueError("negative dimension")
+        self._corner = corner
+        self._width = width
+        self._height = height
+
+    @property
+    def center(self) -> Point:
+        return Point(
+            self._corner.x + self._width / 2,
+            self._corner.y + self._height / 2,
+        )
+
+    def translate(self, offset: Point) -> None:
+        self._corner.x += offset.x
+        self._corner.y += offset.y
+
+    @property
+    def area(self) -> float:
+        return self._width * self._height
+
+
+class Actor(ABC):
+    @abstractmethod
+    def attack(self, damage: int) -> None:
+        raise NotImplementedError
+
+
+class BadMonster(Actor):
+    def attack(self) -> None:
+        pass
+
+
+class GameObject(ABC):
+    def update(self, seconds: float) -> None:
+        if seconds < 0.0:
+            raise ValueError("negative time")
+        self._before_update()
+        self._do_update(seconds)
+        self._after_update()
+
+    @abstractmethod
+    def _do_update(self, seconds: float) -> None:
+        raise NotImplementedError
+
+    def _before_update(self) -> None:
+        pass
+
+    def _after_update(self) -> None:
+        pass
+
+
+class Rule(ABC):
+    @abstractmethod
+    def evaluate(self, input_value: float) -> float:
+        raise NotImplementedError
+
+
+@dataclass(frozen=True)
+class Literal(Rule):
+    value: float
+
+    def evaluate(self, input_value: float) -> float:
+        del input_value
+        return self.value
+
+
+@dataclass(frozen=True)
+class Add(Rule):
+    left: Rule
+    right: Rule
+
+    def evaluate(self, input_value: float) -> float:
+        return self.left.evaluate(input_value) + self.right.evaluate(
+            input_value
+        )
+
+
+def total_area(shapes: list[Shape]) -> float:
+    return sum(shape.area for shape in shapes)
+
+
+def main() -> None:
+    circle = Circle(Point(0.0, 0.0), 2.0)
+    rectangle = Rectangle(Point(1.0, 1.0), 3.0, 4.0)
+    assert math.isclose(circle.area, 4.0 * math.pi)
+    assert rectangle.area == 12.0
+    assert math.isclose(
+        total_area([circle, rectangle]), 4.0 * math.pi + 12.0
+    )
+    circle.translate(Point(1.0, -1.0))
+    assert circle.center == Point(1.0, -1.0)
+
+    bad_monster = BadMonster()
+    try:
+        bad_monster.attack(10)
+    except TypeError:
+        pass
+    else:
+        raise AssertionError("override mismatch was not observed")
+
+    rule = Add(Literal(2.0), Literal(3.0))
+    assert rule.evaluate(100.0) == 5.0
+    print("Week 13 Python contrasts passed.")
+
+
+if __name__ == "__main__":
+    main()

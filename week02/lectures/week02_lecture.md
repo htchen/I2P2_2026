@@ -3,6 +3,8 @@
 > September 15, 2026 · Source lineage: previous function, array, string, and
 > input notes, reorganized around comparisons with Python sequences
 
+> Python bridge: [Python Contrast Companion for Week 2](week02_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

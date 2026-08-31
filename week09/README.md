@@ -1,7 +1,9 @@
 # Week 9: Classes and Invariants
 
 - **Tuesday, November 3:** [Week 9 Lecture Notes — Classes, Invariants, and Operators](lectures/week09_lecture.md)
-- **Lecture support:** [C++ examples](lectures/examples.cpp) · [Exercises and starter](lectures/lecture_exercises/week09_ex.md)
+- **Lecture support:** [C++ examples](lectures/examples.cpp) ·
+  [Python contrast companion](lectures/week09_python_companion.md) ·
+  [Exercises and starter](lectures/lecture_exercises/week09_ex.md)
 - **Thursday, November 5:** [Event-loop and resource-lifecycle lab](labs/README.md)
 
 Focus: constructors, member-initializer lists, access control, `const` member

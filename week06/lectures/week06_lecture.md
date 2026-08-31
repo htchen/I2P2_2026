@@ -4,6 +4,8 @@
 > the 2025 Week 3–4 notebooks, and the instructor-provided *From C to Assembly*
 > handout
 
+> Python bridge: [Python Contrast Companion for Week 6](week06_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

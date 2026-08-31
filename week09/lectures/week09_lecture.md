@@ -3,6 +3,8 @@
 > November 3, 2026 · Source lineage: previous Classes I notes and Rational
 > examples from the 2025 C++ notebook
 
+> Python bridge: [Python Contrast Companion for Week 9](week09_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

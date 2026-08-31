@@ -1,7 +1,9 @@
 # Week 7: Expression Parsing and Syntax Trees
 
 - **Tuesday, October 20:** [Week 7 Lecture Notes — Expression Parsing and Syntax Trees](lectures/week07_lecture.md)
-- **Lecture support:** [C examples](lectures/examples.c) · [Exercises and starter](lectures/lecture_exercises/week07_ex.md)
+- **Lecture support:** [C examples](lectures/examples.c) ·
+  [Python contrast companion](lectures/week07_python_companion.md) ·
+  [Exercises and starter](lectures/lecture_exercises/week07_ex.md)
 - **Thursday, October 22:** **Midterm Exam 1 + Written Assessment (5%)** — lecture material from Weeks 1–6; Tuesday's Week 7 lecture notes are excluded
 - **Asynchronous:** [Bounded parser and code-generation integration checkpoint](labs/README.md), due on the project schedule rather than during the exam
 

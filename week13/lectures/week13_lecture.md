@@ -3,6 +3,8 @@
 > December 1, 2026 · Source lineage: previous Classes III material and the
 > class-hierarchy/variant sections of the 2025 Week 7 and Week 14 notebooks
 
+> Python bridge: [Python Contrast Companion for Week 13](week13_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

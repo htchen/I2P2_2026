@@ -3,6 +3,8 @@
 > October 6, 2026 · Source lineage: previous linked-list notes and the 2025
 > Week 1–3 notebooks; examples were consolidated around explicit ownership
 
+> Python bridge: [Python Contrast Companion for Week 5](week05_python_companion.md)
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

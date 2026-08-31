@@ -41,6 +41,14 @@ to C++ references, RAII, classes, templates, the standard library, value
 semantics and ownership, polymorphism, and problem solving in a multi-file C++
 codebase.
 
+Each of the 13 lecture weeks also includes a **Python contrast companion**. Each
+companion maps every C/C++ example to a direct Python translation, a closest
+Python model, or an explanation of why no faithful translation exists. These
+companions use students' prior knowledge as a bridge; they do not replace the
+C/C++ representation, lifetime, ownership, or compilation model assessed in
+the course. Each companion also provides a deterministic, standard-library-only
+Python example file for executable comparisons.
+
 ## Learning Outcomes
 
 By the end of the course, students should be able to:
