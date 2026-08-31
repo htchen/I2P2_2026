@@ -94,6 +94,8 @@ def array_sum(values: Sequence[int]) -> int:
 
 
 def students_read(lines: Iterable[str], capacity: int) -> list[Student]:
+    if capacity < 0:
+        raise ValueError("negative capacity")
     students: list[Student] = []
     for line in lines:
         if not line.strip():
@@ -103,6 +105,8 @@ def students_read(lines: Iterable[str], capacity: int) -> list[Student]:
         fields = line.split()
         if len(fields) != 3:
             raise ValueError("expected id, name, and grade")
+        if len(fields[1]) > 31:
+            raise ValueError("name exceeds the 31-character C field")
         students.append(
             Student(
                 student_id=int(fields[0]),
@@ -127,6 +131,12 @@ def main() -> None:
     assert array_sum([1, 2, 3]) == 6
     students = students_read(["1001 Ada 92.5\n", "1002 Lin 88\n"], 2)
     assert [entry.name for entry in students] == ["Ada", "Lin"]
+    try:
+        students_read([], -1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("negative capacity was accepted")
     print("Week 3 Python contrasts passed.")
 
 

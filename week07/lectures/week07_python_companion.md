@@ -118,12 +118,13 @@ the maximum that matches the intended C implementation or simulated target.
 expression  -> term (('+' | '-') term)*
 term        -> unary (('*' | '/') unary)*
 unary       -> ('+' | '-') unary | primary
-primary     -> INTEGER | IDENTIFIER | '(' expression ')'
+primary     -> INTEGER | '(' expression ')'
 ```
 
-The bounded code examples below implement integers and parentheses; adding
-identifiers requires a token kind, lexical rule, and semantic environment. The
-grammar—not the implementation language—determines precedence and associativity.
+An identifier extension requires an `IDENTIFIER` token and AST node, a lexical
+rule, and a semantic environment. The core grammar and bounded examples here
+deliberately implement integers and parentheses. The grammar—not the
+implementation language—determines precedence and associativity.
 
 ## AST representation and invariants
 
@@ -157,7 +158,12 @@ class Ast:
             and self.right is None
         )
         is_binary = (
-            self.kind not in (AstKind.INTEGER, AstKind.NEGATE)
+            self.kind in (
+                AstKind.ADD,
+                AstKind.SUBTRACT,
+                AstKind.MULTIPLY,
+                AstKind.DIVIDE,
+            )
             and self.left is not None
             and self.right is not None
         )

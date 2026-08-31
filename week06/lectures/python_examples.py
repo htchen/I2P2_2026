@@ -33,6 +33,8 @@ def power(base: int, exponent: int) -> int:
 def hanoi(
     n: int, source: str, temporary: str, destination: str
 ) -> list[tuple[int, str, str]]:
+    if n < 0:
+        raise ValueError("negative disk count")
     if n == 0:
         return []
     return (
@@ -43,6 +45,8 @@ def hanoi(
 
 
 def count_queens(size: int) -> int:
+    if size < 0:
+        raise ValueError("negative board size")
     columns: set[int] = set()
     descending: set[int] = set()
     ascending: set[int] = set()
@@ -137,6 +141,12 @@ def bst_minimum(node: TreeNode | None) -> TreeNode | None:
 def reconstruct(
     preorder_values: list[int], inorder_values: list[int]
 ) -> TreeNode | None:
+    if (
+        len(preorder_values) != len(inorder_values)
+        or len(set(preorder_values)) != len(preorder_values)
+        or set(preorder_values) != set(inorder_values)
+    ):
+        raise ValueError("traversals must contain the same unique values")
     if not preorder_values:
         return None
     root_value = preorder_values[0]
@@ -160,6 +170,12 @@ def main() -> None:
     assert power(3, 5) == 243
     assert len(hanoi(3, "A", "B", "C")) == 7
     assert count_queens(4) == 2
+    try:
+        hanoi(-1, "A", "B", "C")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("negative disk count was accepted")
 
     root: TreeNode | None = None
     for value in (4, 2, 6, 1, 3, 5, 7):
@@ -175,6 +191,12 @@ def main() -> None:
 
     rebuilt = reconstruct([4, 2, 1, 3, 6, 5, 7], inorder(root))
     assert preorder(rebuilt) == preorder(root)
+    try:
+        reconstruct([1, 2], [2, 3])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("inconsistent traversals were accepted")
     print("Week 6 Python contrasts passed.")
 
 

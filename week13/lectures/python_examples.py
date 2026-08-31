@@ -5,9 +5,10 @@ from __future__ import annotations
 import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Union
 
 
-@dataclass
+@dataclass(frozen=True)
 class Point:
     x: float
     y: float
@@ -31,8 +32,8 @@ class Shape(ABC):
 
 class Circle(Shape):
     def __init__(self, center: Point, radius: float) -> None:
-        if radius < 0.0:
-            raise ValueError("negative radius")
+        if not math.isfinite(radius) or radius < 0.0:
+            raise ValueError("radius must be finite and nonnegative")
         self._center = center
         self._radius = radius
 
@@ -41,8 +42,10 @@ class Circle(Shape):
         return self._center
 
     def translate(self, offset: Point) -> None:
-        self._center.x += offset.x
-        self._center.y += offset.y
+        self._center = Point(
+            self._center.x + offset.x,
+            self._center.y + offset.y,
+        )
 
     @property
     def area(self) -> float:
@@ -51,8 +54,15 @@ class Circle(Shape):
 
 class Rectangle(Shape):
     def __init__(self, corner: Point, width: float, height: float) -> None:
-        if width < 0.0 or height < 0.0:
-            raise ValueError("negative dimension")
+        if (
+            not math.isfinite(width)
+            or not math.isfinite(height)
+            or width < 0.0
+            or height < 0.0
+        ):
+            raise ValueError(
+                "rectangle dimensions must be finite and nonnegative"
+            )
         self._corner = corner
         self._width = width
         self._height = height
@@ -65,8 +75,10 @@ class Rectangle(Shape):
         )
 
     def translate(self, offset: Point) -> None:
-        self._corner.x += offset.x
-        self._corner.y += offset.y
+        self._corner = Point(
+            self._corner.x + offset.x,
+            self._corner.y + offset.y,
+        )
 
     @property
     def area(self) -> float:
@@ -129,6 +141,50 @@ class Add(Rule):
         )
 
 
+@dataclass(frozen=True)
+class Transform:
+    position: Point
+
+
+@dataclass(frozen=True)
+class Sprite:
+    asset_id: int
+
+
+@dataclass
+class Entity:
+    transform: Transform
+    sprite: Sprite
+
+
+class Movement(ABC):
+    @abstractmethod
+    def next_position(self, current: Point, seconds: float) -> Point:
+        raise NotImplementedError
+
+
+class LinearMovement(Movement):
+    def next_position(self, current: Point, seconds: float) -> Point:
+        return Point(current.x + seconds, current.y)
+
+
+class MovingMonster:
+    def __init__(self, movement: Movement) -> None:
+        if movement is None:
+            raise ValueError("movement is required")
+        self._movement = movement
+
+    def next_position(self, current: Point, seconds: float) -> Point:
+        return self._movement.next_position(current, seconds)
+
+
+ShapeValue = Union[Circle, Rectangle]
+
+
+def area_of(shape: ShapeValue) -> float:
+    return shape.area
+
+
 def total_area(shapes: list[Shape]) -> float:
     return sum(shape.area for shape in shapes)
 
@@ -143,6 +199,12 @@ def main() -> None:
     )
     circle.translate(Point(1.0, -1.0))
     assert circle.center == Point(1.0, -1.0)
+    try:
+        Circle(Point(0.0, 0.0), math.nan)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("non-finite radius was accepted")
 
     bad_monster = BadMonster()
     try:
@@ -154,6 +216,11 @@ def main() -> None:
 
     rule = Add(Literal(2.0), Literal(3.0))
     assert rule.evaluate(100.0) == 5.0
+    entity = Entity(Transform(Point(0.0, 0.0)), Sprite(7))
+    assert entity.transform.position == Point(0.0, 0.0)
+    moving = MovingMonster(LinearMovement())
+    assert moving.next_position(Point(1.0, 2.0), 0.5) == Point(1.5, 2.0)
+    assert area_of(rectangle) == 12.0
     print("Week 13 Python contrasts passed.")
 
 

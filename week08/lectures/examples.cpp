@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -29,8 +30,8 @@ void Normalize(std::vector<double>& values) {
   for (double value : values) {
     sum += value;
   }
-  if (sum == 0.0) {
-    throw std::invalid_argument{"cannot normalize a zero sum"};
+  if (!std::isfinite(sum) || sum == 0.0) {
+    throw std::invalid_argument{"normalization requires a finite nonzero sum"};
   }
   for (double& value : values) {
     value /= sum;

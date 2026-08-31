@@ -348,11 +348,18 @@ Judge data often contains an unknown number of records. In Python you might
 iterate over standard-input lines. In C, the conversion count controls the loop:
 
 ```c
+#include <limits.h>
+
 int value;
 long long total = 0;
 size_t count = 0;
 
 while (scanf("%d", &value) == 1) {
+  if ((value > 0 && total > LLONG_MAX - value) ||
+      (value < 0 && total < LLONG_MIN - value)) {
+    fprintf(stderr, "sum is outside the long long range\n");
+    return 1;
+  }
   total += value;
   ++count;
 }

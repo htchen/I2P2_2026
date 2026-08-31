@@ -277,6 +277,7 @@ boundary: start at `left` and continue while `i < right`.
 Design two interfaces rather than hiding preprocessing inside `main`:
 
 ```c
+#include <stddef.h>
 #include <stdint.h>
 
 int build_prefix(const int values[], size_t count, int64_t prefix[],
@@ -563,6 +564,11 @@ int sum_matrix(size_t rows, size_t columns, const int matrix[rows][columns]) {
   return total;
 }
 ```
+
+This VLA-parameter form requires `columns > 0`, a valid matrix whenever
+`rows > 0`, and a mathematical sum representable as `int`. A production
+interface that permits zero columns or unrestricted totals needs a different
+representation or result contract.
 
 The conceptual byte offset of `matrix[r][c]` is
 `(r * columns + c) * sizeof(int)`. Draw a `2 x 3` matrix as six consecutive

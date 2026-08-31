@@ -102,8 +102,10 @@ static void ast_destroy(Ast* node) {
 static Ast* ast_create(AstKind kind, long value, Ast* left, Ast* right) {
   const bool is_number = kind == AST_INTEGER && left == NULL && right == NULL;
   const bool is_unary = kind == AST_NEGATE && left != NULL && right == NULL;
-  const bool is_binary = kind != AST_INTEGER && kind != AST_NEGATE &&
-                         left != NULL && right != NULL;
+  const bool is_binary =
+      (kind == AST_ADD || kind == AST_SUBTRACT || kind == AST_MULTIPLY ||
+       kind == AST_DIVIDE) &&
+      left != NULL && right != NULL;
   if (!is_number && !is_unary && !is_binary) {
     return NULL;
   }

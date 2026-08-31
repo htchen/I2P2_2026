@@ -236,8 +236,12 @@ auto first_large =
     std::find_if(values.begin(), values.end(),
                  [threshold](int value) { return value >= threshold; });
 
-int total = std::accumulate(values.begin(), values.end(), 0);
+long long total = std::accumulate(values.begin(), values.end(), 0LL);
 ```
+
+The initial value selects the accumulation type, so `0LL` avoids accumulating
+in `int`. A wider type is still not a proof against overflow; the input contract
+must bound the mathematical sum or the program must check it.
 
 Common algorithms include:
 

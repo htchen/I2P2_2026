@@ -165,10 +165,10 @@ void rational_print(FILE* stream, const struct Rational* value);
 `rational.c`:
 
 ```c
+#include "rational.h"
+
 #include <assert.h>
 #include <limits.h>
-
-#include "rational.h"
 
 static int gcd(int a, int b) {
   while (b != 0) {
@@ -262,7 +262,7 @@ Function-like macros can evaluate arguments more than once:
 
 ```c
 #define BAD_SQUARE(x) ((x) * (x))
-/* BAD_SQUARE(i++) modifies i twice: do not do this. */
+/* BAD_SQUARE(i++) modifies i twice without sequencing: undefined behavior. */
 ```
 
 Prefer `enum` constants, `const` objects, and functions when they express the
@@ -308,12 +308,21 @@ Use assertions for internal conditions that indicate a programmer error:
 
 ```c
 #include <assert.h>
+#include <stddef.h>
 
 int array_sum(const int values[], size_t count) {
   assert(values != NULL || count == 0);
-  /* ... */
+  int total = 0;
+  for (size_t i = 0; i < count; ++i) {
+    total += values[i];
+  }
+  return total;
 }
 ```
+
+This teaching version requires the mathematical sum to be representable as an
+`int`. An interface for unrestricted inputs must use checked arithmetic or
+report overflow explicitly.
 
 Do not use `assert` as the only validation of ordinary user input; assertions
 may be disabled. Return an error or report a diagnostic for expected failures.
@@ -338,16 +347,20 @@ instead of opening a hard-coded path:
 ```c
 int students_read(FILE* input, struct Student students[], size_t capacity,
                   size_t* count) {
+  if (input == NULL || count == NULL || (students == NULL && capacity != 0)) {
+    return 0;
+  }
   *count = 0;
   while (*count < capacity) {
     struct Student next;
     int converted =
         fscanf(input, "%d %31s %lf", &next.id, next.name, &next.grade);
-    if (converted == EOF) return 1;
+    if (converted == EOF) return feof(input) != 0;
     if (converted != 3) return 0;
     students[(*count)++] = next;
   }
-  return fscanf(input, "%*s") == EOF; /* reject extra records */
+  int extra = fscanf(input, "%*s");
+  return extra == EOF && feof(input) != 0; /* reject extras/read errors */
 }
 ```
 

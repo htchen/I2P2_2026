@@ -36,6 +36,8 @@ def contains_zero(values: Sequence[int]) -> bool:
 
 
 def read_values(tokens: Iterable[str], count: int) -> list[int]:
+    if count < 0:
+        raise ValueError("negative count")
     iterator = iter(tokens)
     values: list[int] = []
     for _ in range(count):
@@ -78,6 +80,12 @@ def main() -> None:
     assert swapped(10, 20) == (20, 10)
     assert contains_zero([3, 0, 4])
     assert read_values(["10", "20", "30"], 3) == [10, 20, 30]
+    try:
+        read_values([], -1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("negative count was accepted")
 
     buffer = IntBuffer()
     buffer.push(7)

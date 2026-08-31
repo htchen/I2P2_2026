@@ -67,12 +67,15 @@ analogue. `print` and `input` are built-ins:
 
 ```python
 age = int(input("Age? "))
+if not 0 <= age <= 150:
+    raise ValueError("expected an age from 0 through 150")
 print(f"Next year: {age + 1}")
 ```
 
 `int` conversion raises `ValueError` on invalid text. C++ formatted extraction
-instead records failure in stream state. The error paths are related, but their
-interfaces are not interchangeable.
+instead records failure in stream state. Both versions then apply the same
+domain check. The error paths are related, but their interfaces are not
+interchangeable.
 
 Reading a complete name is similarly direct:
 

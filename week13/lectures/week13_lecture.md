@@ -86,11 +86,14 @@ interface; `Shape shape;` is ill-formed because no complete base behavior exists
 ### 3. Override the contract
 
 ```cpp
+#include <cmath>
+#include <stdexcept>
+
 class Circle final : public Shape {
  public:
   Circle(Point center, double radius) : center_{center}, radius_{radius} {
-    if (radius < 0.0) {
-      throw std::invalid_argument{"negative radius"};
+    if (!std::isfinite(radius) || radius < 0.0) {
+      throw std::invalid_argument{"radius must be finite and nonnegative"};
     }
   }
 
@@ -112,6 +115,36 @@ class Circle final : public Shape {
   Point center_;
   double radius_;
 };
+
+class Rectangle final : public Shape {
+ public:
+  Rectangle(Point corner, double width, double height)
+      : corner_{corner}, width_{width}, height_{height} {
+    if (!std::isfinite(width) || !std::isfinite(height) || width < 0.0 ||
+        height < 0.0) {
+      throw std::invalid_argument{
+          "rectangle dimensions must be finite and nonnegative"};
+    }
+  }
+
+  Point center() const override {
+    return {corner_.x + width_ / 2.0, corner_.y + height_ / 2.0};
+  }
+
+  void Translate(Point offset) override {
+    corner_.x += offset.x;
+    corner_.y += offset.y;
+  }
+
+  double area() const override {
+    return width_ * height_;
+  }
+
+ private:
+  Point corner_;
+  double width_;
+  double height_;
+};
 ```
 
 `override` asks the compiler to verify that a base virtual function is actually
@@ -124,6 +157,7 @@ For example, this is probably a mistake:
 class Actor {
  public:
   virtual void Attack(int damage) = 0;
+  virtual ~Actor() = default;
 };
 
 class Monster : public Actor {
@@ -200,12 +234,16 @@ observe how `override` converts a silent overload into a compile error.
 ### 4. Dynamic dispatch requires indirection
 
 ```cpp
+#include <iostream>
+
 void PrintArea(const Shape& shape) {
   std::cout << shape.area() << '\n';
 }
 
-Circle circle{{0.0, 0.0}, 2.0};
-PrintArea(circle); /* calls Circle::area */
+void DemonstrateDispatch() {
+  Circle circle{{0.0, 0.0}, 2.0};
+  PrintArea(circle); /* calls Circle::area */
+}
 ```
 
 The function accepts a base reference, but the virtual call selects behavior
@@ -223,15 +261,18 @@ derived part. Polymorphic APIs use references or pointers.
 ### 5. Polymorphic ownership
 
 ```cpp
+#include <iostream>
 #include <memory>
 #include <vector>
 
-std::vector<std::unique_ptr<Shape>> shapes;
-shapes.push_back(std::make_unique<Circle>(Point{0, 0}, 2.0));
-shapes.push_back(std::make_unique<Rectangle>(Point{1, 1}, 3.0, 4.0));
+void PrintExampleAreas() {
+  std::vector<std::unique_ptr<Shape>> shapes;
+  shapes.push_back(std::make_unique<Circle>(Point{0, 0}, 2.0));
+  shapes.push_back(std::make_unique<Rectangle>(Point{1, 1}, 3.0, 4.0));
 
-for (const auto& shape : shapes) {
-  std::cout << shape->area() << '\n';
+  for (const auto& shape : shapes) {
+    std::cout << shape->area() << '\n';
+  }
 }
 ```
 
@@ -309,6 +350,14 @@ rather than loosely interpreted characters when the set is closed.
 “A game entity has a position” suggests composition:
 
 ```cpp
+struct Transform {
+  Point position{0.0, 0.0};
+};
+
+struct Sprite {
+  int asset_id{0};
+};
+
 class Entity {
  private:
   Transform transform_;
@@ -330,16 +379,23 @@ composed helper.
 ### Strategy through composition
 
 ```cpp
+#include <memory>
+#include <stdexcept>
+#include <utility>
+
 class Movement {
  public:
   virtual Point Next(Point current, double seconds) = 0;
   virtual ~Movement() = default;
 };
 
-class Monster {
+class MovingMonster {
  public:
-  explicit Monster(std::unique_ptr<Movement> movement)
+  explicit MovingMonster(std::unique_ptr<Movement> movement)
       : movement_{std::move(movement)} {
+    if (movement_ == nullptr) {
+      throw std::invalid_argument{"movement is required"};
+    }
   }
 
  private:
@@ -429,6 +485,8 @@ When the set of alternatives is small and closed, `std::variant` offers
 value-based rather than inheritance-based polymorphism:
 
 ```cpp
+#include <variant>
+
 using ShapeValue = std::variant<Circle, Rectangle>;
 
 double Area(const ShapeValue& shape) {

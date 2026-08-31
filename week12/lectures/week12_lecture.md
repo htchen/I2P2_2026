@@ -33,7 +33,7 @@ In C, an owning dynamic array is commonly created with `malloc` and released
 with `free`. C++ also has the paired array operations `new[]` and `delete[]`:
 
 ```cpp
-int* values = new int[count];
+int* values = new int[count]{};
 /* use values[0] through values[count - 1] */
 delete[] values;
 ```
@@ -48,6 +48,8 @@ Direct `new[]`/`delete[]` is shown here to expose the ownership mechanism behind
 an educational container. Application code should normally use `std::vector`
 or another RAII owner. The purpose of `IntVec` is to understand why those
 owners require coordinated lifetime operations, not to replace them.
+The snippet assumes `count` is a validated nonnegative element count supported
+by the implementation; `{}` value-initializes each integer before it is read.
 
 ### 2. Ownership must survive value operations
 
@@ -288,8 +290,8 @@ the Rule of Zero.
 ```cpp
 #include <memory>
 
-auto node = std::make_unique<Node>(value);
-std::unique_ptr<Node> owner = std::move(node);
+auto value = std::make_unique<int>(42);
+std::unique_ptr<int> owner = std::move(value);
 ```
 
 - `std::unique_ptr<T>`: exactly one owner; movable, not copyable.

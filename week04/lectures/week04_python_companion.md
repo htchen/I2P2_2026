@@ -232,6 +232,8 @@ from collections.abc import Iterable
 
 
 def read_values(tokens: Iterable[str], count: int) -> list[int]:
+    if count < 0:
+        raise ValueError("negative count")
     iterator = iter(tokens)
     values: list[int] = []
     for _ in range(count):

@@ -49,6 +49,8 @@ localize errors and make stages testable independently.
 ### 2. Tokens
 
 ```c
+#include <stddef.h>
+
 enum TokenKind {
   TOKEN_INTEGER,
   TOKEN_PLUS,
@@ -99,6 +101,7 @@ A token carries the starting position, kind, and parsed value. Integer scanning
 must detect overflow while accumulating rather than after overflow has occurred:
 
 ```c
+#include <ctype.h>
 #include <limits.h>
 
 long value = 0;
@@ -124,7 +127,7 @@ program rather than guessing an omitted helper.
 ### Hour 1 lexer lab
 
 For input `" 12 + 3*x"`, write every token with `[start,end)`, kind, and
-value/lexeme. Then test empty input, every operator, `INT_MAX`, one overflowing
+value/lexeme. Then test empty input, every operator, `LONG_MAX`, one overflowing
 integer, an invalid byte between valid tokens, and repeated calls after end.
 The parser should never need to inspect raw characters or repeat overflow logic.
 
@@ -139,8 +142,13 @@ operators left-associative:
 expression  -> term (('+' | '-') term)*
 term        -> unary (('*' | '/') unary)*
 unary       -> ('+' | '-') unary | primary
-primary     -> INTEGER | IDENTIFIER | '(' expression ')'
+primary     -> INTEGER | '(' expression ')'
 ```
+
+An identifier extension would add an `IDENTIFIER` token and AST node to
+`primary`, together with a lexical rule and an environment used during
+evaluation. The core parser below deliberately implements only the grammar
+shown here.
 
 For `1 + 2 * 3`, `expression` contains one `term` for `1` and another whose
 tree is `2 * 3`. For `8 - 3 - 2`, the repetition builds `(8 - 3) - 2`.
@@ -252,12 +260,16 @@ This makes it visible that unary minus is syntax, not part of the integer token.
 ### AST constructors centralize invariants
 
 ```c
+#include <stdlib.h>
+
 static struct Ast* ast_create(enum AstKind kind, long value, struct Ast* left,
                               struct Ast* right) {
   int is_number = kind == AST_INTEGER && left == NULL && right == NULL;
   int is_unary = kind == AST_NEGATE && left != NULL && right == NULL;
-  int is_binary = kind != AST_INTEGER && kind != AST_NEGATE && left != NULL &&
-                  right != NULL;
+  int is_binary =
+      (kind == AST_ADD || kind == AST_SUBTRACT || kind == AST_MULTIPLY ||
+       kind == AST_DIVIDE) &&
+      left != NULL && right != NULL;
   if (!is_number && !is_unary && !is_binary) return NULL;
 
   struct Ast* node = malloc(sizeof(*node));

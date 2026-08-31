@@ -98,6 +98,8 @@ Separating computation from output makes the Hanoi translation easy to test:
 def hanoi(
     n: int, source: str, temporary: str, destination: str
 ) -> list[tuple[int, str, str]]:
+    if n < 0:
+        raise ValueError("negative disk count")
     if n == 0:
         return []
     return (
@@ -114,6 +116,8 @@ The N-queens invariant translates directly:
 
 ```python
 def count_queens(size: int) -> int:
+    if size < 0:
+        raise ValueError("negative board size")
     columns: set[int] = set()
     descending: set[int] = set()
     ascending: set[int] = set()
@@ -252,7 +256,15 @@ translation of postorder deallocation and cannot prove C cleanup correctness.
 ## Reconstructing from traversals
 
 ```python
-def reconstruct(preorder_values: list[int], inorder_values: list[int]) -> TreeNode | None:
+def reconstruct(
+    preorder_values: list[int], inorder_values: list[int]
+) -> TreeNode | None:
+    if (
+        len(preorder_values) != len(inorder_values)
+        or len(set(preorder_values)) != len(preorder_values)
+        or set(preorder_values) != set(inorder_values)
+    ):
+        raise ValueError("traversals must contain the same unique values")
     if not preorder_values:
         return None
     root_value = preorder_values[0]
@@ -260,8 +272,13 @@ def reconstruct(preorder_values: list[int], inorder_values: list[int]) -> TreeNo
     left_size = middle
     return TreeNode(
         root_value,
-        reconstruct(preorder_values[1 : 1 + left_size], inorder_values[:middle]),
-        reconstruct(preorder_values[1 + left_size :], inorder_values[middle + 1 :]),
+        reconstruct(
+            preorder_values[1 : 1 + left_size], inorder_values[:middle]
+        ),
+        reconstruct(
+            preorder_values[1 + left_size :],
+            inorder_values[middle + 1 :],
+        ),
     )
 ```
 

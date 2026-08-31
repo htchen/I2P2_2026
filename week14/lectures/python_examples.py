@@ -10,21 +10,33 @@ from typing import Optional
 Graph = list[list[int]]
 
 
-def add_undirected_edge(graph: Graph, a: int, b: int) -> None:
-    if not (0 <= a < len(graph) and 0 <= b < len(graph)):
+def validate_vertex(graph: Graph, vertex: int) -> None:
+    if not 0 <= vertex < len(graph):
         raise IndexError("vertex outside graph")
+
+
+def add_undirected_edge(graph: Graph, a: int, b: int) -> None:
+    validate_vertex(graph, a)
+    validate_vertex(graph, b)
     graph[a].append(b)
-    graph[b].append(a)
+    try:
+        graph[b].append(a)
+    except MemoryError:
+        graph[a].pop()
+        raise
 
 
 def dfs_visit(graph: Graph, vertex: int, visited: list[bool]) -> None:
     visited[vertex] = True
     for neighbor in graph[vertex]:
+        validate_vertex(graph, neighbor)
         if not visited[neighbor]:
             dfs_visit(graph, neighbor, visited)
 
 
 def reachable_dfs(graph: Graph, start: int, goal: int) -> bool:
+    validate_vertex(graph, start)
+    validate_vertex(graph, goal)
     visited = [False] * len(graph)
     dfs_visit(graph, start, visited)
     return visited[goal]
@@ -43,6 +55,7 @@ def component_sizes(graph: Graph) -> list[int]:
             current = stack.pop()
             size += 1
             for neighbor in graph[current]:
+                validate_vertex(graph, neighbor)
                 if not visited[neighbor]:
                     visited[neighbor] = True
                     stack.append(neighbor)
@@ -53,6 +66,8 @@ def component_sizes(graph: Graph) -> list[int]:
 def shortest_path(
     graph: Graph, start: int, goal: int
 ) -> Optional[list[int]]:
+    validate_vertex(graph, start)
+    validate_vertex(graph, goal)
     parent: list[Optional[int]] = [None] * len(graph)
     parent[start] = start
     frontier = deque([start])
@@ -61,6 +76,7 @@ def shortest_path(
         if current == goal:
             break
         for next_vertex in graph[current]:
+            validate_vertex(graph, next_vertex)
             if parent[next_vertex] is None:
                 parent[next_vertex] = current
                 frontier.append(next_vertex)
@@ -86,6 +102,7 @@ def multi_source_distances(
     distance: list[Optional[int]] = [None] * len(graph)
     frontier: deque[int] = deque()
     for source in sources:
+        validate_vertex(graph, source)
         if distance[source] is None:
             distance[source] = 0
             frontier.append(source)
@@ -94,6 +111,7 @@ def multi_source_distances(
         current_distance = distance[current]
         assert current_distance is not None
         for neighbor in graph[current]:
+            validate_vertex(graph, neighbor)
             if distance[neighbor] is None:
                 distance[neighbor] = current_distance + 1
                 frontier.append(neighbor)
@@ -132,6 +150,13 @@ class Step:
 
 
 def successors(state: State, cap_a: int, cap_b: int) -> list[State]:
+    if (
+        cap_a < 0
+        or cap_b < 0
+        or not 0 <= state.a <= cap_a
+        or not 0 <= state.b <= cap_b
+    ):
+        raise ValueError("invalid jug state or capacity")
     result = [
         State(cap_a, state.b),
         State(state.a, cap_b),
@@ -160,6 +185,12 @@ def main() -> None:
     assert shortest_path(graph, 0, 2) == [0, 1, 2]
     assert shortest_path(graph, 0, 5) is None
     assert multi_source_distances(graph, [0, 4]) == [0, 1, 2, 1, 0, None]
+    try:
+        reachable_dfs(graph, -1, 2)
+    except IndexError:
+        pass
+    else:
+        raise AssertionError("negative vertex was accepted")
 
     assert are_neighbors((0, 0), (3, 4), 5)
     assert not are_neighbors((0, 0), (3, 4), 4)
@@ -173,6 +204,12 @@ def main() -> None:
         State(0, 5): Step(initial, Action.FILL_B),
     }
     assert discovered[State(3, 0)].action is Action.FILL_A
+    try:
+        successors(State(4, 0), 3, 5)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("invalid jug state was accepted")
     print("Week 14 Python contrasts passed.")
 
 

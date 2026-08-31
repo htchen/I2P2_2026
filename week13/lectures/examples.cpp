@@ -1,6 +1,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -26,6 +27,9 @@ class Sine final : public Function {
  public:
   explicit Sine(std::unique_ptr<Function> argument)
       : argument_{std::move(argument)} {
+    if (argument_ == nullptr) {
+      throw std::invalid_argument{"sine argument is required"};
+    }
   }
   double Eval(double x) const override {
     return std::sin(argument_->Eval(x));

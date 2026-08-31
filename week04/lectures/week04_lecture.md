@@ -84,6 +84,8 @@ Week 3 introduced structures. In C17, a member declaration describes layout;
 it cannot contain an initializer. Initialize each object when it is created:
 
 ```c
+#include <stddef.h>
+
 typedef struct Node {
   int value;
   struct Node* next; /* no "= NULL" here in C17 */
@@ -206,6 +208,8 @@ callback, but do not use them to avoid learning the underlying type.
 ### Pointer/array trace
 
 ```c
+#include <stdio.h>
+
 int values[] = {10, 20, 30, 40};
 int* first = values;
 int* last = values + 4;

@@ -325,6 +325,10 @@ def sum_matrix(matrix: Sequence[Sequence[int]]) -> int:
     return sum(value for row in matrix for value in row)
 ```
 
+This Python model accepts an empty matrix and a zero-column rectangular matrix.
+The C VLA parameter instead requires a positive column bound, so that boundary
+is a deliberate representation difference rather than an algorithmic one.
+
 Insertion sort preserves the C shifting invariant:
 
 ```python

@@ -98,7 +98,12 @@ class Ast:
             and self.right is None
         )
         is_binary = (
-            self.kind not in (AstKind.INTEGER, AstKind.NEGATE)
+            self.kind in (
+                AstKind.ADD,
+                AstKind.SUBTRACT,
+                AstKind.MULTIPLY,
+                AstKind.DIVIDE,
+            )
             and self.left is not None
             and self.right is not None
         )

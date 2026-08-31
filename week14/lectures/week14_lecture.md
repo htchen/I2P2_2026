@@ -51,11 +51,27 @@ so traversal needs a visited set.
 For integer vertices `0 .. n-1`:
 
 ```cpp
+#include <cstddef>
+#include <stdexcept>
+#include <vector>
+
 using Graph = std::vector<std::vector<int>>;
 
 void AddUndirectedEdge(Graph& graph, int a, int b) {
-  graph.at(a).push_back(b);
-  graph.at(b).push_back(a);
+  if (a < 0 || b < 0) throw std::out_of_range{"negative vertex"};
+  const auto first = static_cast<std::size_t>(a);
+  const auto second = static_cast<std::size_t>(b);
+  if (first >= graph.size() || second >= graph.size()) {
+    throw std::out_of_range{"vertex outside graph"};
+  }
+
+  graph[first].push_back(b);
+  try {
+    graph[second].push_back(a);
+  } catch (...) {
+    graph[first].pop_back();
+    throw;
+  }
 }
 ```
 
@@ -166,6 +182,7 @@ edge, a transitive chain, duplicate coordinates, and an empty graph.
 ### 5. Breadth-first search finds shortest unweighted paths
 
 ```cpp
+#include <algorithm>
 #include <optional>
 #include <queue>
 
@@ -333,6 +350,8 @@ For water jugs with capacities A and B, one state is the current amount in each
 jug:
 
 ```cpp
+#include <tuple>
+
 struct State {
   int a;
   int b;
@@ -347,7 +366,16 @@ Vertices do not need to be stored in advance. A successor function generates
 legal next states:
 
 ```cpp
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
+
 std::vector<State> Successors(State state, int cap_a, int cap_b) {
+  if (cap_a < 0 || cap_b < 0 || state.a < 0 || state.a > cap_a ||
+      state.b < 0 || state.b > cap_b) {
+    throw std::invalid_argument{"invalid jug state or capacity"};
+  }
+
   std::vector<State> result{
       {cap_a, state.b}, {state.a, cap_b}, {0, state.b}, {state.a, 0}};
 
@@ -374,6 +402,8 @@ maze routing, and game AI.
 ### Record actions, not only parents
 
 ```cpp
+#include <map>
+
 enum class Action { FillA, FillB, EmptyA, EmptyB, PourAToB, PourBToA };
 
 struct Step {
@@ -409,6 +439,9 @@ Several actions may produce the same state, especially when a jug is already
 empty or full. The visited map prevents infinite cycles and unnecessary work.
 
 ```cpp
+#include <map>
+#include <queue>
+
 std::map<State, State> parent;
 std::queue<State> frontier;
 ```

@@ -24,7 +24,7 @@ Every fenced example in the Week 13 note is accounted for below.
 | Tag-based circle/rectangle branch | Direct | Show the same conditional and motivate moving behavior behind objects |
 | Shape-interface Mermaid diagram | Direct design | Preserve client → interface → concrete implementation relationship |
 | `Point` and abstract `Shape` | Closest model | Dataclass plus `ABC`/`abstractmethod`; no virtual destructor requirement |
-| `Circle final : Shape` | Direct behavior, weaker guarantees | Implement methods and invariant; Python has no `final` enforcement by default |
+| `Circle`/`Rectangle final : Shape` | Direct behavior, weaker guarantees | Implement methods and invariants; Python has no `final` enforcement by default |
 | Incorrect `Attack()` override | Important difference | ABC checks the method name, not compatible call signature; failure can occur at call time |
 | Non-virtual-interface `GameObject` | Direct template-method pattern | Public `update` validates and calls protected-by-convention hook |
 | Update sequence text | Direct | Preserve the ordered skeleton |
@@ -59,7 +59,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(frozen=True)
 class Point:
     x: float
     y: float
@@ -91,8 +91,8 @@ import math
 
 class Circle(Shape):
     def __init__(self, center: Point, radius: float) -> None:
-        if radius < 0.0:
-            raise ValueError("negative radius")
+        if not math.isfinite(radius) or radius < 0.0:
+            raise ValueError("radius must be finite and nonnegative")
         self._center = center
         self._radius = radius
 
@@ -101,12 +101,49 @@ class Circle(Shape):
         return self._center
 
     def translate(self, offset: Point) -> None:
-        self._center.x += offset.x
-        self._center.y += offset.y
+        self._center = Point(
+            self._center.x + offset.x,
+            self._center.y + offset.y,
+        )
 
     @property
     def area(self) -> float:
         return math.pi * self._radius * self._radius
+
+
+class Rectangle(Shape):
+    def __init__(
+        self, corner: Point, width: float, height: float
+    ) -> None:
+        if (
+            not math.isfinite(width)
+            or not math.isfinite(height)
+            or width < 0.0
+            or height < 0.0
+        ):
+            raise ValueError(
+                "rectangle dimensions must be finite and nonnegative"
+            )
+        self._corner = corner
+        self._width = width
+        self._height = height
+
+    @property
+    def center(self) -> Point:
+        return Point(
+            self._corner.x + self._width / 2.0,
+            self._corner.y + self._height / 2.0,
+        )
+
+    def translate(self, offset: Point) -> None:
+        self._corner = Point(
+            self._corner.x + offset.x,
+            self._corner.y + offset.y,
+        )
+
+    @property
+    def area(self) -> float:
+        return self._width * self._height
 ```
 
 The invariant and dispatched behavior are direct. Python 3.9 has no built-in
@@ -215,7 +252,10 @@ class Add(Rule):
     right: Rule
 
     def evaluate(self, input_value: float) -> float:
-        return self.left.evaluate(input_value) + self.right.evaluate(input_value)
+        return (
+            self.left.evaluate(input_value)
+            + self.right.evaluate(input_value)
+        )
 ```
 
 Leaf/branch polymorphism and recursive evaluation transfer. Python attributes
@@ -225,6 +265,19 @@ unless the design forbids it.
 ## Composition and strategy
 
 ```python
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Transform:
+    position: Point
+
+
+@dataclass(frozen=True)
+class Sprite:
+    asset_id: int
+
+
 @dataclass
 class Entity:
     transform: Transform
@@ -243,6 +296,8 @@ class Movement(ABC):
 
 class MovingMonster:
     def __init__(self, movement: Movement) -> None:
+        if movement is None:
+            raise ValueError("movement is required")
         self._movement = movement
 ```
 

@@ -311,6 +311,8 @@ Then change the private representation and list which files must recompile.
 ### 9. Test the abstraction, not the fields
 
 ```cpp
+#include <cassert>
+
 void TestNormalization() {
   Rational value{2, -4};
   assert(value.numerator() == -1);

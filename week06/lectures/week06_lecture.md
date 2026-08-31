@@ -170,6 +170,8 @@ To move `n` disks from peg `A` to peg `C` using peg `B`:
 3. move the `n - 1` disks from `B` to `C`.
 
 ```c
+#include <stdio.h>
+
 void hanoi(unsigned int n, char from, char temporary, char to) {
   if (n == 0) return;
   hanoi(n - 1, from, to, temporary);
@@ -258,6 +260,9 @@ flowchart TD
 ```
 
 ```c
+#include <stddef.h>
+#include <stdio.h>
+
 void preorder(const struct TreeNode* node) {
   if (node == NULL) return;
   printf("%d ", node->value);
@@ -300,6 +305,8 @@ to the two recursive calls exactly matches the order's definition.
 ### 4. Aggregate queries
 
 ```c
+#include <stddef.h>
+
 size_t tree_size(const struct TreeNode* node) {
   if (node == NULL) return 0;
   return 1 + tree_size(node->left) + tree_size(node->right);

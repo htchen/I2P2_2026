@@ -55,10 +55,17 @@ static void list_destroy(Node** head) {
 
 int main(void) {
   Node* head = NULL;
-  (void)list_insert(&head, 0, 20);
-  (void)list_insert(&head, 0, 10);
-  (void)list_insert(&head, 2, 30);
-  (void)list_erase(&head, 1);
+  if (!list_insert(&head, 0, 20) || !list_insert(&head, 0, 10) ||
+      !list_insert(&head, 2, 30)) {
+    fputs("could not build list\n", stderr);
+    list_destroy(&head);
+    return 1;
+  }
+  if (!list_erase(&head, 1)) {
+    fputs("expected list element was absent\n", stderr);
+    list_destroy(&head);
+    return 1;
+  }
   for (const Node* node = head; node != NULL; node = node->next) {
     printf("%d%c", node->value, node->next == NULL ? '\n' : ' ');
   }

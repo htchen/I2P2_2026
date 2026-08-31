@@ -286,6 +286,8 @@ from collections.abc import Iterable
 
 
 def students_read(lines: Iterable[str], capacity: int) -> list[Student]:
+    if capacity < 0:
+        raise ValueError("negative capacity")
     students: list[Student] = []
     for line in lines:
         if not line.strip():
@@ -295,6 +297,8 @@ def students_read(lines: Iterable[str], capacity: int) -> list[Student]:
         fields = line.split()
         if len(fields) != 3:
             raise ValueError("expected id, name, and grade")
+        if len(fields[1]) > 31:
+            raise ValueError("name exceeds the 31-character C field")
         students.append(
             Student(
                 student_id=int(fields[0]),

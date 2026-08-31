@@ -75,7 +75,10 @@ operators a type-appropriate meaning. For now, read a chain from left to right:
 ```cpp
 int age{0};
 std::cout << "Age? ";
-std::cin >> age;
+if (!(std::cin >> age) || age < 0 || age > 150) {
+  std::cerr << "expected an age from 0 through 150\n";
+  return 1;
+}
 std::cout << "Next year: " << age + 1 << '\n';
 ```
 
@@ -246,14 +249,17 @@ required. Use a reference for a required borrowed object.
 ```cpp
 double Mean(const std::vector<int>& values) {
   if (values.empty()) return 0.0;
-  long long total = 0;
+  double total = 0.0;
   for (int value : values) total += value;
-  return static_cast<double>(total) / values.size();
+  return total / static_cast<double>(values.size());
 }
 ```
 
 The signature says the vector is required, borrowed, and not modified. The
 range loop copies each `int`, which is appropriate for a small scalar.
+Accumulating in `double` avoids signed-integer overflow, although a large sum
+can round and floating-point overflow must still be considered for an
+unrestricted numeric interface.
 
 For larger elements:
 

@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <queue>
 #include <utility>
@@ -26,18 +27,32 @@ static std::optional<int> ShortestDistance(
   if (grid.empty() || grid.front().empty()) {
     return std::nullopt;
   }
+  if (grid.size() > static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
+      grid.front().size() >
+          static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+    return std::nullopt;
+  }
   const int rows = static_cast<int>(grid.size());
   const int columns = static_cast<int>(grid.front().size());
   for (const auto& row : grid) {
-    if (static_cast<int>(row.size()) != columns) {
+    if (row.size() != grid.front().size()) {
       return std::nullopt;
     }
+  }
+  const auto in_bounds = [rows, columns](int row, int column) {
+    return row >= 0 && row < rows && column >= 0 && column < columns;
+  };
+  if (!in_bounds(target.first, target.second) ||
+      grid[target.first][target.second] == '#') {
+    return std::nullopt;
   }
   std::vector distance(rows, std::vector<int>(columns, -1));
   std::queue<std::pair<int, int>> frontier;
   for (const auto [row, column] : starts) {
-    if (row >= 0 && row < rows && column >= 0 && column < columns &&
-        grid[row][column] != '#' && distance[row][column] == -1) {
+    if (!in_bounds(row, column) || grid[row][column] == '#') {
+      return std::nullopt;
+    }
+    if (distance[row][column] == -1) {
       distance[row][column] = 0;
       frontier.push({row, column});
     }

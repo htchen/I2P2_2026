@@ -47,6 +47,8 @@ per node, non-contiguous memory access, and linear-time indexing.
 ### 2. Representation and invariants
 
 ```c
+#include <stddef.h>
+
 struct Node {
   int value;
   struct Node* next;
@@ -386,6 +388,8 @@ connection changes.
 ### 7. Traversal and read-only borrowing
 
 ```c
+#include <stdio.h>
+
 void list_print(const struct List* list, FILE* stream) {
   for (const struct Node* node = list->head; node != NULL; node = node->next) {
     fprintf(stream, "%d%s", node->value, node->next == NULL ? "\n" : " -> ");
