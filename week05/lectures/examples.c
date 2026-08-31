@@ -20,7 +20,7 @@ static bool list_insert(Node **head, size_t index, int value) {
     if (index != 0) {
         return false;
     }
-    Node *node = malloc(sizeof *node);
+    Node *node = malloc(sizeof(*node));
     if (node == NULL) {
         return false;
     }

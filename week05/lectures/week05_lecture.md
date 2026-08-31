@@ -80,7 +80,7 @@ void list_init(struct List *list)
 
 static struct Node *node_create(int value, struct Node *next)
 {
-    struct Node *node = malloc(sizeof *node);
+    struct Node *node = malloc(sizeof(*node));
     if (node == NULL) return NULL;
     node->value = value;
     node->next = next;
@@ -93,9 +93,11 @@ Because it is `static`, it is a private implementation detail of `list.c`.
 
 ### Separate payload from structure
 
-The legacy list notes eventually separated list mechanics from stored data. A
-node can own a heap-allocated string, borrow a string, or store the bytes inline;
-these choices change destruction and copy behavior.
+The link fields describe the **shape** of the list; the other fields are its
+**payload**, meaning the data the list stores. Keeping these two roles separate
+makes it easier to reuse the same list ideas for integers, strings, tokens, or
+game objects. A node can own a heap-allocated string, borrow a string, or store
+the bytes inline; these choices change destruction and copy behavior.
 
 ```c
 struct StringNode {
@@ -130,11 +132,11 @@ then replace `head`. If allocation fails, the original list is unchanged.
 int list_is_valid(const struct List *list)
 {
     size_t observed = 0;
-    for (const struct Node *node = list->head;
-         node != NULL;
-         node = node->next) {
+    const struct Node *node = list->head;
+    while (node != NULL) {
         ++observed;
         if (observed > list->size) return 0; /* cycle or wrong size */
+        node = node->next;
     }
     return observed == list->size;
 }
@@ -157,6 +159,34 @@ third push and prove that the original two-node list remains valid and owned.
 Removing a node usually requires either changing `list->head` or changing a
 previous node's `next`. A pointer-to-pointer lets one loop treat both as “the
 link that points to the current node.”
+
+The important idea is that `link` points to a **box that contains a node
+pointer**, not directly to the node:
+
+```mermaid
+flowchart LR
+    link["link: Node **"] --> head_slot["list->head: Node *"]
+    head_slot --> first["Node 10"]
+    first -->|next| second["Node 20"]
+    second -->|next| third["Node 30"]
+    third -->|next| null["NULL"]
+```
+
+After one loop step, `link = &(*link)->next` makes the same variable point to
+the `next` box inside the first node:
+
+```mermaid
+flowchart LR
+    head_slot["list->head"] --> first["Node 10"]
+    link["link: Node **"] --> next_slot["10.next: Node *"]
+    first --- next_slot
+    next_slot --> second["Node 20"]
+    second -->|next| third["Node 30"]
+    third -->|next| null["NULL"]
+```
+
+Writing `*link = ...` therefore changes whichever incoming link currently owns
+the node: either `list->head` or one node's `next` field.
 
 Linus Torvalds used this linked-list deletion contrast in his TED2016 interview
 as an example of programming “taste.” A conventional traversal remembers the
@@ -281,7 +311,7 @@ size_t list_remove_all(struct List *list, int target)
 After removal, do not advance `link`: it already designates the next link to
 inspect. This is the key case when adjacent nodes match.
 
-### Hour 2 studio
+### Optional supplementary practice
 
 Implement and test:
 
@@ -418,6 +448,29 @@ Use a circular list because the problem is circular, not merely because it is an
 interesting structure. The Josephus problem also has array and mathematical
 solutions with different tradeoffs.
 
+### The Josephus problem, stated precisely
+
+Arrange `n` participants in a circle and number them `1` through `n`. Begin at
+participant `1`. Count only participants who remain in the circle; remove every
+`k`-th participant, then resume counting at the next remaining participant.
+Continue until one participant remains. The usual task asks for the survivor;
+some versions also ask for the complete removal order.
+
+For `n = 7` and `k = 3`, count `1, 2, 3`, remove `3`, and resume at `4`:
+
+| Round | Circle before counting | Removed | Next start |
+|-------|------------------------|---------|------------|
+| 1 | `1 2 3 4 5 6 7` | `3` | `4` |
+| 2 | `4 5 6 7 1 2` | `6` | `7` |
+| 3 | `7 1 2 4 5` | `2` | `4` |
+| 4 | `4 5 7 1` | `7` | `1` |
+| 5 | `1 4 5` | `5` | `1` |
+| 6 | `1 4` | `1` | `4` |
+
+The removal order is `3, 6, 2, 7, 5, 1`; participant `4` survives. This hand
+trace fixes three common ambiguities: whether counting includes the current
+participant, where counting resumes, and whether labels change after removal.
+
 ### Circular-list representation
 
 A useful representation stores a `tail` whose `next` is the head:
@@ -438,12 +491,18 @@ terminates.
 
 ### Josephus comparison
 
-For `n` participants and step `k`, compare:
+For `n` participants and step `k`, compare three approaches:
 
-1. erase from an array/vector-like representation—simple indexing, O(n²) shifts;
-2. circular linked list—O(nk) link steps with O(1) removal after the predecessor;
-3. recurrence `J(1,k)=0`, `J(n,k)=(J(n-1,k)+k) mod n`—O(n) time and O(1) space
-   iteratively, but returns only the survivor unless extended.
+| Approach | Main state | Typical cost | What it naturally produces |
+|----------|------------|--------------|----------------------------|
+| Array, erase removed entry | remaining labels plus current index | O(n²) because later entries shift | full removal order |
+| Circular linked list | predecessor/current node and remaining count | O(nk) link steps; removal itself is O(1) | full removal order |
+| Recurrence `J(1,k)=0`, `J(n,k)=(J(n-1,k)+k) mod n` | survivor index for the smaller circle | O(n) time, O(1) space iteratively | survivor only |
+
+The recurrence uses zero-based positions. Add one to report a participant label
+from `1` through `n`. It works by imagining that after the first removal, the
+smaller circle is renumbered from its new starting point; adding `k` maps that
+answer back to the original numbering.
 
 The structure-simulation version is still valuable when the complete
 elimination order is required. Algorithm selection follows the requested output.
@@ -503,5 +562,6 @@ ways to corrupt links.
 - [Linked lists](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/2-linked_list.md>)
 - [Linked-list supplementary notes](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/2-linked_list_sup.md>)
 - [Josephus problem](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/3-josephus_problem.md>)
+- [Instructor slides: *Josephus Problem*](../../assets/references/josephus_lee.pptx)
 - [2025 Week 1 notebook (Colab)](https://colab.research.google.com/drive/1Asu-XpzM8EfrB8ANf4ze4ejDUdgIFGq0)
 - [2025 Week 2 notebook (Colab)](https://colab.research.google.com/drive/1U1VXgyhO50YCJUTD7BPrA-zvr6GTMHIr)

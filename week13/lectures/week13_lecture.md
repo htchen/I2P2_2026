@@ -25,10 +25,42 @@ By the end of this lecture, you should be able to:
 
 ## Hour 1 — Abstract interfaces and substitutable overrides
 
-### 1. Substitutability, not code reuse, is the starting point
+### 1. Why introduce an abstraction?
+
+Suppose a drawing program stores circles and rectangles separately. Every new
+operation repeats the type decision:
+
+```cpp
+if (kind == CircleKind) {
+    draw_circle(circle);
+} else if (kind == RectangleKind) {
+    draw_rectangle(rectangle);
+}
+```
+
+The same branch appears again for `area`, `translate`, and later for every new
+shape. An **abstraction** gives client code one small promise—“this object can
+report its center, move, and report its area”—without requiring the client to
+know the concrete shape.
+
+```mermaid
+flowchart TD
+    client["client code<br/>uses a Shape reference"] --> shape["Shape interface"]
+    shape --> circle["Circle"]
+    shape --> rectangle["Rectangle"]
+```
+
+The client depends on the stable interface. Each concrete type supplies its own
+implementation. This is useful only when the common promise is genuine; an
+interface created merely to avoid a few repeated lines can make a design harder
+to understand.
+
+### 2. Public inheritance means “can be used as”
 
 Use public inheritance when every derived object can be used wherever the base
-interface is expected without violating its contract.
+interface is expected without violating its contract. This property is called
+**substitutability**: code written for `Shape&` must work correctly when the
+actual object is a `Circle` or `Rectangle`.
 
 ```cpp
 struct Point {
@@ -48,7 +80,7 @@ public:
 A pure virtual function (`= 0`) makes `Shape` abstract. It describes an
 interface; `Shape shape;` is ill-formed because no complete base behavior exists.
 
-### 2. Override the contract
+### 3. Override the contract
 
 ```cpp
 class Circle final : public Shape {
@@ -85,7 +117,27 @@ private:
 being overridden. It catches parameter, `const`, and spelling mismatches.
 `final` prevents further derivation when the design intends a leaf class.
 
-### Strengthen neither preconditions nor surprises
+For example, this is probably a mistake:
+
+```cpp
+class Actor {
+public:
+    virtual void attack(int damage) = 0;
+};
+
+class Monster : public Actor {
+public:
+    void attack() {} /* a different overload; does not override attack(int) */
+};
+```
+
+Writing `void attack() override` makes the compiler reject the mismatch at the
+definition. Without `override`, the error may be discovered much later when the
+class remains abstract or a call through the base interface cannot reach the
+intended function. Treat `override` as a compile-time safety check, not only as
+documentation.
+
+### A derived class must keep the base promise
 
 If `Shape::translate` accepts every finite offset, `Circle::translate` cannot
 silently reject negative offsets. A derived operation may guarantee more in its
@@ -111,13 +163,28 @@ public:
 
 private:
     virtual void do_update(double seconds) = 0;
-    void before_update();
-    void after_update();
+    void before_update() { /* common setup */ }
+    void after_update() { /* common cleanup */ }
 };
 ```
 
 The public nonvirtual function enforces common checks and sequencing; derived
-classes customize only the intended step.
+classes customize only the intended step. A derived class may override a
+`private virtual` function even though it cannot call that function directly.
+Keeping `do_update` private prevents callers and derived classes from bypassing
+the public `update` sequence:
+
+```text
+update(seconds)
+    -> validate seconds
+    -> before_update()
+    -> do_update(seconds)   // the derived behavior
+    -> after_update()
+```
+
+This pattern separates two questions: the base class controls **when** the
+steps run, while the derived class supplies **what** happens in the designated
+step.
 
 ### Hour 1 studio
 
@@ -127,7 +194,7 @@ observe how `override` converts a silent overload into a compile error.
 
 ## Hour 2 — Dynamic dispatch, ownership, and destruction
 
-### 3. Dynamic dispatch requires indirection
+### 4. Dynamic dispatch requires indirection
 
 ```cpp
 void print_area(const Shape& shape)
@@ -151,7 +218,7 @@ void wrong(Shape value); /* abstract Shape makes this impossible here */
 For a nonabstract base, copying a derived value into a base object discards the
 derived part. Polymorphic APIs use references or pointers.
 
-### 4. Polymorphic ownership
+### 5. Polymorphic ownership
 
 ```cpp
 #include <memory>
@@ -192,7 +259,7 @@ Rule: if a class has any virtual function and objects may be deleted through a
 base pointer, give it a public virtual destructor (or deliberately prevent such
 deletion with a protected nonvirtual destructor in advanced designs).
 
-### 5. Access control
+### 6. Access control
 
 - `public`: accessible through the interface.
 - `protected`: accessible in the class and derived classes.
@@ -233,9 +300,9 @@ consistently; falling out of a non-void override or silently accepting an unknow
 operation is not a valid default. Store operation choices with `enum class`
 rather than loosely interpreted characters when the set is closed.
 
-## Hour 3 — Composition, variants, and brownfield architecture
+## Hour 3 — Composition, variants, and existing-project architecture
 
-### 6. Composition before inheritance
+### 7. Composition before inheritance
 
 “A game entity has a position” suggests composition:
 
@@ -281,7 +348,7 @@ Monster type and movement policy now vary independently. The monster uniquely
 owns its strategy; a shared immutable strategy could instead be borrowed or
 shared under an explicit lifetime design.
 
-### 7. Downcasting is a design signal
+### 8. Downcasting is a design signal
 
 ```cpp
 if (auto* circle = dynamic_cast<Circle*>(shape)) {
@@ -294,7 +361,7 @@ may mean the base interface is missing an operation or the behavior belongs in
 a visitor/variant. Never use `static_cast` to downcast unless a separate
 invariant proves the dynamic type; otherwise behavior is undefined.
 
-### 8. Closed alternatives with `std::variant`
+### 9. Closed alternatives with `std::variant`
 
 When the set of alternatives is small and known, value-based polymorphism can be
 clearer. This is a comparison example; the lecture does not build a second
@@ -330,7 +397,7 @@ implement multiple small pure interfaces when it truly satisfies independent
 contracts, for example `Updatable` and `Drawable`. Ownership should still have
 one clear path; avoid diamond-shaped shared implementation hierarchies.
 
-### 9. Final-project reading strategy
+### 10. Final-project reading strategy
 
 For a legacy game hierarchy:
 

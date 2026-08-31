@@ -11,7 +11,7 @@ static bool make_sequence(size_t size, int **out) {
     if (size == 0) {
         return true;
     }
-    int *candidate = malloc(size * sizeof *candidate);
+    int *candidate = malloc(size * sizeof(*candidate));
     if (candidate == NULL) {
         return false;
     }

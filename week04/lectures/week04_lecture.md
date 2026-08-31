@@ -40,6 +40,14 @@ printf("through pointer=%d\n", *pointer);
 - `*pointer` designates the object at that address.
 - The pointer type describes the pointed-to object and controls pointer arithmetic.
 
+```mermaid
+flowchart LR
+    pointer["pointer<br/>stores address of value"] --> value["value<br/>7"]
+```
+
+The arrow means “stores the address of,” not “contains a copy of.” Reading
+`*pointer` follows the arrow; writing `*pointer = 9` changes the `value` box.
+
 Read `int *pointer` as “pointer is a pointer to int.” In a multi-declaration, the
 star belongs to each declarator:
 
@@ -49,6 +57,34 @@ int *second;
 ```
 
 This is clearer than `int *first, second`, where `second` is not a pointer.
+
+You will see both `int *pointer` and `int* pointer`. They declare the same type;
+spacing does not change the program. This course writes the `*` next to the
+variable name because a declaration may contain both a pointer and a non-pointer:
+
+```c
+int *first, count; /* first is int*, but count is int */
+```
+
+For beginners, one declaration per line is usually the clearest choice.
+
+### C and C++ initialize structures differently
+
+Week 3 introduced structures. In C17, a member declaration cannot contain a
+C++-style default initializer:
+
+```c
+typedef struct Node {
+    int value;
+    struct Node *next; /* no "= NULL" here in C17 */
+} Node;
+
+Node node = {0, NULL}; /* initialize an object when it is created */
+```
+
+C++ permits member initializers, but C does not. Also notice that the body uses
+`struct Node *`: the typedef name `Node` becomes available only after the closing
+brace.
 
 ### 2. Pass an address to modify a caller's object
 
@@ -72,7 +108,30 @@ C still passes arguments by value: `left` receives a copy of `&a`. Both the
 original address and its copy designate the same integer, so dereferencing the
 copy modifies `a`.
 
-### Assembly lens: forming an address is not accessing an object
+### Use `const` to prevent accidental writes
+
+A pointer parameter can promise that the function only reads the array:
+
+```c
+int contains_zero(const int *values, size_t count)
+{
+    for (size_t i = 0; i < count; ++i) {
+        if (values[i] == 0) return 1;
+    }
+    return 0;
+}
+```
+
+Without `const`, a typo such as `values[i] = 0` is a valid assignment and can
+silently modify the caller's array. With `const int *`, the compiler rejects
+that assignment. `const` is therefore both a contract for the caller and a
+safety check for the function author.
+
+<details>
+<summary>Optional machine-code preview: forming an address is not accessing an object</summary>
+
+The following comparison is useful after the C pointer model is clear; it is
+not required to read or write pointer code.
 
 Consider three different C operations:
 
@@ -95,19 +154,20 @@ type, bounds, alignment, and lifetime rules, while `lea` and `mov` are target
 instructions. Optimization may keep `value` only in a register or replace the
 whole fragment with a constant, leaving no visible pointer operation.
 
-Use `const` to separate observation from mutation:
-
-```c
-int sum(const int *values, size_t count); /* pointed-to ints are read-only */
-```
+</details>
 
 ### 3. Arrays and pointers are related, not identical
 
-In most expressions, an array is converted to a pointer to its first element:
+The subscript operation is defined through pointer arithmetic:
 
 ```c
 values[i] == *(values + i)
 ```
+
+For this expression, `values` is converted to a pointer to its first element.
+This conversion happens in most expressions, which explains why array indexing
+and pointer arithmetic are closely related. It does **not** make an array object
+and a pointer object the same thing.
 
 But an array object and a pointer object differ:
 
@@ -147,8 +207,13 @@ for (int *position = first; position != last; ++position) {
 ```
 
 `position - first` is measured in elements and has type `ptrdiff_t`; `%td` is
-its matching format. Draw all five valid pointer positions, including the
-one-past pointer, and mark which four may be dereferenced.
+its matching format. `ptrdiff_t` is designed to hold the difference between two
+pointers into the same array. An `int` may be only 32 bits even when pointers are
+64 bits, so it is not guaranteed to hold that difference. For the small arrays
+used in many programming exercises, an `int` index is often practical; use
+`ptrdiff_t` when the value really is a pointer difference. Draw all five valid
+pointer positions, including the one-past pointer, and mark which four may be
+dereferenced.
 
 ### Hour 1 checkpoint
 
@@ -176,6 +241,10 @@ object (or be a permitted one-past pointer that is never dereferenced).
 
 Dynamic storage remains allocated until `free` releases it.
 
+`NULL` is the standard null-pointer constant used in C headers. A pointer equal
+to `NULL` intentionally designates no object. It may be compared, assigned, or
+passed when an interface permits “no object,” but it must never be dereferenced.
+
 ```c
 #include <stdint.h>
 #include <stdio.h>
@@ -185,7 +254,7 @@ int *read_values(size_t count)
 {
     if (count > SIZE_MAX / sizeof(int)) return NULL;
 
-    int *values = malloc(count * sizeof *values);
+    int *values = malloc(count * sizeof(*values));
     if (values == NULL && count != 0) return NULL;
 
     for (size_t i = 0; i < count; ++i) {
@@ -211,7 +280,7 @@ free(values);
 values = NULL;
 ```
 
-Writing `sizeof *values` keeps the allocation correct if the pointed-to type is
+Writing `sizeof(*values)` keeps the allocation correct if the pointed-to type is
 changed. Check multiplication before allocation when sizes may be untrusted.
 
 ### Build a dynamic buffer incrementally
@@ -227,11 +296,11 @@ int buffer_push(struct IntBuffer *buffer, int value)
 {
     if (buffer->size == buffer->capacity) {
         size_t next = buffer->capacity == 0 ? 8 : buffer->capacity * 2;
-        if (next < buffer->capacity || next > SIZE_MAX / sizeof *buffer->data) {
+        if (next < buffer->capacity || next > SIZE_MAX / sizeof(*buffer->data)) {
             return 0;
         }
         int *replacement = realloc(buffer->data,
-                                   next * sizeof *buffer->data);
+                                   next * sizeof(*buffer->data));
         if (replacement == NULL) return 0;
         buffer->data = replacement;
         buffer->capacity = next;
@@ -261,10 +330,10 @@ if (new_count == 0) {
     free(values);
     values = NULL;
 } else {
-    if (new_count > SIZE_MAX / sizeof *values) {
+    if (new_count > SIZE_MAX / sizeof(*values)) {
         handle_failure();
     } else {
-        int *resized = realloc(values, new_count * sizeof *values);
+        int *resized = realloc(values, new_count * sizeof(*values));
         if (resized == NULL) {
             /* values is still valid */
             handle_failure();
@@ -299,10 +368,17 @@ For every pointer, ask:
 5. Who must free it, and when?
 6. Can another pointer outlive the owner?
 
-As an assembly cross-check, compile one safe pointer example and one returning
-the address of a local object with `-O0 -S`. Identifying an address calculation
-does not prove that the resulting pointer remains valid; the lifetime argument
-must still be made at the C level.
+As an optional assembly cross-check, compile one safe pointer example and one
+returning the address of a local object:
+
+```sh
+cc -std=c17 -O0 -S pointer_demo.c
+```
+
+`-O0` asks the compiler not to optimize, which usually keeps the generated code
+closer to the source. `-S` stops after producing an assembly file rather than an
+executable. Identifying an address calculation does not prove that the pointer
+remains valid; the lifetime argument must still be made at the C level.
 
 Examples:
 
@@ -326,8 +402,16 @@ void values_destroy(int **owned)
 
 ### Function pointers and `qsort`
 
-The legacy supplementary material used `qsort` to combine generic bytes with a
-typed comparator:
+The C standard library provides a generic sorting function:
+
+```c
+void qsort(void *base, size_t count, size_t element_size,
+           int (*compare)(const void *, const void *));
+```
+
+`qsort` does not know the element type. The caller supplies the array address,
+number of elements, size of one element, and a comparator function. For an
+array of student records:
 
 ```c
 #include <stdlib.h>
@@ -344,7 +428,7 @@ int compare_grade_descending(const void *left, const void *right)
     return (b->grade > a->grade) - (b->grade < a->grade);
 }
 
-qsort(students, count, sizeof students[0], compare_grade_descending);
+qsort(students, count, sizeof(students[0]), compare_grade_descending);
 ```
 
 The callback borrows two elements as `const void *` and casts them back to the
@@ -422,6 +506,7 @@ report without restoring the ownership rule.
 ## References and legacy sources
 
 - [Instructor handout: *From C to Assembly*](../../assets/references/from_c_to_assembly.pdf)
+- [Instructor slides: *Assembly*](../../assets/references/lee_assembly.pptx)
 - [Pointers](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/pointer/Pointer.md>)
 - [Supplementary C material: memory and pointers](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Supplementary%20Material%201/README.md>)
 - [2025 Week 1 notebook: linked-list foundations (Colab)](https://colab.research.google.com/drive/1Asu-XpzM8EfrB8ANf4ze4ejDUdgIFGq0)

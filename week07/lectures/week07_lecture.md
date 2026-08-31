@@ -26,9 +26,12 @@ By the end of this lecture, you should be able to:
 
 ### 1. A small compiler is a pipeline
 
-```text
-characters -> tokens -> syntax tree -> checked tree -> instructions
-              lexer      parser       semantics       code generator
+```mermaid
+flowchart LR
+    source["characters<br/>12 + 3 * 4"] -->|lexer| tokens["tokens<br/>INTEGER PLUS INTEGER STAR INTEGER"]
+    tokens -->|parser| ast["syntax tree<br/>+"]
+    ast -->|semantic checks| checked["checked tree"]
+    checked -->|code generator| code["target instructions"]
 ```
 
 Each stage gives a simpler contract to the next:
@@ -45,22 +48,20 @@ localize errors and make stages testable independently.
 
 ```c
 enum TokenKind {
-    TokenInteger,
-    TokenPlus,
-    TokenMinus,
-    TokenStar,
-    TokenSlash,
-    TokenLeftParen,
-    TokenRightParen,
-    TokenIdentifier,
-    TokenEnd,
-    TokenInvalid
+    TOKEN_INTEGER,
+    TOKEN_PLUS,
+    TOKEN_MINUS,
+    TOKEN_STAR,
+    TOKEN_SLASH,
+    TOKEN_LEFT_PAREN,
+    TOKEN_RIGHT_PAREN,
+    TOKEN_END,
+    TOKEN_INVALID
 };
 
 struct Token {
     enum TokenKind kind;
-    int value;
-    char identifier; /* simplified project subset: one-character names */
+    long value;
     size_t position;
 };
 ```
@@ -68,6 +69,10 @@ struct Token {
 The lexer should always make progress: consume a valid token, skip permitted
 whitespace, or consume/report an invalid character. Recording the source
 position makes later diagnostics precise.
+
+The complete teaching example intentionally parses numeric expressions only.
+The project adds identifiers and more operators using the same pipeline. Keeping
+the teaching language small lets us see every ownership and error path.
 
 ### A lexer skeleton
 
@@ -94,10 +99,12 @@ A token carries the starting position, kind, and parsed value. Integer scanning
 must detect overflow while accumulating rather than after overflow has occurred:
 
 ```c
+#include <limits.h>
+
 long value = 0;
 while (isdigit((unsigned char)peek(lexer))) {
     int digit = take(lexer) - '0';
-    if (value > (INT_MAX - digit) / 10) {
+    if (value > (LONG_MAX - digit) / 10) {
         return token_invalid(start);
     }
     value = value * 10 + digit;
@@ -106,6 +113,13 @@ while (isdigit((unsigned char)peek(lexer))) {
 
 Cast to `unsigned char` before calling `<ctype.h>` classification functions;
 passing a negative plain `char` other than `EOF` is undefined behavior.
+
+The declarations above and all helper definitions appear together in the
+[complete Week 7 example](examples.c). The
+[starter file](lecture_exercises/week07_starter.c) uses the same `TokenKind`,
+`Token`, `Lexer`, `AstKind`, `Ast`, and `Parser` types. Lecture fragments below
+focus on one idea at a time; use the complete example when you need a compilable
+program rather than guessing an omitted helper.
 
 ### Hour 1 lexer lab
 
@@ -138,19 +152,17 @@ nonterminal.
 
 ```c
 enum AstKind {
-    AstInteger,
-    AstAdd,
-    AstSubtract,
-    AstMultiply,
-    AstDivide,
-    AstNegate,
-    AstIdentifier
+    AST_INTEGER,
+    AST_ADD,
+    AST_SUBTRACT,
+    AST_MULTIPLY,
+    AST_DIVIDE,
+    AST_NEGATE
 };
 
 struct Ast {
     enum AstKind kind;
-    int value;
-    char identifier;
+    long value;
     struct Ast *left;
     struct Ast *right;
 };
@@ -158,9 +170,8 @@ struct Ast {
 
 Representation rules:
 
-- `AstInteger` stores its number in `value` and has no children.
-- `AstIdentifier` stores a one-character name in `identifier` and has no children.
-- `AstNegate` uses `left` as its operand and has no right child.
+- `AST_INTEGER` stores its number in `value` and has no children.
+- `AST_NEGATE` uses `left` as its operand and has no right child.
 - Binary nodes own both child trees.
 
 An AST omits punctuation that was required only to parse. Parentheses affect
@@ -175,7 +186,7 @@ struct Parser {
     const char *error;
 };
 
-static void advance(struct Parser *parser)
+static void parser_advance(struct Parser *parser)
 {
     parser->current = lexer_next(&parser->lexer);
 }
@@ -186,7 +197,7 @@ Every parser function follows a useful contract:
 - on success, return an owned AST and leave `current` at the first unused token;
 - on failure, return `NULL`, record one diagnostic, and release partial trees.
 
-The top-level parse succeeds only if an expression is followed by `TokenEnd`.
+The top-level parse succeeds only if an expression is followed by `TOKEN_END`.
 Accepting a valid prefix while ignoring trailing garbage is a parser bug.
 
 ### 6. Recursive descent
@@ -199,10 +210,10 @@ static struct Ast *parse_expression(struct Parser *parser)
     struct Ast *left = parse_term(parser);
     if (left == NULL) return NULL;
 
-    while (parser->current.kind == TokenPlus ||
-           parser->current.kind == TokenMinus) {
+    while (parser->current.kind == TOKEN_PLUS ||
+           parser->current.kind == TOKEN_MINUS) {
         enum TokenKind operation = parser->current.kind;
-        advance(parser);
+        parser_advance(parser);
 
         struct Ast *right = parse_term(parser);
         if (right == NULL) {
@@ -210,8 +221,8 @@ static struct Ast *parse_expression(struct Parser *parser)
             return NULL;
         }
 
-        enum AstKind kind = operation == TokenPlus ? AstAdd : AstSubtract;
-        struct Ast *combined = ast_binary(kind, left, right);
+        enum AstKind kind = operation == TOKEN_PLUS ? AST_ADD : AST_SUBTRACT;
+        struct Ast *combined = ast_create(kind, 0, left, right);
         if (combined == NULL) {
             ast_destroy(left);
             ast_destroy(right);
@@ -243,15 +254,19 @@ This makes it visible that unary minus is syntax, not part of the integer token.
 ### AST constructors centralize invariants
 
 ```c
-static struct Ast *ast_binary(enum AstKind kind,
-                              struct Ast *left,
-                              struct Ast *right)
+static struct Ast *ast_create(enum AstKind kind, long value,
+                              struct Ast *left, struct Ast *right)
 {
-    if (left == NULL || right == NULL) return NULL;
-    struct Ast *node = malloc(sizeof *node);
+    int is_number = kind == AST_INTEGER && left == NULL && right == NULL;
+    int is_unary = kind == AST_NEGATE && left != NULL && right == NULL;
+    int is_binary = kind != AST_INTEGER && kind != AST_NEGATE &&
+                    left != NULL && right != NULL;
+    if (!is_number && !is_unary && !is_binary) return NULL;
+
+    struct Ast *node = malloc(sizeof(*node));
     if (node == NULL) return NULL;
     node->kind = kind;
-    node->value = 0;
+    node->value = value;
     node->left = left;
     node->right = right;
     return node;
@@ -259,36 +274,31 @@ static struct Ast *ast_binary(enum AstKind kind,
 ```
 
 Define whether ownership transfers only on success or whenever nonnull children
-are passed. The parser above assumes transfer on success; on failure it destroys
-both children itself. A mismatched convention causes leaks or double free.
+are passed. `ast_create` transfers ownership only when it succeeds; on failure,
+the parser destroys both children itself. A mismatched convention causes leaks
+or double free.
 
 `parse_primary` handles integers and parenthesized expressions:
 
 ```c
 static struct Ast *parse_primary(struct Parser *parser)
 {
-    if (parser->current.kind == TokenInteger) {
-        int value = parser->current.value;
-        advance(parser);
-        return ast_integer(value);
+    if (parser->current.kind == TOKEN_INTEGER) {
+        long value = parser->current.value;
+        parser_advance(parser);
+        return ast_create(AST_INTEGER, value, NULL, NULL);
     }
 
-    if (parser->current.kind == TokenIdentifier) {
-        char identifier = parser->current.identifier;
-        advance(parser);
-        return ast_identifier(identifier);
-    }
-
-    if (parser->current.kind == TokenLeftParen) {
-        advance(parser);
+    if (parser->current.kind == TOKEN_LEFT_PAREN) {
+        parser_advance(parser);
         struct Ast *inside = parse_expression(parser);
         if (inside == NULL) return NULL;
-        if (parser->current.kind != TokenRightParen) {
+        if (parser->current.kind != TOKEN_RIGHT_PAREN) {
             parser->error = "expected ')'";
             ast_destroy(inside);
             return NULL;
         }
-        advance(parser);
+        parser_advance(parser);
         return inside;
     }
 
@@ -297,7 +307,7 @@ static struct Ast *parse_primary(struct Parser *parser)
 }
 ```
 
-### Hour 2 parser studio
+### Hour 2 guided implementation
 
 Implement `parse_unary` and `parse_term`. Use malformed cases to inspect cleanup
 paths: `1 +`, `2 * )`, `(3 + 4`, `--`, and a forced allocation failure after the
@@ -308,28 +318,43 @@ allocation leaks.
 
 ### 7. Evaluation is postorder
 
+Week 6 introduced postorder on ordinary binary trees. An expression tree adds
+one invariant: number nodes have no children, a negation node owns one child,
+and a binary operator owns two children. For `1 + 2 * 3`, precedence produces:
+
+```mermaid
+flowchart TD
+    add(("+")) --> one(("1"))
+    add --> multiply(("*"))
+    multiply --> two(("2"))
+    multiply --> three(("3"))
+```
+
+Postorder visits `1, 2, 3, *, +`. Each operator runs only after the values of
+its children are available.
+
 ```c
-int ast_evaluate(const struct Ast *node, int *result)
+int ast_evaluate(const struct Ast *node, long *result)
 {
-    if (node->kind == AstInteger) {
+    if (node->kind == AST_INTEGER) {
         *result = node->value;
         return 1;
     }
 
-    int left;
-    int right;
+    long left;
+    long right;
     if (!ast_evaluate(node->left, &left)) return 0;
-    if (node->kind == AstNegate) {
+    if (node->kind == AST_NEGATE) {
         *result = -left;
         return 1;
     }
     if (!ast_evaluate(node->right, &right)) return 0;
 
     switch (node->kind) {
-    case AstAdd:      *result = left + right; return 1;
-    case AstSubtract: *result = left - right; return 1;
-    case AstMultiply: *result = left * right; return 1;
-    case AstDivide:
+    case AST_ADD:      *result = left + right; return 1;
+    case AST_SUBTRACT: *result = left - right; return 1;
+    case AST_MULTIPLY: *result = left * right; return 1;
+    case AST_DIVIDE:
         if (right == 0) return 0;
         *result = left / right;
         return 1;
@@ -339,23 +364,22 @@ int ast_evaluate(const struct Ast *node, int *result)
 }
 ```
 
-Production code must also define and check overflow behavior. Semantic analysis
-can reject invalid constructs before code generation.
-This evaluator fragment covers numeric trees; evaluating `AstIdentifier`
-requires an environment that maps each identifier to its current value.
+Production code must also define and check overflow behavior. The complete
+example rejects arithmetic overflow; the shorter fragment keeps the traversal
+visible. Semantic analysis can reject invalid constructs before code generation.
+This evaluator fragment covers the lecture's numeric trees. When the project
+adds identifier nodes, evaluation requires an environment that maps each
+identifier to its current value.
 
 ### Semantic checks are not parsing
 
-The grammar can accept forms whose meaning is invalid. In the original mini
-compiler, increment/decrement or assignment-like operations require a modifiable
-variable rather than an arbitrary expression. Keep this rule in a separate pass:
-
-```c
-int is_modifiable(const struct Ast *node)
-{
-    return node != NULL && node->kind == AstIdentifier;
-}
-```
+The grammar can accept forms whose meaning is invalid. In the project compiler,
+increment/decrement or assignment-like operations require a modifiable variable
+rather than an arbitrary expression. Keep this rule in a separate semantic
+function such as `is_modifiable`. After the project adds identifier nodes, that
+function returns true exactly for the node kinds the specification defines as
+modifiable. It must reject a number, a binary result, and any other temporary
+expression.
 
 An AST retains enough structure to report “left operand is not modifiable” at
 the operator position. Do not twist the grammar until it rejects every
@@ -474,7 +498,7 @@ Week 10 demo.
 1. Draw the AST for `-1 + 2 * (3 - 4)`.
 2. Why does the grammar use a loop for left-associative binary operators?
 3. Where must a partial tree be freed when the right operand fails to parse?
-4. Why must the top-level parser require `TokenEnd`?
+4. Why must the top-level parser require `TOKEN_END`?
 5. Emit stack-machine instructions for `(8 - 3) / 5`.
 
 ## Summary
@@ -488,6 +512,7 @@ Week 10 demo.
 ## References and legacy sources
 
 - [Instructor handout: *From C to Assembly*](../../assets/references/from_c_to_assembly.pdf)
+- [Instructor slides: *Assembly*](../../assets/references/lee_assembly.pptx)
 - [Syntax trees](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/5-syntax_tree.md>)
 - [A simple computer model](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/6-Computer.md>)
 - [Assembly language](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/7-Assembly.md>)

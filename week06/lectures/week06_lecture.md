@@ -61,10 +61,24 @@ factorial(4)
 ```
 
 After the base case, calls finish in reverse order. Recursion depth consumes
-stack space. A missing base case or non-decreasing argument eventually exhausts
-the stack rather than producing a Python `RecursionError` with a portable limit.
+stack space. A missing base case, a non-decreasing argument, or a valid but very
+deep input can exhaust the process stack. In an online judge this normally
+appears as **Runtime Error** (often a segmentation fault), not as Python's
+`RecursionError`. C does not provide a portable recursion-depth exception that
+you can catch.
 
-### Assembly lens: calls, frames, and the ABI
+```mermaid
+flowchart TD
+    f4["factorial(4): waiting for factorial(3)"] --> f3["factorial(3): waiting for factorial(2)"]
+    f3 --> f2["factorial(2): waiting for factorial(1)"]
+    f2 --> f1["factorial(1): returns 1"]
+```
+
+Each unfinished box is one active call. The boxes disappear in the reverse
+order as return values move upward.
+
+<details>
+<summary>Optional machine-code lens: calls, frames, and the ABI</summary>
 
 At the machine level, a call must preserve enough information to resume the
 caller. A platform's application binary interface (ABI) specifies where
@@ -88,10 +102,17 @@ parameters and locals from different calls remain distinct and why excessive
 depth can overflow finite stack space. Tail-call elimination can sometimes
 reuse a frame, but C does not guarantee it.
 
-Compile a small recursive sum with `-O0 -S` and `-O2 -S`. At each optimization
-level, mark the base-case branch, recursive call or replacement loop, returned
-value, and evidence that the argument progresses. Do not make program
-correctness depend on the optimized version eliminating recursion.
+Compile a small recursive sum with `-O0 -S` and `-O2 -S`. Week 4 explains that
+`-S` produces assembly, while `-O0` disables optimization; `-O2` enables a
+substantial set of optimizations. At each level, mark the base-case branch,
+recursive call or replacement loop, returned value, and evidence that the
+argument progresses. Do not make correctness depend on optimized recursion
+being replaced with iteration.
+
+</details>
+
+<details>
+<summary>Optional contrast examples: Euclid's algorithm and fast exponentiation</summary>
 
 ### Euclid's algorithm
 
@@ -110,7 +131,7 @@ a wider type or reject that case.
 
 ### Fast exponentiation
 
-The legacy recursion notes contrasted linear and logarithmic recursion:
+Fast exponentiation reduces the exponent by half instead of by one:
 
 ```c
 long long power(long long base, unsigned int exponent)
@@ -126,6 +147,8 @@ The decreasing measure is `exponent`; depth is O(log exponent). Arithmetic may
 still overflow. Trace `power(3, 5)` and draw when multiplication happens on the
 unwinding path.
 
+</details>
+
 ### Recursion versus iteration
 
 Use recursion when it exposes the structure of the proof or data. Use iteration
@@ -133,36 +156,79 @@ when the state transition is simpler and deep recursion risks the stack. Tail
 calls are not guaranteed to be optimized by C, so rewriting a linear recursive
 loop may be necessary for unbounded input.
 
-### Hour 1 checkpoint
+### Quick comparison
 
 For Fibonacci, binary search, and linked-list length, identify the problem
 measure, number of recursive calls, maximum depth, and overlapping subproblems.
 Explain why naive Fibonacci is exponential while the other two need not be.
 
+### Classic divide-and-recombine example: Towers of Hanoi
+
+To move `n` disks from peg `A` to peg `C` using peg `B`:
+
+1. move the top `n - 1` disks from `A` to `B`;
+2. move the largest disk from `A` to `C`;
+3. move the `n - 1` disks from `B` to `C`.
+
+```c
+void hanoi(unsigned int n, char from, char temporary, char to)
+{
+    if (n == 0) return;
+    hanoi(n - 1, from, to, temporary);
+    printf("move disk %u: %c -> %c\n", n, from, to);
+    hanoi(n - 1, temporary, from, to);
+}
+```
+
+The measure `n` decreases, but each non-base call creates two recursive calls.
+The number of moves satisfies `T(n) = 2T(n - 1) + 1 = 2^n - 1`. Trace `n = 3`
+before running it and check that no larger disk is ever placed on a smaller one.
+
 ### Backtracking: choose, recurse, undo
 
 Some small search spaces are naturally described by a sequence of decisions.
-To enumerate arrangements of distinct labels, maintain:
+A backtracking function maintains a partial answer, chooses one permitted next
+step, recurses, and then **undoes** that step before trying another choice. The
+undo step restores the caller's invariant; omitting it silently removes valid
+branches.
 
-- the partial arrangement built so far;
-- which labels are already used;
-- the next position to fill;
-- a validator or accumulator at the base case.
+### Classic backtracking example: N queens
 
-At each position, choose one unused label, mark it used, recurse on the next
-position, and undo the mark before trying the next choice. The undo step restores
-the caller's invariant; omitting it silently removes valid branches.
+Place one queen in each row of an `n × n` chessboard so that no two queens share
+a column or diagonal. A recursive call represents “rows `0` through `row - 1`
+are already valid.” For every column in the current row:
 
-Draw the recursion tree for arranging `A`, `B`, and `C`. There are `3!` leaves,
-so complete permutation enumeration is appropriate only when the published
-bound is genuinely small. Before using it, estimate the largest search tree and
-ask whether partial candidates can be rejected early or whether the object has
-recursive structure that avoids enumerating unrelated candidates.
+1. reject it immediately if the column or either diagonal is occupied;
+2. mark the three occupied lines;
+3. recurse on `row + 1`;
+4. unmark the three lines before trying the next column.
 
-Keep the generator separate from the validator. Pass the working arrangement,
-used-label set, and result accumulator explicitly or group them in a context
-structure. Hidden mutable `static` work buffers make repeated calls, tests, and
-future concurrency harder to reason about.
+```text
+choose a safe column
+    -> mark column and diagonals
+        -> solve the next row
+    -> undo all three marks
+```
+
+The base case `row == n` means one complete placement was found. This is more
+efficient than generating all `n!` row-to-column permutations and validating
+only at the end because unsafe partial boards are pruned immediately. For the
+four-queen problem, draw the search branches for the first queen in columns `0`
+and `1`, and identify the first point at which each impossible branch stops.
+
+Complete search is appropriate only when the published bound is small. Estimate
+the largest search tree before coding, and look for safe early rejection rules.
+
+Keep the search state and validation rules explicit. Pass the current queen
+positions, occupied-line sets, and result accumulator as parameters or group
+them in a context structure. Hidden mutable `static` work buffers make repeated
+calls and tests harder to reason about.
+
+### Hour 1 checkpoint
+
+For factorial, Towers of Hanoi, and N queens, state the contract, base case,
+decreasing measure, maximum depth, and number of recursive calls per non-base
+case. Then explain which one uses “undo” and why the other two do not.
 
 ## Hour 2 — Recursive data and traversal design
 
@@ -180,6 +246,18 @@ A tree is either empty (`NULL`) or a node with two smaller trees. The data
 definition suggests the program structure.
 
 ### Traversal orders
+
+Use this tree for the first trace:
+
+```mermaid
+flowchart TD
+    A((A)) --> B((B))
+    A --> C((C))
+    B --> D((D))
+    B --> E((E))
+    C --> F((F))
+    C --> G((G))
+```
 
 ```c
 void preorder(const struct TreeNode *node)
@@ -213,6 +291,17 @@ void postorder(const struct TreeNode *node)
 
 The appropriate order follows the task, not a memorized ranking.
 
+For the pictured tree:
+
+| Order | Visit sequence | How to read it |
+|-------|----------------|----------------|
+| Preorder | `A B D E C F G` | root, then left subtree, then right subtree |
+| Inorder | `D B E A F C G` | left subtree, root, right subtree |
+| Postorder | `D E B F G C A` | left subtree, right subtree, root |
+
+Point to the line containing `printf` in each function: its position relative
+to the two recursive calls exactly matches the order's definition.
+
 ### 4. Aggregate queries
 
 ```c
@@ -234,33 +323,6 @@ int tree_height(const struct TreeNode *node)
 Define conventions explicitly. Some books call an empty tree height `0` and a
 leaf height `1`; this note measures edges, so they are `-1` and `0`.
 
-### Evaluate a tree-shaped expression
-
-Before the compiler lecture, treat operator trees as ordinary binary trees:
-
-```c
-enum ExprKind { ExprNumber, ExprAdd, ExprMultiply };
-
-struct Expr {
-    enum ExprKind kind;
-    int number;
-    struct Expr *left;
-    struct Expr *right;
-};
-
-int expr_evaluate(const struct Expr *expr)
-{
-    if (expr->kind == ExprNumber) return expr->number;
-    int left = expr_evaluate(expr->left);
-    int right = expr_evaluate(expr->right);
-    return expr->kind == ExprAdd ? left + right : left * right;
-}
-```
-
-The representation changes the base case: unlike a general binary tree, a
-well-formed operator expression never uses `NULL` as a complete expression.
-Every recursive algorithm begins from its data invariant.
-
 ### Derive, do not memorize, traversal order
 
 Choose the moment to process the root:
@@ -269,6 +331,10 @@ Choose the moment to process the root:
 - print BST values in order → inorder;
 - compute a directory's size after child sizes → postorder;
 - release a resource after owned children → postorder;
+
+Week 7 applies the same idea to expression trees. Moving evaluation there lets
+us first establish traversal on ordinary binary trees, then add operator-node
+invariants when the compiler pipeline is introduced.
 
 ### Hour 2 board exercise
 
@@ -299,7 +365,7 @@ int bst_insert(struct TreeNode **link, int value)
         }
     }
 
-    struct TreeNode *node = malloc(sizeof *node);
+    struct TreeNode *node = malloc(sizeof(*node));
     if (node == NULL) return 0;
     node->value = value;
     node->left = NULL;

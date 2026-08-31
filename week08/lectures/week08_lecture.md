@@ -27,8 +27,21 @@ By the end of this lecture, you should be able to:
 ### 1. Compile C++ as C++
 
 ```sh
-c++ -std=c++17 -Wall -Wextra -Wpedantic -g program.cpp -o program
+c++ -std=c++17 program.cpp -o program
 ```
+
+This is the minimum command used in the first demonstration: `-std=c++17`
+selects the language version, `program.cpp` is the source file, and `-o program`
+names the executable. During development, add the warning and debug options used
+throughout the course:
+
+| Option | Purpose |
+|--------|---------|
+| `-Wall -Wextra -Wpedantic` | ask the compiler to report many suspicious constructs |
+| `-g` | keep information that helps a debugger show source lines and variables |
+
+These are compiler options, not C++ syntax. You do not need to memorize the
+whole command; use the course build template and learn what each part controls.
 
 Although much C syntax is accepted, C++ is a different language with stronger
 type checking, overloading, references, classes, templates, exceptions, and a
@@ -46,8 +59,27 @@ int main()
 }
 ```
 
+`std` is a **namespace**: a named region that groups standard-library names.
+The `::` operator selects a name from that region, so `std::cout` means “the
+`cout` supplied by the standard library.” C has no namespace feature, which is
+why this syntax is new here.
+
+`std::cout << value` sends a value to the output stream, and
+`std::cin >> value` reads a formatted value from the input stream. The symbols
+`<<` and `>>` also mean bit shifts for integers; C++ allows library types to give
+operators a type-appropriate meaning. For now, read a chain from left to right:
+
+```cpp
+int age{0};
+std::cout << "Age? ";
+std::cin >> age;
+std::cout << "Next year: " << age + 1 << '\n';
+```
+
 Prefer `std::` qualification in teaching examples. A global `using namespace
-std;` can make names collide and hides where facilities originate.
+std;` imports many names at once, which can create collisions and hides where a
+facility came from. It is common in short contest solutions, but explicit
+qualification is clearer while learning the library.
 
 ### 2. Prefer library values over manual buffers
 
@@ -59,6 +91,9 @@ std::cout << name << " has " << name.size() << " characters\n";
 
 `std::string` manages its storage, maintains its own size, and supports value
 operations such as assignment and comparison.
+
+A `std::vector<T>` is a resizable sequence of values of type `T`. It plays a
+role similar to a Python list, but every element has the same declared type:
 
 ```cpp
 std::vector<int> scores{91, 82, 73};
@@ -136,6 +171,24 @@ void swap_values(int& left, int& right)
 A reference must refer to an object when initialized and is used with ordinary
 value syntax. It is not a reseatable, nullable handle like a pointer.
 
+The change is visible through the original variable:
+
+```cpp
+int set_to_seventeen(int& value)
+{
+    value = 17;
+    return 15;
+}
+
+int number = 13;
+std::cout << number << '\n';                 /* 13 */
+std::cout << set_to_seventeen(number) << '\n'; /* 15 */
+std::cout << number << '\n';                 /* 17 */
+```
+
+The function returns `15`, but its reference parameter changes `number` to
+`17`. Contrast this with a value parameter, which would change only a copy.
+
 Parameter guidelines:
 
 ```cpp
@@ -180,21 +233,6 @@ for (const auto& word : words) {
 
 Use `auto` when the initializer makes the type clear; spell the type when it
 communicates an important unit, conversion, or ownership decision.
-
-### `decltype` preserves an expression's type
-
-The legacy C++ introduction included `decltype`:
-
-```cpp
-int value = 0;
-int& alias = value;
-
-decltype(value) another = 1;          /* int */
-decltype((value)) reference = value;  /* int&: (value) is an lvalue */
-```
-
-This distinction matters in generic code, but should not replace readable
-explicit types in ordinary application code. Parentheses can change the result.
 
 ### 5. Lambdas are local callable objects
 
@@ -398,6 +436,22 @@ trace and resource-lifecycle table.
 - Range loops, `auto`, and lambdas make generic code readable when used precisely.
 - Exceptions transfer control while stack unwinding destroys automatic objects.
 - RAII binds resource cleanup to deterministic object lifetime.
+
+## Optional enrichment — `decltype`
+
+`decltype(expression)` asks the compiler for an expression's type. It is useful
+in generic library code but is not required for the Week 8 core:
+
+```cpp
+int value = 0;
+int& alias = value;
+
+decltype(value) another = 1;          /* int */
+decltype((value)) reference = value;  /* int& because (value) is an lvalue */
+```
+
+Parentheses can change the result, so prefer an explicit readable type in
+ordinary code unless deduction solves a real problem.
 
 ## References and legacy sources
 
