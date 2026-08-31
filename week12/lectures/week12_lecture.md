@@ -1,6 +1,6 @@
 # Week 12 Lecture Notes — Ownership, Copying, Moving, and the Rule of Zero
 
-> November 24, 2026 · Source lineage: the legacy Classes II notes and IntVec
+> November 24, 2026 · Source lineage: previous Classes II notes and IntVec
 > implementation from the 2025 Week 8/10 notebooks
 
 ## Learning objectives
@@ -19,38 +19,59 @@ By the end of this lecture, you should be able to:
 
 | Hour | Main question | In-class production |
 |------|---------------|---------------------|
-| 1 | Why does an owning class need coordinated lifetime operations? | Trace the legacy IntVec representation and destructor |
+| 1 | Why does an owning class need coordinated lifetime operations? | Trace the previous IntVec representation and destructor |
 | 2 | What are the exact semantics of copy, assignment, and move? | Implement/test special members including failure paths |
 | 3 | How should production code express ownership with Rule of Zero and smart pointers? | Refactor IntVec and map recursive/final-project lifetimes |
 
 ## Hour 1 — Owning representations and deterministic destruction
 
-### 1. Ownership must survive value operations
+### 1. From C allocation to a C++ owning class
+
+In C, an owning dynamic array is commonly created with `malloc` and released
+with `free`. C++ also has the paired array operations `new[]` and `delete[]`:
+
+```cpp
+int* values = new int[count];
+/* use values[0] through values[count - 1] */
+delete[] values;
+```
+
+`new int[count]` allocates storage for `count` `int` objects and returns a
+pointer to the first one. `delete[]` ends the elements' lifetimes and releases
+that exact array allocation. The brackets matter: memory obtained with `new[]`
+must be released with `delete[]`, not `delete` or `free`. As with C allocation,
+every control-flow path must release the allocation exactly once.
+
+Direct `new[]`/`delete[]` is shown here to expose the ownership mechanism behind
+an educational container. Application code should normally use `std::vector`
+or another RAII owner. The purpose of `IntVec` is to understand why those
+owners require coordinated lifetime operations, not to replace them.
+
+### 2. Ownership must survive value operations
 
 Consider a teaching vector that directly owns a dynamic array:
 
 ```cpp
 class IntVec {
-public:
-    IntVec();
-    explicit IntVec(std::size_t size);
-    ~IntVec();
+ public:
+  IntVec();
+  explicit IntVec(std::size_t size);
+  ~IntVec();
 
-    friend void swap(IntVec& left, IntVec& right) noexcept;
+  friend void swap(IntVec& left, IntVec& right) noexcept;
 
-private:
-    int* data_ = nullptr;
-    std::size_t size_ = 0;
-    std::size_t capacity_ = 0;
+ private:
+  int* data_ = nullptr;
+  std::size_t size_ = 0;
+  std::size_t capacity_ = 0;
 };
 ```
 
 The destructor can release the array:
 
 ```cpp
-IntVec::~IntVec()
-{
-    delete[] data_;
+IntVec::~IntVec() {
+  delete[] data_;
 }
 ```
 
@@ -65,7 +86,7 @@ addresses, then run this sequence under AddressSanitizer:
 
 ```cpp
 IntVec original{3};
-IntVec copy = original;   // compiler-generated memberwise copy
+IntVec copy = original;  // compiler-generated memberwise copy
 ```
 
 Predict both objects' `data_` values and the order of destructor calls before
@@ -86,15 +107,14 @@ data_[0 .. size_) contains live values owned by this object
 ```
 
 ```cpp
-void IntVec::reserve(std::size_t requested)
-{
-    if (requested <= capacity_) return;
+void IntVec::reserve(std::size_t requested) {
+  if (requested <= capacity_) return;
 
-    int* replacement = new int[requested];
-    if (size_ != 0) std::copy_n(data_, size_, replacement);
-    delete[] data_;
-    data_ = replacement;
-    capacity_ = requested;
+  int* replacement = new int[requested];
+  if (size_ != 0) std::copy_n(data_, size_, replacement);
+  delete[] data_;
+  data_ = replacement;
+  capacity_ = requested;
 }
 ```
 
@@ -110,42 +130,41 @@ elision; log count is not the abstraction's contract.
 
 ## Hour 2 — Copy, move, assignment, and exception guarantees
 
-### 2. The special member functions
+### 3. The special member functions
 
 The ownership-relevant operations are:
 
 ```cpp
-IntVec();                              // default constructor
-IntVec(const IntVec& other);           // copy constructor
-IntVec& operator=(const IntVec& other);// copy assignment
-IntVec(IntVec&& other) noexcept;       // move constructor
-IntVec& operator=(IntVec&& other) noexcept; // move assignment
-~IntVec();                             // destructor
+IntVec();                                    // default constructor
+IntVec(const IntVec& other);                 // copy constructor
+IntVec& operator=(const IntVec& other);      // copy assignment
+IntVec(IntVec&& other) noexcept;             // move constructor
+IntVec& operator=(IntVec&& other) noexcept;  // move assignment
+~IntVec();                                   // destructor
 ```
 
 They are invoked in different contexts:
 
 ```cpp
 IntVec a{10};
-IntVec b = a;            // copy construction
-b = a;                   // copy assignment
-IntVec c = std::move(a); // move construction; a remains valid but unspecified
+IntVec b = a;             // copy construction
+b = a;                    // copy assignment
+IntVec c = std::move(a);  // move construction; a remains valid but unspecified
 ```
 
 `std::move` does not move by itself. It permits overload resolution to select an
 rvalue-reference operation that may transfer resources.
 
-### 3. Deep copying
+### 4. Deep copying
 
 ```cpp
 IntVec::IntVec(const IntVec& other)
     : data_{other.capacity_ == 0 ? nullptr : new int[other.capacity_]},
       size_{other.size_},
-      capacity_{other.capacity_}
-{
-    if (size_ != 0) {
-        std::copy_n(other.data_, size_, data_);
-    }
+      capacity_{other.capacity_} {
+  if (size_ != 0) {
+    std::copy_n(other.data_, size_, data_);
+  }
 }
 ```
 
@@ -157,19 +176,17 @@ Copy assignment must handle existing resources and self-assignment. The
 copy-and-swap idiom gives a strong structure:
 
 ```cpp
-void swap(IntVec& left, IntVec& right) noexcept
-{
-    using std::swap;
-    swap(left.data_, right.data_);
-    swap(left.size_, right.size_);
-    swap(left.capacity_, right.capacity_);
+void swap(IntVec& left, IntVec& right) noexcept {
+  using std::swap;
+  swap(left.data_, right.data_);
+  swap(left.size_, right.size_);
+  swap(left.capacity_, right.capacity_);
 }
 
-IntVec& IntVec::operator=(const IntVec& other)
-{
-    IntVec copy{other};
-    swap(*this, copy);
-    return *this;
+IntVec& IntVec::operator=(const IntVec& other) {
+  IntVec copy{other};
+  swap(*this, copy);
+  return *this;
 }
 ```
 
@@ -188,31 +205,27 @@ destroys the old allocation.
 Construction creates lifetime; assignment operates within an existing lifetime.
 This distinction is why one implementation cannot blindly serve every case.
 
-### 4. Moving transfers ownership
+### 5. Moving transfers ownership
 
 ```cpp
 IntVec::IntVec(IntVec&& other) noexcept
-    : data_{other.data_},
-      size_{other.size_},
-      capacity_{other.capacity_}
-{
+    : data_{other.data_}, size_{other.size_}, capacity_{other.capacity_} {
+  other.data_ = nullptr;
+  other.size_ = 0;
+  other.capacity_ = 0;
+}
+
+IntVec& IntVec::operator=(IntVec&& other) noexcept {
+  if (this != &other) {
+    delete[] data_;
+    data_ = other.data_;
+    size_ = other.size_;
+    capacity_ = other.capacity_;
     other.data_ = nullptr;
     other.size_ = 0;
     other.capacity_ = 0;
-}
-
-IntVec& IntVec::operator=(IntVec&& other) noexcept
-{
-    if (this != &other) {
-        delete[] data_;
-        data_ = other.data_;
-        size_ = other.size_;
-        capacity_ = other.capacity_;
-        other.data_ = nullptr;
-        other.size_ = 0;
-        other.capacity_ = 0;
-    }
-    return *this;
+  }
+  return *this;
 }
 ```
 
@@ -243,7 +256,7 @@ allocation failure through a teaching hook and verify the promised guarantee.
 
 ## Hour 3 — Rule of Zero, smart pointers, and project ownership
 
-### 5. Rule of Three, Five, and Zero
+### 6. Rule of Three, Five, and Zero
 
 - **Rule of Three:** if a class needs a custom destructor, copy constructor, or
   copy assignment, it probably needs all three.
@@ -256,11 +269,11 @@ The best production `IntVec` representation is usually:
 
 ```cpp
 class IntVec {
-public:
-    /* domain-specific operations */
+ public:
+  /* domain-specific operations */
 
-private:
-    std::vector<int> values_;
+ private:
+  std::vector<int> values_;
 };
 ```
 
@@ -268,7 +281,7 @@ Now generated copy, move, assignment, and destruction have the correct meaning.
 We implement a raw owning class once to understand the mechanism, then prefer
 the Rule of Zero.
 
-### 6. Smart pointers encode ownership
+### 7. Smart pointers encode ownership
 
 ```cpp
 #include <memory>
@@ -291,9 +304,9 @@ Ownership and access are different questions.
 
 ```cpp
 struct Node {
-    int value;
-    std::unique_ptr<Node> left;
-    std::unique_ptr<Node> right;
+  int value;
+  std::unique_ptr<Node> left;
+  std::unique_ptr<Node> right;
 };
 
 auto root = std::make_unique<Node>();
@@ -305,23 +318,23 @@ Recursive destruction is automatic. The type is movable but not copyable unless
 deep copy is explicitly implemented. Search functions can return `Node*` or
 `const Node*` as borrowers while the tree retains ownership.
 
-### 7. Explicitly disable unsupported operations
+### 8. Explicitly disable unsupported operations
 
 Some resources cannot sensibly be copied:
 
 ```cpp
 class Connection {
-public:
-    Connection(const Connection&) = delete;
-    Connection& operator=(const Connection&) = delete;
-    Connection(Connection&&) noexcept = default;
-    Connection& operator=(Connection&&) noexcept = default;
+ public:
+  Connection(const Connection&) = delete;
+  Connection& operator=(const Connection&) = delete;
+  Connection(Connection&&) noexcept = default;
+  Connection& operator=(Connection&&) noexcept = default;
 };
 ```
 
 Compile-time rejection is better than an accidental shallow copy.
 
-### 8. Ownership in the final project
+### 9. Ownership in the final project
 
 For each game object, answer:
 
@@ -406,7 +419,7 @@ non-mutating transformation must clone, may share, or may only borrow. Then add
 one parent observer and decide whether it must be a `weak_ptr`; a cycle of
 `shared_ptr` owners prevents reference counts from reaching zero.
 
-## References and legacy sources
+## References and source materials
 
 - [Classes II](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20II/README.md>)
 - [2025 Week 8 notebook (Colab)](https://colab.research.google.com/drive/1qkDyeCDzzislM1BN8XSoUJxiomuT3cv8)

@@ -28,6 +28,26 @@ The new notes are a condensed adaptation, not a week-for-week copy. Explanations
 were rewritten around students who already know Python, examples were updated to
 make ownership contracts explicit, and overlapping legacy lessons were merged.
 
+## Code-example reuse policy
+
+When a 2025 notebook already contains a useful teaching example, the new notes
+retain its recognizable problem, data, or execution trace instead of inventing
+an unrelated replacement. Reuse is selective rather than verbatim:
+
+- keep the original example when its prerequisites have already been taught;
+- split a long notebook program when one smaller example teaches the idea more
+  clearly;
+- repair undefined behavior, incomplete definitions, unchecked allocation, and
+  ambiguous contracts before presenting the code to students;
+- translate Weeks 1–7 examples to strict C17 and use C++17 only after the
+  C-to-C++ transition in Week 8; and
+- apply the repository's Google-derived style without changing the algorithm
+  or observation that made the example useful.
+
+The table below names the notebook examples actually retained. “Adapted” means
+that the instructional core is reused while the interface, safety checks,
+decomposition, or naming has been revised for this course.
+
 ## Mapping to Lecture Weeks
 
 | Lecture week | Main legacy GitHub material | 2025 notebook material | Reorganization |
@@ -35,16 +55,16 @@ make ownership contracts explicit, and overlapping legacy lessons were merged.
 | Week 1 — From Python to C | `程式設計一/Introduction to programming`, `Printf and Scanf`, `Operators, Expressions, and Statements`, `Looping` | — | Compresses the former introductory sequence into one contrastive lecture and adds the complete build pipeline, assembly observation, common binary sections, and undefined behavior. |
 | Week 2 — Functions, Arrays, and Strings | `程式設計一/function`, `array`, `Input and output`, `Printf and Scanf/String type` | — | Treats arrays and strings as explicit representations of Python-familiar sequence ideas, adds prefix and sorted-boundary query patterns, and gives a minimal address-passing bridge; multidimensional arrays, in-place editing, and custom sorting are retained as optional extensions. |
 | Week 3 — Structures, Modules, Builds, and Debugging | `Supplementary Material 2`, `如何compile多個檔案`, `Programming related Topic/Debug.md`, `程式撰寫風格.md` | — | Combines record design, invariants, interfaces, linking, and evidence-driven debugging. |
-| Week 4 — Pointers, Lifetime, and Dynamic Memory | `程式設計一/pointer`, `Supplementary Material 1` | Linked-node allocation examples in `Week01.ipynb` | Moves ownership, lifetime, allocation failure, sanitizers, and double pointers into one foundation lecture; machine-code details are a labeled optional observation after the portable pointer model. |
-| Week 5 — Linked Lists | `程式設計二/mid1/2-linked_list.md`, `2-linked_list_sup.md`, `3-josephus_problem.md` | `Week01.ipynb`, `Week02.ipynb`, linked-list part of `Week03.ipynb` | Consolidates singly/circular lists around visual link-location traces, specification-first editing, the Torvalds “good taste” example, and a fully stated Josephus comparison; doubly linked lists are optional enrichment. |
-| Week 6 — Recursion and Binary Trees | `程式設計一/Recursive`, `程式設計二/mid1/4-binary_tree.md` | tree material in `Week03.ipynb` and `Week04_1.ipynb` | Connects recursive proof structure to stack-overflow risk, Hanoi, N queens, visual traversal traces, construction, destruction, reconstruction ambiguity, and complexity; expression-tree evaluation moves to Week 7, while exhaustive interpretation counting and BST deletion remain optional. |
-| Week 7 — Expression Parsing and Syntax Trees | `程式設計二/mid1/5-syntax_tree.md`, `6-Computer.md`, `7-Assembly.md`, `8-calculator_tree.pdf.md` | `Week04_2.ipynb`, `Week05.ipynb` | Organizes mini-project concepts as a compiler pipeline with one shared lexer/parser/AST model across the note, example, and starter; expression evaluation, code generation, and native-versus-simulated targets follow the tree foundation from Week 6. |
-| Week 8 — From C to C++ | `程式設計二/Intro` | introductory sections of `Week07.ipynb` | Introduces namespaces, stream I/O, standard-library values, references, `const`, lambdas, exceptions, stack unwinding, and RAII incrementally; `decltype` is optional enrichment. |
-| Week 9 — Classes, Invariants, and Operators | `程式設計二/Classes I` | Rational/class material in `Week07.ipynb` | Centers class design on invariants, named creation policies, and conventional value behavior. |
-| Week 11 — Templates and the Standard Library | template section of `Classes III`, `week 12 Standard library` | standard-library portion of `Week11.ipynb`; `std::optional` in `Week14.ipynb` | Combines generic programming with container selection, boundary algorithms, expected-absence results, complexity, and iterator invalidation early enough for Midterm 2. |
-| Week 12 — Ownership, Copying, Moving, and Rule of Zero | `程式設計二/Classes II` | `Week08.ipynb`, `Week10.ipynb` | Uses an explicit shallow-copy failure and educational `IntVec` implementation before Rule of Zero and smart pointers; shared-graph and private-factory details are optional enrichment. |
-| Week 13 — Inheritance and Runtime Polymorphism | derived-class section of `程式設計二/Classes III` | polymorphism section of `Week07.ipynb`; `std::variant` in `Week14.ipynb` | Motivates abstraction before syntax, demonstrates `override` as a mismatch check and private virtual customization, uses Composite as the detailed case study, then compares composition, strategy, and `variant`. |
-| Week 14 — Graphs and State-Space Search | `week 13 找路徑`, `week 14 Water Jugs Problem`, `week 16 Missionary and Torch` | graph/search material in `Week11.ipynb`, `Week12.ipynb`, `Week13.ipynb` | Uses one core implementation per hour—geometric DFS components, multi-source BFS, and Water Jugs—while representation alternatives, weighted policies, and additional puzzles remain optional. |
+| Week 4 — Pointers, Lifetime, and Dynamic Memory | `程式設計一/pointer`, `Supplementary Material 1` | Linked-node allocation examples in `Week01.ipynb` | Adapts the node-allocation examples to introduce ownership and allocation failure before lists; machine-code details are a labeled optional observation after the portable pointer model. |
+| Week 5 — Linked Lists | `程式設計二/mid1/2-linked_list.md`, `2-linked_list_sup.md`, `3-josephus_problem.md` | `Week01.ipynb`, `Week02.ipynb`, linked-list part of `Week03.ipynb` | Retains the pointer-to-pointer insertion/deletion shape, circular-list Josephus simulation, and iterative Josephus recurrence. Interfaces now state ownership and failure behavior, and all allocations are checked. |
+| Week 6 — Recursion and Binary Trees | `程式設計一/Recursive`, `程式設計二/mid1/4-binary_tree.md` | tree material in `Week03.ipynb` and `Week04_1.ipynb` | Retains recursive size and traversal examples and the preorder/inorder reconstruction pattern, then adds stack-overflow risk, Hanoi, N queens, destruction, ambiguity, and complexity. Expression-tree evaluation moves to Week 7. |
+| Week 7 — Expression Parsing and Syntax Trees | `程式設計二/mid1/5-syntax_tree.md`, `6-Computer.md`, `7-Assembly.md`, `8-calculator_tree.pdf.md` | `Week04_2.ipynb`, `Week05.ipynb` | Adapts the notebook calculator's lexer, recursive-descent parser, syntax tree, evaluator, and code generator into one consistent, fully defined C17 pipeline. |
+| Week 8 — From C to C++ | `程式設計二/Intro` | introductory sections of `Week07.ipynb` | Retains the notebook's string/vector demonstrations and three-way value/pointer/reference swap trace. Lambdas and `decltype` are intentionally omitted; lambdas begin with algorithms in Week 11. |
+| Week 9 — Classes, Invariants, and Operators | `程式設計二/Classes I` | Rational/class material in `Week07.ipynb` | Rebuilds the notebook `Rational` example around a normalized representation, constructor validation, `const` observation, and conventional arithmetic/output operators. |
+| Week 11 — Templates and the Standard Library | template section of `Classes III`, `week 12 Standard library` | standard-library portion of `Week11.ipynb`; `std::optional` in `Week14.ipynb` | Retains container/algorithm examples while adding explicit range contracts, lower/upper boundaries, expected-absence results, complexity, and iterator invalidation early enough for Midterm 2. |
+| Week 12 — Ownership, Copying, Moving, and Rule of Zero | `程式設計二/Classes II` | `Week08.ipynb`, `Week10.ipynb` | Retains the educational `IntVec` representation and copy/move lifetime trace, repairs incomplete operations, and contrasts the result with a Rule-of-Zero `vector` owner. |
+| Week 13 — Inheritance and Runtime Polymorphism | derived-class section of `程式設計二/Classes III` | polymorphism section of `Week07.ipynb`; `std::variant` in `Week14.ipynb` | Retains the notebook `Shape` hierarchy and heterogeneous traversal, adding `override` diagnostics, virtual destruction, explicit ownership, Composite, and composition/strategy. |
+| Week 14 — Graphs and State-Space Search | `week 13 找路徑`, `week 14 Water Jugs Problem`, `week 16 Missionary and Torch` | graph/search material in `Week11.ipynb`, `Week12.ipynb`, `Week13.ipynb` | Retains geometric connected components, queue-based shortest paths, and Water Jugs successor generation while separating graph model, search policy, and path explanation. |
 
 ## Material retained for later use
 
@@ -56,8 +76,8 @@ The following source topics are useful but do not fit the 13-note core:
   details, and assembly implementation details beyond the conceptual bridges
   needed for the midterm compiler's simulated target;
 - C++20 ranges, concepts, modules, parallel algorithms, and advanced `optional`
-  or `variant` details from `Week14.ipynb` beyond the focused uses in the Week
-  12–14 lecture notes;
+  or `variant` details from `Week14.ipynb` beyond the optional comparison in the
+  Week 13 lecture notes;
 - Python/C++ interoperability, CUDA, and later-language previews from
   `Week15.ipynb`;
 - extended Josephus variants and the Ninety-Nine Problems collection.

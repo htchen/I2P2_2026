@@ -6,10 +6,11 @@
 - **Asynchronous:** [Bounded polymorphism and vertical-slice design checkpoint](labs/README.md), due on the project schedule rather than during the exam
 
 Focus: abstract interfaces, virtual dispatch, polymorphic destruction, object
-slicing, recursive Composite design, transformation ownership, composition, and
-closed alternatives with `std::variant`. Because Thursday is occupied by the
-midterm, the asynchronous checkpoint is limited to design and verification
-planning; implementation continues in Week 14.
+slicing, recursive Composite design, explicit ownership, and composition.
+Downcasting, closed alternatives with `std::variant`, and multiple-interface
+designs are optional enrichment. Because Thursday is occupied by the midterm,
+the asynchronous checkpoint is limited to design and verification planning;
+implementation continues in Week 14.
 
 Project milestone: map one new object or behavior through construction,
 registration, update/interaction, rendering, and destruction.

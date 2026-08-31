@@ -1,6 +1,6 @@
 # Week 13 Lecture Notes — Inheritance and Runtime Polymorphism
 
-> December 1, 2026 · Source lineage: the legacy Classes III material and the
+> December 1, 2026 · Source lineage: previous Classes III material and the
 > class-hierarchy/variant sections of the 2025 Week 7 and Week 14 notebooks
 
 ## Learning objectives
@@ -10,8 +10,9 @@ By the end of this lecture, you should be able to:
 1. Define an abstract interface with virtual functions.
 2. Override behavior safely through references and pointers.
 3. Explain why a polymorphic base needs a virtual destructor.
-4. Avoid object slicing and unsafe downcasts.
-5. Decide between inheritance, composition, and `std::variant`.
+4. Avoid object slicing and preserve explicit polymorphic ownership.
+5. Decide between inheritance and composition from the required substitution
+   and variation.
 6. Design a recursive polymorphic Composite with explicit construction,
    evaluation, transformation, and ownership contracts.
 
@@ -21,7 +22,7 @@ By the end of this lecture, you should be able to:
 |------|---------------|---------------------|
 | 1 | What contract makes derived objects genuinely substitutable? | Implement and test a Shape hierarchy |
 | 2 | How do dispatch, destruction, and ownership interact? | Trace polymorphic calls and study one recursive Composite in depth |
-| 3 | When should a design use inheritance, composition, or variants? | Compare alternatives and refactor one final-project hierarchy |
+| 3 | When should a design use inheritance or composition? | Compare alternatives and refactor one final-project hierarchy |
 
 ## Hour 1 — Abstract interfaces and substitutable overrides
 
@@ -32,13 +33,13 @@ operation repeats the type decision:
 
 ```cpp
 if (kind == CircleKind) {
-    draw_circle(circle);
+  DrawCircle(circle);
 } else if (kind == RectangleKind) {
-    draw_rectangle(rectangle);
+  DrawRectangle(rectangle);
 }
 ```
 
-The same branch appears again for `area`, `translate`, and later for every new
+The same branch appears again for `area`, `Translate`, and later for every new
 shape. An **abstraction** gives client code one small promise—“this object can
 report its center, move, and report its area”—without requiring the client to
 know the concrete shape.
@@ -64,16 +65,16 @@ actual object is a `Circle` or `Rectangle`.
 
 ```cpp
 struct Point {
-    double x;
-    double y;
+  double x;
+  double y;
 };
 
 class Shape {
-public:
-    virtual Point center() const = 0;
-    virtual void translate(Point offset) = 0;
-    virtual double area() const = 0;
-    virtual ~Shape() = default;
+ public:
+  virtual Point center() const = 0;
+  virtual void Translate(Point offset) = 0;
+  virtual double area() const = 0;
+  virtual ~Shape() = default;
 };
 ```
 
@@ -84,32 +85,30 @@ interface; `Shape shape;` is ill-formed because no complete base behavior exists
 
 ```cpp
 class Circle final : public Shape {
-public:
-    Circle(Point center, double radius)
-        : center_{center}, radius_{radius}
-    {
-        if (radius < 0.0) {
-            throw std::invalid_argument{"negative radius"};
-        }
+ public:
+  Circle(Point center, double radius) : center_{center}, radius_{radius} {
+    if (radius < 0.0) {
+      throw std::invalid_argument{"negative radius"};
     }
+  }
 
-    Point center() const override { return center_; }
+  Point center() const override {
+    return center_;
+  }
 
-    void translate(Point offset) override
-    {
-        center_.x += offset.x;
-        center_.y += offset.y;
-    }
+  void Translate(Point offset) override {
+    center_.x += offset.x;
+    center_.y += offset.y;
+  }
 
-    double area() const override
-    {
-        constexpr double pi = 3.141592653589793;
-        return pi * radius_ * radius_;
-    }
+  double area() const override {
+    constexpr double pi = 3.141592653589793;
+    return pi * radius_ * radius_;
+  }
 
-private:
-    Point center_;
-    double radius_;
+ private:
+  Point center_;
+  double radius_;
 };
 ```
 
@@ -121,17 +120,18 @@ For example, this is probably a mistake:
 
 ```cpp
 class Actor {
-public:
-    virtual void attack(int damage) = 0;
+ public:
+  virtual void Attack(int damage) = 0;
 };
 
 class Monster : public Actor {
-public:
-    void attack() {} /* a different overload; does not override attack(int) */
+ public:
+  void Attack() {
+  } /* a different overload; does not override Attack(int) */
 };
 ```
 
-Writing `void attack() override` makes the compiler reject the mismatch at the
+Writing `void Attack() override` makes the compiler reject the mismatch at the
 definition. Without `override`, the error may be discovered much later when the
 class remains abstract or a call through the base interface cannot reach the
 intended function. Treat `override` as a compile-time safety check, not only as
@@ -151,35 +151,36 @@ alone cannot detect.
 
 ```cpp
 class GameObject {
-public:
-    void update(double seconds)
-    {
-        if (seconds < 0.0) throw std::invalid_argument{"negative time"};
-        before_update();
-        do_update(seconds);
-        after_update();
-    }
-    virtual ~GameObject() = default;
+ public:
+  void Update(double seconds) {
+    if (seconds < 0.0) throw std::invalid_argument{"negative time"};
+    BeforeUpdate();
+    DoUpdate(seconds);
+    AfterUpdate();
+  }
+  virtual ~GameObject() = default;
 
-private:
-    virtual void do_update(double seconds) = 0;
-    void before_update() { /* common setup */ }
-    void after_update() { /* common cleanup */ }
+ private:
+  virtual void DoUpdate(double seconds) = 0;
+  void BeforeUpdate() { /* common setup */
+  }
+  void AfterUpdate() { /* common cleanup */
+  }
 };
 ```
 
 The public nonvirtual function enforces common checks and sequencing; derived
 classes customize only the intended step. A derived class may override a
 `private virtual` function even though it cannot call that function directly.
-Keeping `do_update` private prevents callers and derived classes from bypassing
-the public `update` sequence:
+Keeping `DoUpdate` private prevents callers and derived classes from bypassing
+the public `Update` sequence:
 
 ```text
-update(seconds)
+Update(seconds)
     -> validate seconds
-    -> before_update()
-    -> do_update(seconds)   // the derived behavior
-    -> after_update()
+    -> BeforeUpdate()
+    -> DoUpdate(seconds)   // the derived behavior
+    -> AfterUpdate()
 ```
 
 This pattern separates two questions: the base class controls **when** the
@@ -197,13 +198,12 @@ observe how `override` converts a silent overload into a compile error.
 ### 4. Dynamic dispatch requires indirection
 
 ```cpp
-void print_area(const Shape& shape)
-{
-    std::cout << shape.area() << '\n';
+void PrintArea(const Shape& shape) {
+  std::cout << shape.area() << '\n';
 }
 
 Circle circle{{0.0, 0.0}, 2.0};
-print_area(circle); /* calls Circle::area */
+PrintArea(circle); /* calls Circle::area */
 ```
 
 The function accepts a base reference, but the virtual call selects behavior
@@ -212,7 +212,7 @@ using the object's dynamic type at run time.
 Passing by value would slice:
 
 ```cpp
-void wrong(Shape value); /* abstract Shape makes this impossible here */
+void Wrong(Shape value); /* abstract Shape makes this impossible here */
 ```
 
 For a nonabstract base, copying a derived value into a base object discards the
@@ -229,7 +229,7 @@ shapes.push_back(std::make_unique<Circle>(Point{0, 0}, 2.0));
 shapes.push_back(std::make_unique<Rectangle>(Point{1, 1}, 3.0, 4.0));
 
 for (const auto& shape : shapes) {
-    std::cout << shape->area() << '\n';
+  std::cout << shape->area() << '\n';
 }
 ```
 
@@ -300,7 +300,7 @@ consistently; falling out of a non-void override or silently accepting an unknow
 operation is not a valid default. Store operation choices with `enum class`
 rather than loosely interpreted characters when the set is closed.
 
-## Hour 3 — Composition, variants, and existing-project architecture
+## Hour 3 — Composition and existing-project architecture
 
 ### 7. Composition before inheritance
 
@@ -308,9 +308,9 @@ rather than loosely interpreted characters when the set is closed.
 
 ```cpp
 class Entity {
-private:
-    Transform transform_;
-    Sprite sprite_;
+ private:
+  Transform transform_;
+  Sprite sprite_;
 };
 ```
 
@@ -329,18 +329,19 @@ composed helper.
 
 ```cpp
 class Movement {
-public:
-    virtual Point next(Point current, double seconds) = 0;
-    virtual ~Movement() = default;
+ public:
+  virtual Point Next(Point current, double seconds) = 0;
+  virtual ~Movement() = default;
 };
 
 class Monster {
-public:
-    explicit Monster(std::unique_ptr<Movement> movement)
-        : movement_{std::move(movement)} {}
+ public:
+  explicit Monster(std::unique_ptr<Movement> movement)
+      : movement_{std::move(movement)} {
+  }
 
-private:
-    std::unique_ptr<Movement> movement_;
+ private:
+  std::unique_ptr<Movement> movement_;
 };
 ```
 
@@ -348,58 +349,9 @@ Monster type and movement policy now vary independently. The monster uniquely
 owns its strategy; a shared immutable strategy could instead be borrowed or
 shared under an explicit lifetime design.
 
-### 8. Downcasting is a design signal
+### 8. Final-project reading strategy
 
-```cpp
-if (auto* circle = dynamic_cast<Circle*>(shape)) {
-    /* Circle-specific behavior */
-}
-```
-
-`dynamic_cast` safely checks a polymorphic dynamic type, but repeated type tests
-may mean the base interface is missing an operation or the behavior belongs in
-a visitor/variant. Never use `static_cast` to downcast unless a separate
-invariant proves the dynamic type; otherwise behavior is undefined.
-
-### 9. Closed alternatives with `std::variant`
-
-When the set of alternatives is small and known, value-based polymorphism can be
-clearer. This is a comparison example; the lecture does not build a second
-full shape architecture:
-
-```cpp
-using ShapeValue = std::variant<Circle, Rectangle>;
-
-double area(const ShapeValue& shape)
-{
-    return std::visit([](const auto& value) { return value.area(); }, shape);
-}
-```
-
-Tradeoff:
-
-- Virtual hierarchy: easy to add a new derived type without changing consumers.
-- Variant: easy to add a new operation with exhaustive handling of known types.
-
-Neither is universally superior; choose based on which axis changes.
-
-### Variant exhaustiveness exercise
-
-Add a `Triangle` to `ShapeValue`. Every `std::visit` operation must compile for
-the new alternative, so the compiler exposes incomplete operations. Contrast
-this with adding a derived virtual class, which requires no edits to existing
-virtual-call consumers but must implement every pure virtual operation.
-
-### Multiple inheritance and interfaces
-
-The course does not use implementation-heavy multiple inheritance. A class may
-implement multiple small pure interfaces when it truly satisfies independent
-contracts, for example `Updatable` and `Drawable`. Ownership should still have
-one clear path; avoid diamond-shaped shared implementation hierarchies.
-
-### 10. Final-project reading strategy
-
-For a legacy game hierarchy:
+For an existing game hierarchy:
 
 1. Find the abstract or common base.
 2. List virtual functions and their contracts.
@@ -411,9 +363,9 @@ For a legacy game hierarchy:
 ### Hour 3 architecture review
 
 Choose one repeated type-switch or `dynamic_cast` chain in the project template.
-Propose three alternatives: add a virtual operation, introduce a composed
-strategy, or use a variant/visitor. Evaluate extension direction, ownership,
-testability, number of affected files, and migration risk before choosing.
+Propose two alternatives: add a virtual operation or introduce a composed
+strategy. Evaluate the required substitution, ownership, testability, number of
+affected files, and migration risk before choosing.
 
 ### Final-project handoff — Design a thin vertical slice
 
@@ -423,11 +375,11 @@ construction, ownership/registration, input if needed, update, interaction,
 draw, removal, and destruction. Week 13 material is excluded from the exam.
 
 Decide whether the extension is best represented by an existing virtual
-interface, a composed strategy, or a closed variant. List affected files,
-ownership edges, incremental build steps, and test cases. Implementation begins
-in Week 14. An LLM may compare designs or review affected files, but the student
-must reject suggestions that invent interfaces or bypass the template's actual
-control flow.
+interface or a composed strategy. List affected files, ownership edges,
+incremental build steps, and test cases. Implementation begins in Week 14. An
+LLM may compare designs or review affected files, but the student must reject
+suggestions that invent interfaces or bypass the template's actual control
+flow.
 
 ## Check yourself
 
@@ -435,10 +387,11 @@ control flow.
 2. Explain object slicing with a concrete example.
 3. Why does `unique_ptr<Base>` require a virtual base destructor?
 4. Model “monster has movement behavior” using composition.
-5. (Optional) Why must a Composite decide between cloning and immutable subtree sharing?
-6. (Optional) What should a polymorphic factory return, and what does that return type say
-   about lifetime?
-7. When would `variant` be preferable to a virtual hierarchy?
+5. (Optional) Why must a Composite decide between cloning and immutable subtree
+   sharing?
+6. (Optional) What should a polymorphic factory return, and what does that
+   return type say about lifetime?
+7. (Optional) When would `variant` be preferable to a virtual hierarchy?
 
 ## Summary
 
@@ -449,11 +402,52 @@ control flow.
 - Composite treats leaves and branches uniformly through one interface.
 - Prefer composition unless run-time substitutability provides real value.
 
-## Optional enrichment — Composite transformations and factories
+## Optional enrichment — Alternative dispatch and composite transformations
 
 The core Composite example covers recursive dispatch and unique ownership. The
 following design questions matter when a project also transforms or constructs
 heterogeneous trees, but they are outside the three-hour core.
+
+### Alternative dispatch mechanisms
+
+Repeated run-time type tests can signal that a base interface is missing an
+operation:
+
+```cpp
+if (auto* circle = dynamic_cast<Circle*>(shape)) {
+  /* Circle-specific behavior */
+}
+```
+
+`dynamic_cast` safely checks a polymorphic dynamic type. Never use `static_cast`
+to downcast unless a separate invariant proves the dynamic type; otherwise the
+behavior is undefined.
+
+When the set of alternatives is small and closed, `std::variant` offers
+value-based rather than inheritance-based polymorphism:
+
+```cpp
+using ShapeValue = std::variant<Circle, Rectangle>;
+
+double Area(const ShapeValue& shape) {
+  return std::visit([](const auto& value) { return value.area(); }, shape);
+}
+```
+
+A virtual hierarchy makes adding a derived type comparatively local. A variant
+makes adding an operation comparatively local and makes each visitor handle all
+known alternatives. Neither is universally superior; the design depends on
+which axis changes.
+
+As a separate extension, a class may implement multiple small pure interfaces
+when it truly satisfies independent contracts, for example `Updatable` and
+`Drawable`. Avoid implementation-heavy or diamond-shaped inheritance, and keep
+one clear ownership path.
+
+Add a `Triangle` to `ShapeValue`. Every `std::visit` operation must compile for
+the new alternative, so the compiler exposes incomplete operations. Contrast
+this with adding a virtual derived class, which leaves existing virtual-call
+consumers unchanged but must implement every pure virtual operation.
 
 ### Evaluation and transformation are different operations
 
@@ -492,7 +486,7 @@ visitor.
 For normalization, idempotence and preservation of evaluation test the public
 contract without exposing a particular recursive implementation.
 
-## References and legacy sources
+## References and source materials
 
 - [Classes III](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20III/README.md>)
 - [2025 Week 7 notebook (Colab)](https://colab.research.google.com/drive/1oHBcNeAXt4ZeQJsdG2q4RU5m9Yu_9CCw)

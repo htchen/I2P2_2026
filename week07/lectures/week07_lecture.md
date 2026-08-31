@@ -1,6 +1,6 @@
 # Week 7 Lecture Notes — Expression Parsing and Syntax Trees
 
-> October 20, 2026 · Source lineage: the legacy syntax-tree, computer, and
+> October 20, 2026 · Source lineage: previous syntax-tree, computer, and
 > assembly notes, the 2025 Week 4–5 compiler notebooks, and the
 > instructor-provided *From C to Assembly* handout
 
@@ -48,21 +48,21 @@ localize errors and make stages testable independently.
 
 ```c
 enum TokenKind {
-    TOKEN_INTEGER,
-    TOKEN_PLUS,
-    TOKEN_MINUS,
-    TOKEN_STAR,
-    TOKEN_SLASH,
-    TOKEN_LEFT_PAREN,
-    TOKEN_RIGHT_PAREN,
-    TOKEN_END,
-    TOKEN_INVALID
+  TOKEN_INTEGER,
+  TOKEN_PLUS,
+  TOKEN_MINUS,
+  TOKEN_STAR,
+  TOKEN_SLASH,
+  TOKEN_LEFT_PAREN,
+  TOKEN_RIGHT_PAREN,
+  TOKEN_END,
+  TOKEN_INVALID
 };
 
 struct Token {
-    enum TokenKind kind;
-    long value;
-    size_t position;
+  enum TokenKind kind;
+  long value;
+  size_t position;
 };
 ```
 
@@ -78,20 +78,18 @@ the teaching language small lets us see every ownership and error path.
 
 ```c
 struct Lexer {
-    const char *input;
-    size_t position;
+  const char* input;
+  size_t position;
 };
 
-static char peek(const struct Lexer *lexer)
-{
-    return lexer->input[lexer->position];
+static char peek(const struct Lexer* lexer) {
+  return lexer->input[lexer->position];
 }
 
-static char take(struct Lexer *lexer)
-{
-    char current = peek(lexer);
-    if (current != '\0') ++lexer->position;
-    return current;
+static char take(struct Lexer* lexer) {
+  char current = peek(lexer);
+  if (current != '\0') ++lexer->position;
+  return current;
 }
 ```
 
@@ -103,11 +101,11 @@ must detect overflow while accumulating rather than after overflow has occurred:
 
 long value = 0;
 while (isdigit((unsigned char)peek(lexer))) {
-    int digit = take(lexer) - '0';
-    if (value > (LONG_MAX - digit) / 10) {
-        return token_invalid(start);
-    }
-    value = value * 10 + digit;
+  int digit = take(lexer) - '0';
+  if (value > (LONG_MAX - digit) / 10) {
+    return token_invalid(start);
+  }
+  value = value * 10 + digit;
 }
 ```
 
@@ -152,19 +150,19 @@ nonterminal.
 
 ```c
 enum AstKind {
-    AST_INTEGER,
-    AST_ADD,
-    AST_SUBTRACT,
-    AST_MULTIPLY,
-    AST_DIVIDE,
-    AST_NEGATE
+  AST_INTEGER,
+  AST_ADD,
+  AST_SUBTRACT,
+  AST_MULTIPLY,
+  AST_DIVIDE,
+  AST_NEGATE
 };
 
 struct Ast {
-    enum AstKind kind;
-    long value;
-    struct Ast *left;
-    struct Ast *right;
+  enum AstKind kind;
+  long value;
+  struct Ast* left;
+  struct Ast* right;
 };
 ```
 
@@ -181,14 +179,13 @@ shape but do not need their own nodes.
 
 ```c
 struct Parser {
-    struct Lexer lexer;
-    struct Token current;
-    const char *error;
+  struct Lexer lexer;
+  struct Token current;
+  const char* error;
 };
 
-static void parser_advance(struct Parser *parser)
-{
-    parser->current = lexer_next(&parser->lexer);
+static void parser_advance(struct Parser* parser) {
+  parser->current = lexer_next(&parser->lexer);
 }
 ```
 
@@ -205,32 +202,31 @@ Accepting a valid prefix while ignoring trailing garbage is a parser bug.
 Simplified additive parsing:
 
 ```c
-static struct Ast *parse_expression(struct Parser *parser)
-{
-    struct Ast *left = parse_term(parser);
-    if (left == NULL) return NULL;
+static struct Ast* parse_expression(struct Parser* parser) {
+  struct Ast* left = parse_term(parser);
+  if (left == NULL) return NULL;
 
-    while (parser->current.kind == TOKEN_PLUS ||
-           parser->current.kind == TOKEN_MINUS) {
-        enum TokenKind operation = parser->current.kind;
-        parser_advance(parser);
+  while (parser->current.kind == TOKEN_PLUS ||
+         parser->current.kind == TOKEN_MINUS) {
+    enum TokenKind operation = parser->current.kind;
+    parser_advance(parser);
 
-        struct Ast *right = parse_term(parser);
-        if (right == NULL) {
-            ast_destroy(left);
-            return NULL;
-        }
-
-        enum AstKind kind = operation == TOKEN_PLUS ? AST_ADD : AST_SUBTRACT;
-        struct Ast *combined = ast_create(kind, 0, left, right);
-        if (combined == NULL) {
-            ast_destroy(left);
-            ast_destroy(right);
-            return NULL;
-        }
-        left = combined;
+    struct Ast* right = parse_term(parser);
+    if (right == NULL) {
+      ast_destroy(left);
+      return NULL;
     }
-    return left;
+
+    enum AstKind kind = operation == TOKEN_PLUS ? AST_ADD : AST_SUBTRACT;
+    struct Ast* combined = ast_create(kind, 0, left, right);
+    if (combined == NULL) {
+      ast_destroy(left);
+      ast_destroy(right);
+      return NULL;
+    }
+    left = combined;
+  }
+  return left;
 }
 ```
 
@@ -254,22 +250,21 @@ This makes it visible that unary minus is syntax, not part of the integer token.
 ### AST constructors centralize invariants
 
 ```c
-static struct Ast *ast_create(enum AstKind kind, long value,
-                              struct Ast *left, struct Ast *right)
-{
-    int is_number = kind == AST_INTEGER && left == NULL && right == NULL;
-    int is_unary = kind == AST_NEGATE && left != NULL && right == NULL;
-    int is_binary = kind != AST_INTEGER && kind != AST_NEGATE &&
-                    left != NULL && right != NULL;
-    if (!is_number && !is_unary && !is_binary) return NULL;
+static struct Ast* ast_create(enum AstKind kind, long value, struct Ast* left,
+                              struct Ast* right) {
+  int is_number = kind == AST_INTEGER && left == NULL && right == NULL;
+  int is_unary = kind == AST_NEGATE && left != NULL && right == NULL;
+  int is_binary = kind != AST_INTEGER && kind != AST_NEGATE && left != NULL &&
+                  right != NULL;
+  if (!is_number && !is_unary && !is_binary) return NULL;
 
-    struct Ast *node = malloc(sizeof(*node));
-    if (node == NULL) return NULL;
-    node->kind = kind;
-    node->value = value;
-    node->left = left;
-    node->right = right;
-    return node;
+  struct Ast* node = malloc(sizeof(*node));
+  if (node == NULL) return NULL;
+  node->kind = kind;
+  node->value = value;
+  node->left = left;
+  node->right = right;
+  return node;
 }
 ```
 
@@ -281,29 +276,28 @@ or double free.
 `parse_primary` handles integers and parenthesized expressions:
 
 ```c
-static struct Ast *parse_primary(struct Parser *parser)
-{
-    if (parser->current.kind == TOKEN_INTEGER) {
-        long value = parser->current.value;
-        parser_advance(parser);
-        return ast_create(AST_INTEGER, value, NULL, NULL);
-    }
+static struct Ast* parse_primary(struct Parser* parser) {
+  if (parser->current.kind == TOKEN_INTEGER) {
+    long value = parser->current.value;
+    parser_advance(parser);
+    return ast_create(AST_INTEGER, value, NULL, NULL);
+  }
 
-    if (parser->current.kind == TOKEN_LEFT_PAREN) {
-        parser_advance(parser);
-        struct Ast *inside = parse_expression(parser);
-        if (inside == NULL) return NULL;
-        if (parser->current.kind != TOKEN_RIGHT_PAREN) {
-            parser->error = "expected ')'";
-            ast_destroy(inside);
-            return NULL;
-        }
-        parser_advance(parser);
-        return inside;
+  if (parser->current.kind == TOKEN_LEFT_PAREN) {
+    parser_advance(parser);
+    struct Ast* inside = parse_expression(parser);
+    if (inside == NULL) return NULL;
+    if (parser->current.kind != TOKEN_RIGHT_PAREN) {
+      parser->error = "expected ')'";
+      ast_destroy(inside);
+      return NULL;
     }
+    parser_advance(parser);
+    return inside;
+  }
 
-    parser->error = "expected an integer or '('";
-    return NULL;
+  parser->error = "expected an integer or '('";
+  return NULL;
 }
 ```
 
@@ -334,33 +328,38 @@ Postorder visits `1, 2, 3, *, +`. Each operator runs only after the values of
 its children are available.
 
 ```c
-int ast_evaluate(const struct Ast *node, long *result)
-{
-    if (node->kind == AST_INTEGER) {
-        *result = node->value;
-        return 1;
-    }
+int ast_evaluate(const struct Ast* node, long* result) {
+  if (node->kind == AST_INTEGER) {
+    *result = node->value;
+    return 1;
+  }
 
-    long left;
-    long right;
-    if (!ast_evaluate(node->left, &left)) return 0;
-    if (node->kind == AST_NEGATE) {
-        *result = -left;
-        return 1;
-    }
-    if (!ast_evaluate(node->right, &right)) return 0;
+  long left;
+  long right;
+  if (!ast_evaluate(node->left, &left)) return 0;
+  if (node->kind == AST_NEGATE) {
+    *result = -left;
+    return 1;
+  }
+  if (!ast_evaluate(node->right, &right)) return 0;
 
-    switch (node->kind) {
-    case AST_ADD:      *result = left + right; return 1;
-    case AST_SUBTRACT: *result = left - right; return 1;
-    case AST_MULTIPLY: *result = left * right; return 1;
+  switch (node->kind) {
+    case AST_ADD:
+      *result = left + right;
+      return 1;
+    case AST_SUBTRACT:
+      *result = left - right;
+      return 1;
+    case AST_MULTIPLY:
+      *result = left * right;
+      return 1;
     case AST_DIVIDE:
-        if (right == 0) return 0;
-        *result = left / right;
-        return 1;
+      if (right == 0) return 0;
+      *result = left / right;
+      return 1;
     default:
-        return 0;
-    }
+      return 0;
+  }
 }
 ```
 
@@ -509,7 +508,7 @@ Week 10 demo.
 - AST edges express ownership as well as syntax.
 - Evaluation, destruction, and simple code generation are tree traversals.
 
-## References and legacy sources
+## References and source materials
 
 - [Instructor handout: *From C to Assembly*](../../assets/references/from_c_to_assembly.pdf)
 - [Instructor slides: *Assembly*](../../assets/references/lee_assembly.pptx)

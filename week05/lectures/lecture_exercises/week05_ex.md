@@ -9,7 +9,7 @@ owning head link, each owning `next` link, and the one-past-end null value.
 
 ## Hour 2 — Link-location mutation
 
-Implement insertion and erasure with a `Node **link` cursor. Test the head,
+Implement insertion and erasure with a `Node** link` cursor. Test the head,
 middle, tail, and out-of-range cases. State whether an index equal to the list
 length is accepted for insertion.
 

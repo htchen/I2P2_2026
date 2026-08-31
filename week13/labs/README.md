@@ -25,8 +25,10 @@ construction → ownership/registration → input → update → interaction
              → draw → removal → destruction
 ```
 
-Choose inheritance, composition, or a closed variant based on the expected
-extension direction. State affected files before coding.
+Choose inheritance or composition based on the required substitution and
+expected extension direction. A closed variant is an optional alternative only
+if the set of cases is known and the design accounts for every operation. State
+affected files before coding.
 
 ## Part C — Plan incremental verification
 

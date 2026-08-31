@@ -1,6 +1,6 @@
 # Week 2 Lecture Notes — Functions, Arrays, and Strings in C
 
-> September 15, 2026 · Source lineage: the legacy function, array, string, and
+> September 15, 2026 · Source lineage: previous function, array, string, and
 > input notes, reorganized around comparisons with Python sequences
 
 ## Learning objectives
@@ -48,13 +48,12 @@ The definition provides the implementation:
 ```c
 #include <stddef.h>
 
-double mean(const int values[], size_t count)
-{
-    double total = 0.0;
-    for (size_t i = 0; i < count; ++i) {
-        total += values[i];
-    }
-    return count == 0 ? 0.0 : total / count;
+double mean(const int values[], size_t count) {
+  double total = 0.0;
+  for (size_t i = 0; i < count; ++i) {
+    total += values[i];
+  }
+  return count == 0 ? 0.0 : total / count;
 }
 ```
 
@@ -70,11 +69,10 @@ allows multiple source files to share the same contract.
 Each parameter starts as a copy of the corresponding argument.
 
 ```c
-void ineffective_swap(int a, int b)
-{
-    int temporary = a;
-    a = b;
-    b = temporary;
+void ineffective_swap(int a, int b) {
+  int temporary = a;
+  a = b;
+  b = temporary;
 }
 ```
 
@@ -82,9 +80,8 @@ Calling `ineffective_swap(x, y)` does not modify `x` or `y`. Later we will pass
 their addresses when mutation is required. For now, prefer returning the result:
 
 ```c
-int absolute_value(int value)
-{
-    return value < 0 ? -value : value;
+int absolute_value(int value) {
+  return value < 0 ? -value : value;
 }
 ```
 
@@ -98,29 +95,27 @@ these three symbols operationally for now:
 
 ```c
 int value = 10;
-int *address = &value; /* address points to value */
+int* address = &value; /* address points to value */
 *address = 20;         /* write through the address */
 ```
 
-- In a declaration, `int *address` means “address of an `int`.”
+- In a declaration, `int* address` means “address of an `int`.”
 - In an expression, `&value` obtains the address of `value`.
 - In an expression, `*address` designates the pointed-to `int`.
 
 That is enough to repair the swap contract:
 
 ```c
-void swap(int *left, int *right)
-{
-    int temporary = *left;
-    *left = *right;
-    *right = temporary;
+void swap(int* left, int* right) {
+  int temporary = *left;
+  *left = *right;
+  *right = temporary;
 }
 
-void example(void)
-{
-    int x = 1;
-    int y = 2;
-    swap(&x, &y);
+void example(void) {
+  int x = 1;
+  int y = 2;
+  swap(&x, &y);
 }
 ```
 
@@ -131,14 +126,14 @@ do not infer that every address may be dereferenced or retained.
 
 ### Decompose before coding
 
-The legacy function notes built a program in stages. For a judge problem that
+The previous function notes built a program in stages. For a judge problem that
 reads scores, removes one lowest score, and reports a rounded average, first
 write contracts rather than a long `main`:
 
 ```c
-int read_scores(int scores[], size_t capacity, size_t *count);
+int read_scores(int scores[], size_t capacity, size_t* count);
 size_t index_of_minimum(const int scores[], size_t count);
-void remove_at(int scores[], size_t *count, size_t index);
+void remove_at(int scores[], size_t* count, size_t index);
 double mean(const int scores[], size_t count);
 ```
 
@@ -159,10 +154,9 @@ Ordinary local variables are created on entry and cease to exist on return.
 A `static` local retains its value for the program's lifetime:
 
 ```c
-unsigned long next_sequence(void)
-{
-    static unsigned long value = 0;
-    return ++value;
+unsigned long next_sequence(void) {
+  static unsigned long value = 0;
+  return ++value;
 }
 ```
 
@@ -199,7 +193,7 @@ an array is converted to a pointer to its first element. Therefore every general
 array function must receive a length explicitly.
 
 ```c
-int maximum(const int values[], size_t count, int *result);
+int maximum(const int values[], size_t count, int* result);
 ```
 
 The return value can report whether a maximum exists; `result` can hold the
@@ -211,7 +205,7 @@ For `count` valid elements, the canonical traversal is:
 
 ```c
 for (size_t i = 0; i < count; ++i) {
-    use(values[i]);
+  use(values[i]);
 }
 ```
 
@@ -225,6 +219,28 @@ Accessing `values[count]` is undefined behavior. C has no automatic bounds
 check and no `IndexError`.
 
 ### 5. Prefix tables: preprocess repeated range queries
+
+#### A small vocabulary for running time
+
+Before comparing implementations, we need a way to describe how their work
+grows with the input. Let `n` be the number of array elements and `q` the number
+of queries. **Big-O notation** describes an upper bound on the growth rate; it
+does not measure seconds and it normally omits fixed multipliers and smaller
+terms.
+
+- **O(1), constant time:** the number of relevant operations does not grow with
+  `n`. Reading one array element and subtracting two prefix totals are examples.
+- **O(n), linear time:** doubling the number of elements can roughly double the
+  work. One complete array traversal is linear.
+- **O(log n), logarithmic time:** each step discards a fixed fraction of the
+  remaining candidates. Binary search has this shape.
+- **O(n log n):** many comparison-based sorting algorithms have this growth
+  rate.
+
+Big-O is only one design constraint. Two O(n) loops can have different
+constants, memory access patterns, and failure behavior. For this course, first
+prove that the algorithm is correct; then use its growth rate to determine
+whether it remains practical as the input limits increase.
 
 Suppose a program receives an array once and then answers many questions about
 contiguous ranges. Repeating a loop for every query costs time proportional to
@@ -261,11 +277,11 @@ Design two interfaces rather than hiding preprocessing inside `main`:
 ```c
 #include <stdint.h>
 
-int build_prefix(const int values[], size_t count,
-                 int64_t prefix[], size_t prefix_capacity);
+int build_prefix(const int values[], size_t count, int64_t prefix[],
+                 size_t prefix_capacity);
 
-int query_total(const int64_t prefix[], size_t prefix_count,
-                size_t left, size_t right, int64_t *result);
+int query_total(const int64_t prefix[], size_t prefix_count, size_t left,
+                size_t right, int64_t* result);
 ```
 
 The first requires space for `count + 1` accumulated values. The second must
@@ -338,13 +354,14 @@ every value, and duplicates at both ends. A conventional equality-returning
 binary search is insufficient because it may find any duplicate rather than a
 specified boundary.
 
-### Sorting and comparator consistency
+### Sorting is a precondition, not part of the search
 
-Boundary search requires the range to be partitioned according to the same
-ordering used by the search. If C's `qsort` prepares the data, its comparator
-must define a consistent three-way order. Avoid subtraction-based comparators
-such as `left - right`, which can overflow; compare relationally and return a
-negative, zero, or positive result.
+Boundary search requires an ascending sorted range. The search function should
+state that precondition rather than silently sorting its input, because sorting
+would modify the order and change the operation's running time. For now, use
+data that is already sorted or the insertion-sort extension at the end of this
+note. Week 4 introduces C's generic `qsort` interface after function pointers
+and comparator contracts can be explained properly.
 
 Sorting once and answering `q` boundary queries costs O(n log n + q log n).
 Scanning the unsorted array for each query costs O(nq), but preserves original
@@ -374,7 +391,7 @@ the array.
 ```c
 #include <string.h>
 
-size_t length = strlen(language);  /* 3, not 4 */
+size_t length = strlen(language); /* 3, not 4 */
 ```
 
 `strlen` is linear time; it does not know the array capacity.
@@ -390,7 +407,9 @@ char name[32] = "Ada";
 - Available space for additional text: 28 characters, because one position is
   reserved for `\0`.
 
-This distinction returns later as C++ `vector::capacity()` versus `size()`.
+Capacity and logical length are different properties in every sequence
+representation. Keeping them separate here prepares us to reason about dynamic
+arrays and other containers later without depending on any one language API.
 
 ### 8. Reading a line safely
 
@@ -402,7 +421,7 @@ For text, prefer a bounded line read and then parse:
 
 char line[128];
 if (fgets(line, sizeof line, stdin) == NULL) {
-    return 1;
+  return 1;
 }
 
 line[strcspn(line, "\n")] = '\0';
@@ -421,22 +440,20 @@ Before relying on `<string.h>`, implement two small functions to expose the
 sentinel and capacity contracts:
 
 ```c
-size_t string_length(const char text[])
-{
-    size_t length = 0;
-    while (text[length] != '\0') ++length;
-    return length;
+size_t string_length(const char text[]) {
+  size_t length = 0;
+  while (text[length] != '\0') ++length;
+  return length;
 }
 
-int string_copy(char destination[], size_t capacity, const char source[])
-{
-    size_t length = string_length(source);
-    if (length >= capacity) return 0;
+int string_copy(char destination[], size_t capacity, const char source[]) {
+  size_t length = string_length(source);
+  if (length >= capacity) return 0;
 
-    for (size_t i = 0; i <= length; ++i) {
-        destination[i] = source[i]; /* includes '\0' */
-    }
-    return 1;
+  for (size_t i = 0; i <= length; ++i) {
+    destination[i] = source[i]; /* includes '\0' */
+  }
+  return 1;
 }
 ```
 
@@ -444,73 +461,57 @@ The copy loop uses `<= length` deliberately. A successful string copy must copy
 the terminator as well as visible characters. Discuss why calling either
 function on a nonterminated array violates its precondition.
 
-### Parse numbers from a line
+### Validate the line representation before processing it
 
-`scanf` is convenient for fixed judge formats; `fgets` plus `strtol` gives
-better control for interactive or diagnostic input:
+A successful `fgets` call does not guarantee that the whole logical line fit in
+the array. Search for `\n`. If it is present, replace it with `\0`; if it is
+absent and the program has not reached end-of-file, the input line was longer
+than the buffer and the rest must be rejected or discarded deliberately.
 
-```c
-#include <errno.h>
-#include <limits.h>
-#include <stdlib.h>
+This validation order illustrates a reusable principle:
 
-char *end;
-errno = 0;
-long parsed = strtol(line, &end, 10);
-if (end == line || errno == ERANGE || parsed < INT_MIN || parsed > INT_MAX) {
-    fprintf(stderr, "not an int\n");
-} else {
-    while (*end == ' ' || *end == '\t' || *end == '\n') ++end;
-    if (*end != '\0') fprintf(stderr, "unexpected suffix: %s\n", end);
-}
-```
+1. establish where the valid data ends;
+2. establish that its representation is complete;
+3. only then interpret its contents.
 
-This preview combines strings with pointers. The important idea is staged
-validation: conversion must consume digits, fit the destination type, and leave
-only permitted trailing characters.
+Converting a substring into a number requires an interface that reports both
+the converted value and where conversion stopped. That interface is deferred
+until Week 4, when pointer-valued positions and their lifetime rules have been
+introduced fully.
 
 ### Hour 3 studio
 
-Write `split_words` for a mutable line buffer. It should replace whitespace
-separators with `\0`, store pointers to the first character of each word in a
-caller-provided array, and return the number of words. State the maximum words,
-buffer lifetime, and whether consecutive spaces produce empty words. Use the
-result to explain why the returned word pointers cannot outlive the line array.
+Write `count_words` for a null-terminated character array. A word is one or more
+non-whitespace characters, and any run of whitespace separates words. Trace a
+Boolean state such as `inside_word` across an empty string, leading/trailing
+spaces, and repeated separators. The important technique is recognizing a
+transition from “outside” to “inside,” not memorizing a library function.
 
-## Worked example: one-pass statistics
+## Worked example: one-pass minimum
 
 ```c
 #include <stddef.h>
-#include <stdbool.h>
-
-struct Statistics {
-    int minimum;
-    int maximum;
-    double mean;
-};
-
-bool statistics(const int values[], size_t count, struct Statistics *out)
-{
-    if (count == 0 || out == NULL) {
-        return false;
+int minimum(const int values[], size_t count) {
+  int result = values[0];
+  for (size_t i = 1; i < count; ++i) {
+    if (values[i] < result) {
+      result = values[i];
     }
-
-    double total = values[0];
-    out->minimum = values[0];
-    out->maximum = values[0];
-    for (size_t i = 1; i < count; ++i) {
-        if (values[i] < out->minimum) out->minimum = values[i];
-        if (values[i] > out->maximum) out->maximum = values[i];
-        total += values[i];
-    }
-    out->mean = total / count;
-    return true;
+  }
+  return result;
 }
 ```
 
-This preview uses a structure and a pointer, topics developed in Lectures 3 and
-4. Focus now on the boundary: the function reads `values[0]` only after proving
-that `count > 0`.
+The precondition is `count > 0`; the caller must establish it before the call.
+At the start of each iteration, `result` is the minimum of the already-processed
+half-open range `[0, i)`. The next comparison extends that claim to `[0, i + 1)`.
+This is an example of a **loop invariant**: a statement that is true before and
+after every iteration and explains why the final answer is correct.
+
+A production interface may need to represent an empty result. Week 3 introduces
+structures that can combine status and data, and Week 4 develops output-pointer
+interfaces. This week's version keeps the focus on array bounds, function
+preconditions, and the traversal proof.
 
 ## Check yourself
 
@@ -543,69 +544,48 @@ boundary rules, but they are not part of the three-hour lecture core.
 ### Two-dimensional arrays and row-major layout
 
 ```c
-enum { Rows = 3, Columns = 4 };
-int matrix[Rows][Columns] = {0};
+int matrix[3][4] = {0};
 ```
 
 Elements are stored row by row. When passing this array, the compiler must know
 the column stride:
 
 ```c
-int sum_matrix(size_t rows, size_t columns, const int matrix[rows][columns])
-{
-    int total = 0;
-    for (size_t r = 0; r < rows; ++r) {
-        for (size_t c = 0; c < columns; ++c) {
-            total += matrix[r][c];
-        }
+int sum_matrix(size_t rows, size_t columns, const int matrix[rows][columns]) {
+  int total = 0;
+  for (size_t r = 0; r < rows; ++r) {
+    for (size_t c = 0; c < columns; ++c) {
+      total += matrix[r][c];
     }
-    return total;
+  }
+  return total;
 }
 ```
 
 The conceptual byte offset of `matrix[r][c]` is
-`(r * Columns + c) * sizeof(int)`. Draw a `2 x 3` matrix as six consecutive
+`(r * columns + c) * sizeof(int)`. Draw a `2 x 3` matrix as six consecutive
 cells and explain why the column count is part of the interface contract.
-
-### In-place array insertion
-
-```c
-int insert_at(int values[], size_t *count, size_t capacity,
-              size_t index, int value)
-{
-    if (count == NULL || *count >= capacity || index > *count) return 0;
-    for (size_t i = *count; i > index; --i) {
-        values[i] = values[i - 1];
-    }
-    values[index] = value;
-    ++*count;
-    return 1;
-}
-```
-
-Trace the shift backward and test front, middle, end, empty, and full cases.
 
 ### Implementing a simple sort
 
 ```c
-void insertion_sort(int values[], size_t count)
-{
-    for (size_t i = 1; i < count; ++i) {
-        int current = values[i];
-        size_t position = i;
-        while (position > 0 && values[position - 1] > current) {
-            values[position] = values[position - 1];
-            --position;
-        }
-        values[position] = current;
+void insertion_sort(int values[], size_t count) {
+  for (size_t i = 1; i < count; ++i) {
+    int current = values[i];
+    size_t position = i;
+    while (position > 0 && values[position - 1] > current) {
+      values[position] = values[position - 1];
+      --position;
     }
+    values[position] = current;
+  }
 }
 ```
 
 Before iteration `i`, `[0, i)` is sorted and contains the original prefix's
 values. Trace `{4, 2, 2, 1}` and identify what makes equal elements stable.
 
-## References and legacy sources
+## References and source materials
 
 - [Functions](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/function/function.md>)
 - [Arrays](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/array/array.md>)

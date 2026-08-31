@@ -1,6 +1,6 @@
 # Week 14 Lecture Notes — Graphs and State-Space Search in Modern C++
 
-> December 8, 2026 · Source lineage: the legacy path-finding, Water Jugs,
+> December 8, 2026 · Source lineage: previous path-finding, Water Jugs,
 > Missionary/Torch notes and the 2025 Week 11–13 problem-solving notebooks
 
 ## Learning objectives
@@ -51,10 +51,9 @@ For integer vertices `0 .. n-1`:
 ```cpp
 using Graph = std::vector<std::vector<int>>;
 
-void add_undirected_edge(Graph& graph, int a, int b)
-{
-    graph.at(a).push_back(b);
-    graph.at(b).push_back(a);
+void AddUndirectedEdge(Graph& graph, int a, int b) {
+  graph.at(a).push_back(b);
+  graph.at(b).push_back(a);
 }
 ```
 
@@ -67,21 +66,19 @@ Validate external vertex numbers before converting them to vector indices.
 ### 3. Depth-first search
 
 ```cpp
-void dfs_visit(const Graph& graph, int vertex, std::vector<bool>& visited)
-{
-    visited.at(vertex) = true;
-    for (int neighbor : graph.at(vertex)) {
-        if (!visited.at(neighbor)) {
-            dfs_visit(graph, neighbor, visited);
-        }
+void DfsVisit(const Graph& graph, int vertex, std::vector<bool>& visited) {
+  visited.at(vertex) = true;
+  for (int neighbor : graph.at(vertex)) {
+    if (!visited.at(neighbor)) {
+      DfsVisit(graph, neighbor, visited);
     }
+  }
 }
 
-bool reachable_dfs(const Graph& graph, int start, int goal)
-{
-    std::vector<bool> visited(graph.size(), false);
-    dfs_visit(graph, start, visited);
-    return visited.at(goal);
+bool ReachableDfs(const Graph& graph, int start, int goal) {
+  std::vector<bool> visited(graph.size(), false);
+  DfsVisit(graph, start, visited);
+  return visited.at(goal);
 }
 ```
 
@@ -161,7 +158,7 @@ edge, a transitive chain, duplicate coordinates, and an empty graph.
 ## Hour 2 — Breadth-first layers and shortest paths
 
 > **Core implementation:** implement multi-source grid BFS. Read the
-> single-source `shortest_path` as a reference for the queue/visited invariant;
+> single-source `ShortestPath` as a reference for the queue/visited invariant;
 > do not live-code both programs.
 
 ### 5. Breadth-first search finds shortest unweighted paths
@@ -170,39 +167,38 @@ edge, a transitive chain, duplicate coordinates, and an empty graph.
 #include <optional>
 #include <queue>
 
-std::optional<std::vector<int>> shortest_path(
-    const Graph& graph, int start, int goal)
-{
-    const int unseen = -1;
-    std::vector<int> parent(graph.size(), unseen);
-    std::queue<int> frontier;
+std::optional<std::vector<int>> ShortestPath(const Graph& graph, int start,
+                                             int goal) {
+  const int unseen = -1;
+  std::vector<int> parent(graph.size(), unseen);
+  std::queue<int> frontier;
 
-    parent.at(start) = start;
-    frontier.push(start);
+  parent.at(start) = start;
+  frontier.push(start);
 
-    while (!frontier.empty()) {
-        int current = frontier.front();
-        frontier.pop();
+  while (!frontier.empty()) {
+    int current = frontier.front();
+    frontier.pop();
 
-        if (current == goal) break;
+    if (current == goal) break;
 
-        for (int next : graph.at(current)) {
-            if (parent.at(next) == unseen) {
-                parent.at(next) = current; /* mark before enqueue */
-                frontier.push(next);
-            }
-        }
+    for (int next : graph.at(current)) {
+      if (parent.at(next) == unseen) {
+        parent.at(next) = current; /* mark before enqueue */
+        frontier.push(next);
+      }
     }
+  }
 
-    if (parent.at(goal) == unseen) return std::nullopt;
+  if (parent.at(goal) == unseen) return std::nullopt;
 
-    std::vector<int> path;
-    for (int vertex = goal;; vertex = parent.at(vertex)) {
-        path.push_back(vertex);
-        if (vertex == start) break;
-    }
-    std::reverse(path.begin(), path.end());
-    return path;
+  std::vector<int> path;
+  for (int vertex = goal;; vertex = parent.at(vertex)) {
+    path.push_back(vertex);
+    if (vertex == start) break;
+  }
+  std::reverse(path.begin(), path.end());
+  return path;
 }
 ```
 
@@ -336,13 +332,12 @@ jug:
 
 ```cpp
 struct State {
-    int a;
-    int b;
+  int a;
+  int b;
 
-    friend bool operator<(const State& left, const State& right)
-    {
-        return std::tie(left.a, left.b) < std::tie(right.a, right.b);
-    }
+  friend bool operator<(const State& left, const State& right) {
+    return std::tie(left.a, left.b) < std::tie(right.a, right.b);
+  }
 };
 ```
 
@@ -350,19 +345,16 @@ Vertices do not need to be stored in advance. A successor function generates
 legal next states:
 
 ```cpp
-std::vector<State> successors(State state, int cap_a, int cap_b)
-{
-    std::vector<State> result{
-        {cap_a, state.b}, {state.a, cap_b},
-        {0, state.b},     {state.a, 0}
-    };
+std::vector<State> Successors(State state, int cap_a, int cap_b) {
+  std::vector<State> result{
+      {cap_a, state.b}, {state.a, cap_b}, {0, state.b}, {state.a, 0}};
 
-    int a_to_b = std::min(state.a, cap_b - state.b);
-    result.push_back({state.a - a_to_b, state.b + a_to_b});
+  int a_to_b = std::min(state.a, cap_b - state.b);
+  result.push_back({state.a - a_to_b, state.b + a_to_b});
 
-    int b_to_a = std::min(state.b, cap_a - state.a);
-    result.push_back({state.a + b_to_a, state.b - b_to_a});
-    return result;
+  int b_to_a = std::min(state.b, cap_a - state.a);
+  result.push_back({state.a + b_to_a, state.b - b_to_a});
+  return result;
 }
 ```
 
@@ -383,8 +375,8 @@ maze routing, and game AI.
 enum class Action { FillA, FillB, EmptyA, EmptyB, PourAToB, PourBToA };
 
 struct Step {
-    State parent;
-    Action action;
+  State parent;
+  Action action;
 };
 
 std::map<State, Step> discovered;
@@ -459,7 +451,7 @@ small exhaustively enumerable cases.
 
 ### Hour 3 integration studio
 
-Implement Water Jugs with `State`, `successors`, `goal`, BFS, parent/action
+Implement Water Jugs with `State`, `Successors`, `goal`, BFS, parent/action
 records, and formatted output. Assert invariants for every successor. Compare
 with hand solutions and exhaustive small cases.
 
@@ -552,7 +544,7 @@ Bridge and Torch has weighted actions, so shortest move count and minimum time
 are different objectives. As a final extension, change Water Jugs from fewest
 moves to least total poured volume and explain why ordinary BFS is insufficient.
 
-## References and legacy sources
+## References and source materials
 
 - [Finding paths](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/week%2013%20找路徑/week%2013%20找路徑.md>)
 - [Water Jugs Problem](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/week%2014%20Water%20Jugs%20Problem/Water%20Jugs%20Problem%20（倒水問題）.md>)

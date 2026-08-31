@@ -1,6 +1,6 @@
 # Week 5 Lecture Notes — Linked Lists and Pointer-to-Pointer Techniques
 
-> October 6, 2026 · Source lineage: the legacy linked-list notes and the 2025
+> October 6, 2026 · Source lineage: previous linked-list notes and the 2025
 > Week 1–3 notebooks; examples were consolidated around explicit ownership
 
 ## Learning objectives
@@ -46,13 +46,13 @@ per node, non-contiguous memory access, and linear-time indexing.
 
 ```c
 struct Node {
-    int value;
-    struct Node *next;
+  int value;
+  struct Node* next;
 };
 
 struct List {
-    struct Node *head;
-    size_t size;
+  struct Node* head;
+  size_t size;
 };
 ```
 
@@ -66,10 +66,9 @@ Our representation invariant is:
 Initialize every link before publishing the node into the list.
 
 ```c
-void list_init(struct List *list)
-{
-    list->head = NULL;
-    list->size = 0;
+void list_init(struct List* list) {
+  list->head = NULL;
+  list->size = 0;
 }
 ```
 
@@ -78,13 +77,12 @@ void list_init(struct List *list)
 ```c
 #include <stdlib.h>
 
-static struct Node *node_create(int value, struct Node *next)
-{
-    struct Node *node = malloc(sizeof(*node));
-    if (node == NULL) return NULL;
-    node->value = value;
-    node->next = next;
-    return node;
+static struct Node* node_create(int value, struct Node* next) {
+  struct Node* node = malloc(sizeof(*node));
+  if (node == NULL) return NULL;
+  node->value = value;
+  node->next = next;
+  return node;
 }
 ```
 
@@ -101,8 +99,8 @@ the bytes inline; these choices change destruction and copy behavior.
 
 ```c
 struct StringNode {
-    char *owned_text;
-    struct StringNode *next;
+  char* owned_text;
+  struct StringNode* next;
 };
 ```
 
@@ -113,13 +111,12 @@ string must outlive the list. Never leave this decision implicit.
 ### 4. Insert at the front
 
 ```c
-int list_push_front(struct List *list, int value)
-{
-    struct Node *node = node_create(value, list->head);
-    if (node == NULL) return 0;
-    list->head = node;
-    ++list->size;
-    return 1;
+int list_push_front(struct List* list, int value) {
+  struct Node* node = node_create(value, list->head);
+  if (node == NULL) return 0;
+  list->head = node;
+  ++list->size;
+  return 1;
 }
 ```
 
@@ -129,16 +126,15 @@ then replace `head`. If allocation fails, the original list is unchanged.
 ### Validate the invariant during development
 
 ```c
-int list_is_valid(const struct List *list)
-{
-    size_t observed = 0;
-    const struct Node *node = list->head;
-    while (node != NULL) {
-        ++observed;
-        if (observed > list->size) return 0; /* cycle or wrong size */
-        node = node->next;
-    }
-    return observed == list->size;
+int list_is_valid(const struct List* list) {
+  size_t observed = 0;
+  const struct Node* node = list->head;
+  while (node != NULL) {
+    ++observed;
+    if (observed > list->size) return 0; /* cycle or wrong size */
+    node = node->next;
+  }
+  return observed == list->size;
 }
 ```
 
@@ -193,17 +189,19 @@ as an example of programming “taste.” A conventional traversal remembers the
 previous node and then needs a special branch for the head:
 
 ```c
-struct Node *previous = NULL;
-struct Node *current = list->head;
+struct Node* previous = NULL;
+struct Node* current = list->head;
 while (current != NULL && current->value != target) {
-    previous = current;
-    current = current->next;
+  previous = current;
+  current = current->next;
 }
 if (current != NULL) {
-    if (previous == NULL) list->head = current->next;
-    else previous->next = current->next;
-    free(current);
-    --list->size;
+  if (previous == NULL)
+    list->head = current->next;
+  else
+    previous->next = current->next;
+  free(current);
+  --list->size;
 }
 ```
 
@@ -212,21 +210,20 @@ the actual mutation target is a **link**. Representing that link directly remove
 the artificial head/interior distinction:
 
 ```c
-int list_remove_first(struct List *list, int target)
-{
-    struct Node **link = &list->head;
+int list_remove_first(struct List* list, int target) {
+  struct Node** link = &list->head;
 
-    while (*link != NULL && (*link)->value != target) {
-        link = &(*link)->next;
-    }
+  while (*link != NULL && (*link)->value != target) {
+    link = &(*link)->next;
+  }
 
-    if (*link == NULL) return 0;
+  if (*link == NULL) return 0;
 
-    struct Node *removed = *link;
-    *link = removed->next;
-    free(removed);
-    --list->size;
-    return 1;
+  struct Node* removed = *link;
+  *link = removed->next;
+  free(removed);
+  --list->size;
+  return 1;
 }
 ```
 
@@ -244,18 +241,17 @@ indirection is always preferable.
 ### 6. Insert in sorted order
 
 ```c
-int list_insert_sorted(struct List *list, int value)
-{
-    struct Node **link = &list->head;
-    while (*link != NULL && (*link)->value < value) {
-        link = &(*link)->next;
-    }
+int list_insert_sorted(struct List* list, int value) {
+  struct Node** link = &list->head;
+  while (*link != NULL && (*link)->value < value) {
+    link = &(*link)->next;
+  }
 
-    struct Node *node = node_create(value, *link);
-    if (node == NULL) return 0;
-    *link = node;
-    ++list->size;
-    return 1;
+  struct Node* node = node_create(value, *link);
+  if (node == NULL) return 0;
+  *link = node;
+  ++list->size;
+  return 1;
 }
 ```
 
@@ -265,18 +261,17 @@ and `link` is the exact location that must be updated for insertion.
 ### Reverse in place
 
 ```c
-void list_reverse(struct List *list)
-{
-    struct Node *reversed = NULL;
-    struct Node *remaining = list->head;
+void list_reverse(struct List* list) {
+  struct Node* reversed = NULL;
+  struct Node* remaining = list->head;
 
-    while (remaining != NULL) {
-        struct Node *next = remaining->next;
-        remaining->next = reversed;
-        reversed = remaining;
-        remaining = next;
-    }
-    list->head = reversed;
+  while (remaining != NULL) {
+    struct Node* next = remaining->next;
+    remaining->next = reversed;
+    reversed = remaining;
+    remaining = next;
+  }
+  list->head = reversed;
 }
 ```
 
@@ -289,22 +284,21 @@ original nodes, with no node reachable from both.
 Extend the pointer-to-pointer pattern:
 
 ```c
-size_t list_remove_all(struct List *list, int target)
-{
-    size_t removed_count = 0;
-    struct Node **link = &list->head;
-    while (*link != NULL) {
-        if ((*link)->value == target) {
-            struct Node *removed = *link;
-            *link = removed->next;
-            free(removed);
-            --list->size;
-            ++removed_count;
-        } else {
-            link = &(*link)->next;
-        }
+size_t list_remove_all(struct List* list, int target) {
+  size_t removed_count = 0;
+  struct Node** link = &list->head;
+  while (*link != NULL) {
+    if ((*link)->value == target) {
+      struct Node* removed = *link;
+      *link = removed->next;
+      free(removed);
+      --list->size;
+      ++removed_count;
+    } else {
+      link = &(*link)->next;
     }
-    return removed_count;
+  }
+  return removed_count;
 }
 ```
 
@@ -390,14 +384,10 @@ connection changes.
 ### 7. Traversal and read-only borrowing
 
 ```c
-void list_print(const struct List *list, FILE *stream)
-{
-    for (const struct Node *node = list->head;
-         node != NULL;
-         node = node->next) {
-        fprintf(stream, "%d%s", node->value,
-                node->next == NULL ? "\n" : " -> ");
-    }
+void list_print(const struct List* list, FILE* stream) {
+  for (const struct Node* node = list->head; node != NULL; node = node->next) {
+    fprintf(stream, "%d%s", node->value, node->next == NULL ? "\n" : " -> ");
+  }
 }
 ```
 
@@ -407,16 +397,15 @@ pointer is non-owning; it must never be passed to `free`.
 ### 8. Destroy the entire list
 
 ```c
-void list_clear(struct List *list)
-{
-    struct Node *node = list->head;
-    while (node != NULL) {
-        struct Node *next = node->next;
-        free(node);
-        node = next;
-    }
-    list->head = NULL;
-    list->size = 0;
+void list_clear(struct List* list) {
+  struct Node* node = list->head;
+  while (node != NULL) {
+    struct Node* next = node->next;
+    free(node);
+    node = next;
+  }
+  list->head = NULL;
+  list->size = 0;
 }
 ```
 
@@ -477,8 +466,8 @@ A useful representation stores a `tail` whose `next` is the head:
 
 ```c
 struct CircularList {
-    struct Node *tail;
-    size_t size;
+  struct Node* tail;
+  size_t size;
 };
 
 /* empty: tail == NULL
@@ -503,6 +492,30 @@ The recurrence uses zero-based positions. Add one to report a participant label
 from `1` through `n`. It works by imagining that after the first removal, the
 smaller circle is renumbered from its new starting point; adding `k` maps that
 answer back to the original numbering.
+
+The recursive and iterative versions express the same recurrence. The iterative
+form below makes the changing subproblem size visible and avoids using one
+call-stack frame per participant:
+
+```c
+#include <assert.h>
+
+static int josephus_survivor(int count, int step) {
+  assert(count > 0);
+  assert(step > 0);
+
+  int survivor = 0; /* J(1, step), in zero-based numbering */
+  for (int circle_size = 2; circle_size <= count; ++circle_size) {
+    survivor = (int)(((long long)survivor + step) % circle_size);
+  }
+  return survivor + 1; /* convert to the labels 1 through count */
+}
+```
+
+For `count = 7` and `step = 3`, the successive zero-based survivor positions
+for circle sizes `1` through `7` are `0, 1, 1, 0, 3, 0, 3`; the final `+1`
+therefore reports participant `4`. This algorithm cannot produce the removal
+order because that information is not part of its state.
 
 The structure-simulation version is still valuable when the complete
 elimination order is required. Algorithm selection follows the requested output.
@@ -556,7 +569,7 @@ the invariant requires `node->next->previous == node` and
 from a known node without searching for its predecessor but adds memory and more
 ways to corrupt links.
 
-## References and legacy sources
+## References and source materials
 
 - [Linus Torvalds, *The mind behind Linux* (TED2016)](https://www.ted.com/talks/linus_torvalds_the_mind_behind_linux)
 - [Linked lists](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/mid1/2-linked_list.md>)

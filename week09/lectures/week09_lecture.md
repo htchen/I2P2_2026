@@ -1,6 +1,6 @@
 # Week 9 Lecture Notes — Classes, Invariants, and Operators
 
-> November 3, 2026 · Source lineage: the legacy Classes I notes and Rational
+> November 3, 2026 · Source lineage: previous Classes I notes and Rational
 > examples from the 2025 C++ notebook
 
 ## Learning objectives
@@ -9,7 +9,7 @@ By the end of this lecture, you should be able to:
 
 1. Design a class around an invariant and a small public interface.
 2. Use constructors and member-initializer lists.
-3. Write `const` member functions and distinguish class from object state.
+3. Write `const` member functions and distinguish observation from mutation.
 4. Separate class declarations from definitions.
 5. Overload an operator without surprising its users.
 6. Use a named factory when creation needs validation, alternate construction
@@ -32,19 +32,23 @@ create and mutate values.
 
 ```cpp
 class Rational {
-public:
-    Rational(int numerator = 0, int denominator = 1);
+ public:
+  Rational(int numerator, int denominator);
 
-    int numerator() const { return numerator_; }
-    int denominator() const { return denominator_; }
+  int numerator() const {
+    return numerator_;
+  }
+  int denominator() const {
+    return denominator_;
+  }
 
-    Rational& operator+=(const Rational& other);
+  Rational& operator+=(const Rational& other);
 
-private:
-    int numerator_;
-    int denominator_;
+ private:
+  int numerator_;
+  int denominator_;
 
-    void normalize();
+  void Normalize();
 };
 ```
 
@@ -59,29 +63,27 @@ is a design tool, not a demand to write trivial setters for every field.
 ### 2. Constructors establish the invariant
 
 ```cpp
-#include <numeric>
 #include <limits>
+#include <numeric>
 #include <stdexcept>
 
 Rational::Rational(int numerator, int denominator)
-    : numerator_{numerator}, denominator_{denominator}
-{
-    if (denominator_ == 0 || numerator_ == std::numeric_limits<int>::min() ||
-        denominator_ == std::numeric_limits<int>::min()) {
-        throw std::invalid_argument{"unsupported rational representation"};
-    }
-    normalize();
+    : numerator_{numerator}, denominator_{denominator} {
+  if (denominator_ == 0 || numerator_ == std::numeric_limits<int>::min() ||
+      denominator_ == std::numeric_limits<int>::min()) {
+    throw std::invalid_argument{"unsupported rational representation"};
+  }
+  Normalize();
 }
 
-void Rational::normalize()
-{
-    if (denominator_ < 0) {
-        numerator_ = -numerator_;
-        denominator_ = -denominator_;
-    }
-    int divisor = std::gcd(numerator_, denominator_);
-    numerator_ /= divisor;
-    denominator_ /= divisor;
+void Rational::Normalize() {
+  if (denominator_ < 0) {
+    numerator_ = -numerator_;
+    denominator_ = -denominator_;
+  }
+  int divisor = std::gcd(numerator_, denominator_);
+  numerator_ /= divisor;
+  denominator_ /= divisor;
 }
 ```
 
@@ -89,26 +91,8 @@ The member-initializer list constructs members directly. Assignment in the
 constructor body would occur after default initialization and fails entirely
 for references, `const` members, and members without a default constructor.
 
-A constructor with usable default arguments also serves as a default
-constructor here: `Rational value;` creates `0/1`.
 The teaching representation rejects `INT_MIN`, whose magnitude cannot be stored
 in an `int`; a production numeric class needs a deliberate wider or checked model.
-
-### Delegating and converting constructors
-
-```cpp
-class Rational {
-public:
-    Rational() : Rational{0, 1} {}
-    explicit Rational(int whole) : Rational{whole, 1} {}
-    Rational(int numerator, int denominator);
-};
-```
-
-A delegating constructor chooses one implementation as the invariant-establishing
-path. `explicit` prevents surprising implicit conversions such as passing an
-`int` where a `Rational` is expected. Remove `explicit`, compile examples such
-as `Rational r = 3`, and discuss when numeric conversion is desirable.
 
 ### Initialization order
 
@@ -117,14 +101,13 @@ initializer list. Compile with warnings and keep both orders consistent:
 
 ```cpp
 class Interval {
-    int lower_;
-    int upper_;
-public:
-    Interval(int lower, int upper)
-        : lower_{lower}, upper_{upper}
-    {
-        if (lower_ > upper_) throw std::invalid_argument{"reversed interval"};
-    }
+  int lower_;
+  int upper_;
+
+ public:
+  Interval(int lower, int upper) : lower_{lower}, upper_{upper} {
+    if (lower_ > upper_) throw std::invalid_argument{"reversed interval"};
+  }
 };
 ```
 
@@ -140,9 +123,8 @@ private fields against a public `struct` plus free functions.
 ### 3. `const` member functions
 
 ```cpp
-int Rational::numerator() const
-{
-    return numerator_;
+int Rational::numerator() const {
+  return numerator_;
 }
 ```
 
@@ -150,9 +132,8 @@ The trailing `const` promises not to modify the observable state of the object.
 It also permits calls on a `const Rational`.
 
 ```cpp
-void print(const Rational& value)
-{
-    std::cout << value.numerator() << '/' << value.denominator();
+void Print(const Rational& value) {
+  std::cout << value.numerator() << '/' << value.denominator();
 }
 ```
 
@@ -168,13 +149,12 @@ intermediate multiplication and addition, and every magnitude used during
 normalization, must be representable as `int`.
 
 ```cpp
-Rational& Rational::operator+=(const Rational& other)
-{
-    numerator_ = numerator_ * other.denominator_
-               + other.numerator_ * denominator_;
-    denominator_ *= other.denominator_;
-    normalize();
-    return *this;
+Rational& Rational::operator+=(const Rational& other) {
+  numerator_ =
+      numerator_ * other.denominator_ + other.numerator_ * denominator_;
+  denominator_ *= other.denominator_;
+  Normalize();
+  return *this;
 }
 ```
 
@@ -186,10 +166,9 @@ Returning `*this` by reference supports conventional chaining such as
 Implement symmetric binary operators in terms of compound assignment:
 
 ```cpp
-Rational operator+(Rational left, const Rational& right)
-{
-    left += right;
-    return left;
+Rational operator+(Rational left, const Rational& right) {
+  left += right;
+  return left;
 }
 ```
 
@@ -202,9 +181,8 @@ Output is also a nonmember because the left operand is a stream:
 ```cpp
 #include <ostream>
 
-std::ostream& operator<<(std::ostream& stream, const Rational& value)
-{
-    return stream << value.numerator() << '/' << value.denominator();
+std::ostream& operator<<(std::ostream& stream, const Rational& value) {
+  return stream << value.numerator() << '/' << value.denominator();
 }
 ```
 
@@ -216,10 +194,9 @@ turn `+` into an unrelated command merely because the syntax is available.
 Once values are normalized, equality is simple:
 
 ```cpp
-bool operator==(const Rational& left, const Rational& right)
-{
-    return left.numerator() == right.numerator()
-        && left.denominator() == right.denominator();
+bool operator==(const Rational& left, const Rational& right) {
+  return left.numerator() == right.numerator() &&
+         left.denominator() == right.denominator();
 }
 ```
 
@@ -227,23 +204,13 @@ Ordering via cross multiplication may overflow `int`. A correct interface must
 either use a checked/wider intermediate representation or document a restricted
 input range. Algebraic correctness alone is not machine-level correctness.
 
-### Overloading and default arguments
-
-Member functions may be overloaded by parameter types/count and by trailing
-`const`, but not by return type alone. Default arguments are substituted at the
-call site and should appear in one declaration, normally the header.
-
-Avoid pairs of overloads whose conversions make a call ambiguous. Use a small
-test call matrix to confirm which overload accepts `int`, `double`, `const
-Rational`, and temporary arguments.
-
 ### Hour 2 implementation task
 
 Complete `operator-=`, unary minus, `operator-`, `operator==`, and stream output.
 Each compound operation must preserve normalization. Add a test proving that a
 nonmember binary operator does not mutate either operand.
 
-## Hour 3 — Multi-file class design, class state, and verification
+## Hour 3 — Multi-file class design, creation policies, and verification
 
 ### 6. Declaration and definition
 
@@ -281,89 +248,56 @@ Course convention:
 
 This is a design convention, not a rule enforced by the compiler.
 
-### 8. Static members
+### 8. Named factories and private construction
 
-A static data member belongs to the class rather than each object. A static
-member function has no `this` pointer.
-
-```cpp
-class IdSource {
-public:
-    static int next() { return next_id_++; }
-
-private:
-    inline static int next_id_ = 1; /* C++17 */
-};
-```
-
-Use static state sparingly: hidden global state can make tests interdependent.
-
-### Named factories and private construction
-
-A `static` member function has access to private constructors, so it can expose
-a named creation policy instead of a large set of ambiguous constructors.
-Consider a validated sampling interval:
+A `static` member function belongs to the class rather than to one existing
+object, has no `this` pointer, and can access private constructors. It can
+therefore expose a named creation policy instead of a large set of ambiguous
+constructors. Consider a validated sampling interval:
 
 ```cpp
 #include <cmath>
 #include <stdexcept>
 
 class SampleWindow {
-public:
-    static SampleWindow from_endpoints(double start, double finish)
-    {
-        if (!std::isfinite(start) || !std::isfinite(finish) || start > finish) {
-            throw std::invalid_argument{"invalid sampling window"};
-        }
-        return SampleWindow{start, finish};
+ public:
+  static SampleWindow FromEndpoints(double start, double finish) {
+    if (!std::isfinite(start) || !std::isfinite(finish) || start > finish) {
+      throw std::invalid_argument{"invalid sampling window"};
     }
+    return SampleWindow{start, finish};
+  }
 
-private:
-    SampleWindow(double start, double finish)
-        : start_{start}, finish_{finish} {}
+ private:
+  SampleWindow(double start, double finish) : start_{start}, finish_{finish} {
+  }
 
-    double start_;
-    double finish_;
+  double start_;
+  double finish_;
 };
 ```
 
 The factory name communicates how arguments are interpreted, validation occurs
 before a value is published, and returning by value gives ordinary value
 semantics. Pass small scalar inputs by value rather than by `const` reference.
-For an owned string parameter, accepting `std::string` by value and moving into
-the member can support both lvalues and rvalues cleanly.
+Week 12 compares copying and resource transfer for owned string parameters; do
+not add an ownership-taking overload here before that cost model is available.
 
 A factory is not automatically better than a constructor. Prefer an ordinary
 constructor when there is one obvious, valid interpretation. Use named factories
 for alternate units/formats, fallible parsing, hidden concrete types, or
-polymorphic creation. The return type must state the lifetime contract: value,
-unique owner, shared immutable object, or explicit failure. Returning an owning
-raw pointer leaves that contract unstated; the Week 12 lecture notes develop the smart-pointer
-alternatives.
+explicit failure. This week's factories return ordinary values, so the caller
+receives an independent object with automatic lifetime. Week 12 extends this
+decision to factories that transfer ownership of dynamically allocated
+resources.
 
 ### Factory design checkpoint
 
 For a class that can be created from seconds, milliseconds, or a configuration
 string, compare overloaded constructors with three named factories. State which
 forms throw, which preserve the original object on failure, and which return a
-value versus an owner. Do not implement all factories; first make the creation
-table unambiguous.
-
-### `this`, fluent interfaces, and lifetime
-
-Returning `*this` by reference is valid while the object remains alive. Never
-return a reference to a temporary or local object:
-
-```cpp
-Rational& bad_factory()
-{
-    Rational local{1, 2};
-    return local; /* dangling reference */
-}
-```
-
-Factories should return values. Fluent mutation should return `Class&`; a
-read-only query may return a value or a carefully justified borrowed reference.
+value. Do not implement all factories; first make the creation table
+unambiguous.
 
 ### Header-dependency exercise
 
@@ -375,11 +309,10 @@ Then change the private representation and list which files must recompile.
 ### 9. Test the abstraction, not the fields
 
 ```cpp
-void test_normalization()
-{
-    Rational value{2, -4};
-    assert(value.numerator() == -1);
-    assert(value.denominator() == 2);
+void TestNormalization() {
+  Rational value{2, -4};
+  assert(value.numerator() == -1);
+  assert(value.denominator() == 2);
 }
 ```
 
@@ -393,7 +326,7 @@ stronger representation.
 
 For every public operation, fill a table with valid input, possible failure,
 state change, and invariant restoration point. Seed one bug that bypasses
-`normalize`, use a property test (`denominator() > 0` and gcd equals one) to find
+`Normalize`, use a property test (`denominator() > 0` and gcd equals one) to find
 it, then add the smallest regression case.
 
 ## Final project connection — A class must enter the system safely
@@ -407,7 +340,8 @@ require it.
 
 For Thursday's bounded component, state one invariant and test it without
 opening the Allegro window. If a factory creates the component, specify whether
-it returns a value, `unique_ptr`, or borrowed reference and why. An AI-generated
+it returns a value or reports construction failure, and explain why. Factories
+that transfer dynamic ownership are postponed until Week 12. An AI-generated
 class skeleton is only a draft until its includes, ownership, and integration
 sites have been checked against the repository.
 
@@ -418,7 +352,8 @@ sites have been checked against the repository.
 3. When does a member function need trailing `const`?
 4. Why implement `operator+` in terms of `operator+=`?
 5. When is a named factory clearer than an overloaded constructor?
-6. Why should a factory's return type communicate ownership?
+6. Why should this week's named factories return values rather than references
+   to local objects?
 7. Design an invariant and public interface for a `TimeOfDay` class.
 
 ## Summary
@@ -430,7 +365,60 @@ sites have been checked against the repository.
 - Public interfaces should be smaller and more stable than representations.
 - Operator overloads should preserve invariants and conventional meaning.
 
-## References and legacy sources
+## Optional enrichment — Additional class syntax
+
+The core lecture uses one invariant-establishing constructor and a small set of
+conventional operators. The following language mechanisms are useful when an
+interface genuinely needs them, but they should not drive the initial design.
+
+### Delegating and converting constructors
+
+```cpp
+class Rational {
+ public:
+  Rational() : Rational{0, 1} {
+  }
+  explicit Rational(int whole) : Rational{whole, 1} {
+  }
+  Rational(int numerator, int denominator);
+};
+```
+
+A delegating constructor chooses one implementation as the
+invariant-establishing path. `explicit` prevents surprising implicit
+conversions such as passing an `int` where a `Rational` is expected. Remove
+`explicit`, compile examples such as `Rational r = 3`, and discuss when numeric
+conversion is desirable.
+
+### Overloading and default arguments
+
+Member functions may be overloaded by parameter types/count and by trailing
+`const`, but not by return type alone. Default arguments are substituted at the
+call site and should appear in one declaration, normally the header.
+
+Avoid pairs of overloads whose conversions make a call ambiguous. Use a small
+test call matrix to confirm which overload accepts `int`, `double`, `const
+Rational`, and temporary arguments.
+
+### Class state and fluent lifetime
+
+A static data member belongs to the class rather than each object. Use such
+state sparingly: hidden global state can make tests interdependent.
+
+Returning `*this` by reference supports fluent mutation only while the object
+remains alive. Never return a reference to a temporary or local object:
+
+```cpp
+Rational& BadFactory() {
+  Rational local{1, 2};
+  return local; /* dangling reference */
+}
+```
+
+Factories should return values. A read-only query should return a value or a
+carefully justified borrowed reference.
+
+## References and source materials
 
 - [Classes I](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20I/README.md>)
 - [2025 Week 7 notebook (Colab)](https://colab.research.google.com/drive/1oHBcNeAXt4ZeQJsdG2q4RU5m9Yu_9CCw)

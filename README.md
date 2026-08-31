@@ -203,7 +203,7 @@ midterm project demo.
 | [10](week10/) | Nov. 10 | **Midterm project demo; no lecture** | Nov. 12 | Lab |
 | [11](week11/) | Nov. 17 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | **Quiz 2 + Lab** |
 | [12](week12/) | Nov. 24 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | Lab |
-| [13](week13/) | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Midterm Exam 2** |
+| [13](week13/) | Dec. 1 | Inheritance, virtual functions, ownership, and composition | Dec. 3 | **Midterm Exam 2** |
 | [14](week14/) | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Lab |
 | [15](week15/) | Dec. 15 | Integration, review, and final project clinic | Dec. 17 | Lab |
 | [16](week16/) | — | **Final project demo (date TBD)** | — | — |
@@ -351,7 +351,8 @@ to be finalized.
 
 Course examples use C17 and C++17. Exact supported compiler versions, operating
 systems, and submission tools remain to be confirmed; see [SETUP.md](SETUP.md)
-for the portable baseline workflow.
+for the portable baseline workflow and [STYLE_GUIDE.md](STYLE_GUIDE.md) for the
+course's Google-derived C and C++ conventions.
 
 ## Course Materials
 

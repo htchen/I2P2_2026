@@ -1,6 +1,6 @@
 # Week 11 Lecture Notes — Templates, Containers, Iterators, and Algorithms
 
-> November 17, 2026 · Source lineage: the legacy template and standard-library
+> November 17, 2026 · Source lineage: previous template and standard-library
 > notes plus the 2025 Week 11 and Week 14 notebooks
 
 ## Learning objectives
@@ -26,20 +26,18 @@ By the end of this lecture, you should be able to:
 
 ## Hour 1 — Compile-time genericity and template requirements
 
-Earlier lectures used `vector<int>` as a library client, and Week 8 previewed
-value returns and `std::move`. Now that classes are established, we can explain
-the template mechanism behind the angle brackets and write generic abstractions
-ourselves. The Week 12 lecture notes will develop the complete copy/move and smart-pointer
-ownership model; this note uses library value semantics without requiring that
-full implementation machinery first.
+Earlier lectures used `vector<int>` as a library client. Now that classes are
+established, we can explain the template mechanism behind the angle brackets
+and write generic abstractions ourselves. Week 12 develops copy/move and
+smart-pointer ownership; this note relies on ordinary copying and library value
+semantics without invoking explicit resource-transfer operations prematurely.
 
 ### 1. Templates describe families of code
 
 ```cpp
 template <typename T>
-T maximum(const T& left, const T& right)
-{
-    return left < right ? right : left;
+T Maximum(const T& left, const T& right) {
+  return left < right ? right : left;
 }
 ```
 
@@ -49,8 +47,8 @@ the selected result. Returning by value avoids handing the caller a reference
 that could outlive a temporary argument.
 
 ```cpp
-int largest_int = maximum(3, 8);
-std::string largest_word = maximum(std::string{"ant"}, std::string{"bee"});
+int largest_int = Maximum(3, 8);
+std::string largest_word = Maximum(std::string{"ant"}, std::string{"bee"});
 ```
 
 Templates are compile-time polymorphism. Unlike a virtual call, the concrete
@@ -61,14 +59,16 @@ operation is normally known during compilation and can be inlined.
 ```cpp
 template <typename T>
 class Box {
-public:
-    explicit Box(T value) : value_{std::move(value)} {}
+ public:
+  explicit Box(const T& value) : value_{value} {
+  }
 
-    const T& value() const& { return value_; }
-    T value() && { return std::move(value_); }
+  const T& value() const {
+    return value_;
+  }
 
-private:
-    T value_;
+ private:
+  T value_;
 };
 ```
 
@@ -80,20 +80,30 @@ code is valuable when multiple types share the same meaningful operation.
 
 ### Requirements before C++20 concepts
 
-In C++17, template requirements are implicit in expressions. For `maximum<T>`,
+In C++17, template requirements are implicit in expressions. For `Maximum<T>`,
 `left < right` must be valid and usable as a condition. A compiler error may be
 long because it reports the failed instantiation path. Read from the first
 expression involving your type, not only the final diagnostic line.
 
 Create three types: one with a valid `<`, one with equality only, and one whose
-comparison returns an unsuitable type. Instantiate `maximum` and classify the
+comparison returns an unsuitable type. Instantiate `Maximum` and classify the
 errors. Then state the requirement in a comment beside the template.
 
 ### Function objects and generic lambdas
 
+An algorithm sometimes needs behavior supplied by its caller. For example,
+sorting needs a comparison operation. A **function object** is an object that
+can be called with function-call syntax; a **lambda expression** creates a small
+unnamed function object at the point where the behavior is needed.
+
+The lambda below has three parts: `[]` is the capture list, the parentheses
+declare parameters, and the braced body computes the result. `auto` parameters
+make its call operator generic, so the same comparison can be instantiated for
+different suitable numeric types.
+
 ```cpp
 auto absolute_less = [](const auto& left, const auto& right) {
-    return std::abs(left) < std::abs(right);
+  return std::abs(left) < std::abs(right);
 };
 
 std::sort(values.begin(), values.end(), absolute_less);
@@ -104,6 +114,19 @@ weak ordering; returning `<=` instead of `<` violates the sorting contract.
 For signed integers, `std::abs(INT_MIN)` is not representable. Restrict the input
 domain or compare magnitudes through a checked, wider representation when that
 value is possible.
+
+The empty capture list means the lambda uses no local variables from its
+surrounding function. When local state is required, capture it deliberately:
+
+```cpp
+int threshold = 80;
+auto passed = [threshold](int score) { return score >= threshold; };
+```
+
+`[threshold]` stores a copy in the function object. `[&threshold]` instead
+stores an alias, so the lambda must not outlive `threshold`. Avoid broad `[=]`
+and `[&]` captures in teaching code: naming each captured value makes lifetime
+and mutation visible.
 
 ### Hour 1 template studio
 
@@ -127,7 +150,7 @@ the exercise to make standard-algorithm contracts explicit.
 | `stack<T>` | LIFO interface | intentionally limited access |
 
 Default to `vector` unless another container's semantics or complexity solves a
-specific need. The legacy course used `list` frequently; modern code should not
+specific need. The previous course used `list` frequently; modern code should not
 choose it merely because insertions look O(1)—finding the position is still a
 cost and locality often dominates.
 
@@ -145,7 +168,7 @@ The half-open range `[first, last)` includes `first` and excludes `last`.
 ```cpp
 auto position = std::find(values.begin(), values.end(), target);
 if (position != values.end()) {
-    std::cout << "found at " << std::distance(values.begin(), position) << '\n';
+  std::cout << "found at " << std::distance(values.begin(), position) << '\n';
 }
 ```
 
@@ -207,8 +230,9 @@ complexity and its invalidation rule before running the program.
 std::sort(values.begin(), values.end());
 
 int threshold = 10;
-auto first_large = std::find_if(values.begin(), values.end(),
-    [threshold](int value) { return value >= threshold; });
+auto first_large =
+    std::find_if(values.begin(), values.end(),
+                 [threshold](int value) { return value >= threshold; });
 
 int total = std::accumulate(values.begin(), values.end(), 0);
 ```
@@ -270,10 +294,9 @@ a key outside the stored range.
 does not resize the container.
 
 ```cpp
-values.erase(
-    std::remove_if(values.begin(), values.end(),
-                   [](int value) { return value < 0; }),
-    values.end());
+values.erase(std::remove_if(values.begin(), values.end(),
+                            [](int value) { return value < 0; }),
+             values.end());
 ```
 
 C++20 adds `std::erase_if(values, predicate)` for supported containers, but the
@@ -284,7 +307,7 @@ older form remains important when reading C++17 projects.
 ```cpp
 std::map<std::string, int> frequency;
 for (const std::string& word : words) {
-    ++frequency[word]; /* deliberate default insertion */
+  ++frequency[word]; /* deliberate default insertion */
 }
 ```
 
@@ -293,7 +316,7 @@ for (const std::string& word : words) {
 ```cpp
 auto found = frequency.find(query);
 if (found != frequency.end()) {
-    std::cout << found->second << '\n';
+  std::cout << found->second << '\n';
 }
 ```
 
@@ -303,14 +326,14 @@ mutate a map while asking whether a key exists.
 ### Frequency-to-ranking pipeline
 
 ```cpp
-std::vector<std::pair<std::string, int>> ranking{
-    frequency.begin(), frequency.end()
-};
+std::vector<std::pair<std::string, int>> ranking{frequency.begin(),
+                                                 frequency.end()};
 
-std::sort(ranking.begin(), ranking.end(), [](const auto& left, const auto& right) {
-    if (left.second != right.second) return left.second > right.second;
-    return left.first < right.first;
-});
+std::sort(ranking.begin(), ranking.end(),
+          [](const auto& left, const auto& right) {
+            if (left.second != right.second) return left.second > right.second;
+            return left.first < right.first;
+          });
 ```
 
 The map builds counts; the vector supports ranking by a different order. This is
@@ -327,20 +350,17 @@ sentinel. `std::optional<T>` contains either one `T` or no value:
 #include <optional>
 #include <vector>
 
-std::optional<std::size_t> index_of(
-    const std::vector<int>& values, int target)
-{
-    for (std::size_t index = 0; index < values.size(); ++index) {
-        if (values[index] == target) return index;
-    }
-    return std::nullopt;
+std::optional<std::size_t> IndexOf(const std::vector<int>& values, int target) {
+  for (std::size_t index = 0; index < values.size(); ++index) {
+    if (values[index] == target) return index;
+  }
+  return std::nullopt;
 }
 
-void report_index(const std::vector<int>& values, int target)
-{
-    if (auto index = index_of(values, target)) {
-        std::cout << "found at " << *index << '\n';
-    }
+void ReportIndex(const std::vector<int>& values, int target) {
+  if (auto index = IndexOf(values, target)) {
+    std::cout << "found at " << *index << '\n';
+  }
 }
 ```
 
@@ -376,7 +396,7 @@ only after the student records an independent prediction.
 
 ## Check yourself
 
-1. What operation does the `maximum` template require from `T`?
+1. What operation does the `Maximum` template require from `T`?
 2. Select containers for a FIFO worklist, ordered dictionary, and dense table.
 3. Why is `[begin, end)` easier to represent than an inclusive end?
 4. Distinguish the results of `lower_bound`, `upper_bound`, and `equal_range`.
@@ -396,7 +416,7 @@ only after the student records an independent prediction.
 - `optional<T>` distinguishes an expected missing result from a stored value.
 - Mutation can invalidate iterators; complexity and lifetime remain correctness concerns.
 
-## References and legacy sources
+## References and source materials
 
 - [Classes III: templates and related material](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/Classes%20III/README.md>)
 - [Standard library](<https://github.com/htchen/i2p-nthu/blob/master/程式設計二/week%2012%20Standard%20library/week%2012%20Standard%20library.md>)

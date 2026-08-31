@@ -1,6 +1,6 @@
 # Week 1 Lecture Notes — From Python to C
 
-> September 8, 2026 · C17 · Source lineage: the legacy C introduction,
+> September 8, 2026 · C17 · Source lineage: previous C introduction,
 > formatted-I/O, operators, and looping notes plus the instructor-provided
 > *From C to Assembly* handout
 
@@ -81,20 +81,24 @@ for a debugger. A program that compiles with a warning is not necessarily safe.
 
 Start from the first program below and introduce one defect at a time:
 
+The line `int twice(int value);` is a **declaration**: it tells the compiler the
+function's name, parameter type, and result type before the call is compiled.
+The later braced block is the **definition** that supplies the work. This
+minimal distinction is enough to observe compilation and linking today; Week 2
+develops function contracts, parameter passing, and decomposition in detail.
+
 ```c
 #include <stdio.h>
 
 int twice(int value);
 
-int main(void)
-{
-    printf("%d\n", twice(21));
-    return 0;
+int main(void) {
+  printf("%d\n", twice(21));
+  return 0;
 }
 
-int twice(int value)
-{
-    return value * 2;
+int twice(int value) {
+  return value * 2;
 }
 ```
 
@@ -138,10 +142,9 @@ Compile this file with both `-O0 -S` and `-O2 -S`:
 static int zero_count;
 static int initial_count = 7;
 
-int add_one(int value)
-{
-    int result = value + 1;
-    return result;
+int add_one(int value) {
+  int result = value + 1;
+  return result;
 }
 ```
 
@@ -155,11 +158,10 @@ register or instruction sequence.
 ```c
 #include <stdio.h>
 
-int main(void)
-{
-    int courses_completed = 1;
-    printf("Programming courses completed: %d\n", courses_completed);
-    return 0;
+int main(void) {
+  int courses_completed = 1;
+  printf("Programming courses completed: %d\n", courses_completed);
+  return 0;
 }
 ```
 
@@ -195,8 +197,8 @@ from `<stdint.h>` when an exact width is part of the data format.
 ### Integer division and conversion
 
 ```c
-double wrong = 5 / 2;          /* 2.0: division happened as int */
-double right = (double)5 / 2;  /* 2.5 */
+double wrong = 5 / 2;         /* 2.0: division happened as int */
+double right = (double)5 / 2; /* 2.5 */
 ```
 
 Conversions in C can discard information. Compile with warnings and make a
@@ -215,15 +217,13 @@ Do not confuse assignment (`=`) with comparison (`==`).
 
 ### Integer ranges and signed/unsigned interactions
 
-The legacy notes introduced `sizeof`; connect it to the limits headers rather
-than assuming a fixed machine:
+Connect `sizeof` to the limits headers rather than assuming a fixed machine:
 
 ```c
 #include <limits.h>
 #include <stdio.h>
 
-printf("int: %zu bytes, range %d through %d\n",
-       sizeof(int), INT_MIN, INT_MAX);
+printf("int: %zu bytes, range %d through %d\n", sizeof(int), INT_MIN, INT_MAX);
 printf("unsigned int maximum: %u\n", UINT_MAX);
 ```
 
@@ -257,8 +257,8 @@ For simple judge input, check the result of `scanf`:
 int a;
 int b;
 if (scanf("%d %d", &a, &b) != 2) {
-    fprintf(stderr, "expected two integers\n");
-    return 1;
+  fprintf(stderr, "expected two integers\n");
+  return 1;
 }
 printf("%d\n", a + b);
 ```
@@ -271,17 +271,17 @@ corresponding argument as a checked pair.
 
 | Value type | `printf` | `scanf` |
 |------------|----------|---------|
-| `int` | `%d` | `%d` with `int *` |
-| `unsigned int` | `%u` | `%u` with `unsigned int *` |
-| `long` | `%ld` | `%ld` with `long *` |
-| `double` | `%f` | `%lf` with `double *` |
-| character | `%c` | `%c` with `char *` |
-| string | `%s` | bounded `%Ns` with a sufficiently large array |
-| pointer value | `%p` with `(void *)p` | not normally read with `scanf` |
+| `int` | `%d` | `%d` with `&integer_variable` |
+| `unsigned int` | `%u` | `%u` with `&unsigned_variable` |
+| `long` | `%ld` | `%ld` with `&long_variable` |
+| `double` | `%f` | `%lf` with `&double_variable` |
+| character | `%c` | `%c` with `&character_variable` |
 
 For `printf`, a `float` argument is promoted to `double`, so `%f` is used. For
-`scanf`, `%f` expects `float *` and `%lf` expects `double *`. This asymmetry is a
-common source of memory corruption.
+`scanf`, `%f` requires the address of a `float`, while `%lf` requires the address
+of a `double`. This asymmetry is a common source of memory corruption. String
+and pointer formatting are introduced only after Week 2 establishes array
+representation and Week 4 establishes the pointer model.
 
 ### Hour 2 checkpoint
 
@@ -314,9 +314,9 @@ for value in range(1, limit + 1):
 ```c
 int total = 0;
 for (int value = 1; value <= limit; ++value) {
-    if (value % 2 == 0) {
-        total += value;
-    }
+  if (value % 2 == 0) {
+    total += value;
+  }
 }
 ```
 
@@ -325,13 +325,13 @@ one-statement body; they prevent mistakes during later edits.
 
 ```c
 switch (command) {
-case 'q':
+  case 'q':
     running = false;
     break;
-case 'h':
+  case 'h':
     print_help();
     break;
-default:
+  default:
     fprintf(stderr, "unknown command\n");
     break;
 }
@@ -351,13 +351,13 @@ long long total = 0;
 size_t count = 0;
 
 while (scanf("%d", &value) == 1) {
-    total += value;
-    ++count;
+  total += value;
+  ++count;
 }
 
 if (!feof(stdin)) {
-    fprintf(stderr, "invalid token after %zu integers\n", count);
-    return 1;
+  fprintf(stderr, "invalid token after %zu integers\n", count);
+  return 1;
 }
 printf("count=%zu total=%lld\n", count, total);
 ```
@@ -376,8 +376,8 @@ answer = sum(value * value for value in values if value > 0)
 print(answer)
 ```
 
-Use a fixed maximum of 100 inputs for this week, reject a 101st value, and check
-every input conversion. Test:
+Process each integer as it is read, without storing an array. Accept at most 100
+inputs, reject a 101st value, and check every input conversion. Test:
 
 - an empty line/end-of-file;
 - all negative values;
@@ -409,22 +409,34 @@ once” is therefore not evidence that the program is correct.
 ```c
 #include <stdio.h>
 
-int main(void)
-{
-    int value;
-    if (scanf("%d", &value) != 1) {
-        return 1;
-    }
+int main(void) {
+  int value;
+  if (scanf("%d", &value) != 1) {
+    return 1;
+  }
 
-    const char *sign = value < 0 ? "negative" : value > 0 ? "positive" : "zero";
-    const char *parity = value % 2 == 0 ? "even" : "odd";
-    printf("%d is %s and %s\n", value, sign, parity);
-    return 0;
+  printf("%d is ", value);
+  if (value < 0) {
+    printf("negative");
+  } else if (value > 0) {
+    printf("positive");
+  } else {
+    printf("zero");
+  }
+
+  if (value % 2 == 0) {
+    printf(" and even\n");
+  } else {
+    printf(" and odd\n");
+  }
+  return 0;
 }
 ```
 
-Trace the types and values of every expression. Why is taking `value % 2` safe
-even when `value` is negative? What special output does zero receive?
+Trace the condition selected by each input. Why is taking `value % 2` defined
+when `value` is negative? What special output does zero receive? This version
+uses only integer values and control flow. Week 2 introduces character arrays,
+and Week 4 explains pointer-valued references to strings.
 
 ## Check yourself
 
@@ -445,7 +457,7 @@ even when `value` is negative? What special output does zero receive?
 - Warnings, exit status, and tests are part of normal development.
 - Avoiding undefined behavior is a correctness requirement.
 
-## References and legacy sources
+## References and source materials
 
 - [Instructor handout: *From C to Assembly*](../../assets/references/from_c_to_assembly.pdf)
 - [Introduction to programming](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Introduction%20to%20programming/README.md>)

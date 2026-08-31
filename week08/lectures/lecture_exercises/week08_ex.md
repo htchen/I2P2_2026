@@ -9,11 +9,12 @@ copying the vector and contrast them with copying a raw pointer.
 
 ## Hour 2 — References and `const`
 
-Complete `normalize` with a mutable reference and queries with `const&`.
+Complete `Normalize` with a mutable reference and queries with `const&`.
 Classify each parameter as value, mutable borrow, or read-only borrow.
 
 ## Hour 3 — RAII and exceptions
 
-Trace construction and destruction through both the normal and throwing paths
-of the starter. Replace manual acquisition/release with an object whose lifetime
-performs cleanup, and verify that stack unwinding does not leak the resource.
+Trace the lifetime of a local `std::vector` and `std::ifstream` through normal,
+early-return, and throwing paths. Replace one manual C acquisition/release pair
+with an appropriate standard-library value and explain why each path releases
+the resource. Defining custom constructors and destructors begins in Week 9.

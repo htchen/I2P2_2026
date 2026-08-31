@@ -138,7 +138,7 @@ reserved for the final project demo.
 | 10 | Nov. 10 | **Midterm project demo; no lecture** | Nov. 12 | Small cross-file project component |
 | 11 | Nov. 17 | Templates, STL containers, iterators, algorithms, and `optional` | Nov. 19 | **Quiz 2**; container, algorithm, and invalidation lab |
 | 12 | Nov. 24 | Ownership, destructors, copy/move operations, and Rule of Zero/Five | Nov. 26 | Ownership implementation and sanitizer lab |
-| 13 | Dec. 1 | Inheritance, virtual functions, composition, and `variant` | Dec. 3 | **Midterm Exam 2**; asynchronous polymorphism checkpoint |
+| 13 | Dec. 1 | Inheritance, virtual functions, ownership, and composition | Dec. 3 | **Midterm Exam 2**; asynchronous polymorphism checkpoint |
 | 14 | Dec. 8 | Graph and state-space search using modern C++ | Dec. 10 | Testable game logic, FSM, or search extension |
 | 15 | Dec. 15 | Integration, review, and final-project clinic | Dec. 17 | Final-project lab |
 | 16 | — | **Final project demo (date TBD)** | — | No scheduled Thursday meeting |
@@ -149,27 +149,29 @@ prevent concepts from appearing without enough prior model:
 - The Week 2 lecture notes give the minimal `&`/`*` address-passing vocabulary
   needed by ordinary C interfaces, while the Week 4 lecture notes retain the
   full pointer, lifetime, and ownership treatment.
-- The Week 8 lecture notes introduce throwing, handler selection, and stack
-  unwinding before constructors and copy operations depend on exception
-  behavior.
+- The Week 8 lecture notes introduce throwing, handler selection, library-value
+  lifetimes, and stack unwinding before students define constructors and copy
+  operations for their own classes.
 - The Week 11 lecture notes explain templates and `std::optional` before the
-  Week 13 lecture notes use generic polymorphic containers/`variant` and the
-  Week 14 lecture notes return optional search results.
+  Week 13 lecture notes use generic polymorphic containers and offer
+  `std::variant` as optional enrichment; Week 14 then returns optional search
+  results.
 - The Week 12 lecture notes make copy/move and smart-pointer ownership explicit
   before Week 13 combines polymorphism with owning base pointers and recursive
   composites.
 
 Students may use `vector<T>` as library clients in the Week 8 lecture notes
 before learning to author templates; the class model in the Week 9 lecture
-notes provides the needed foundation for template definitions in the Week 11
-lecture notes. The Week 8 lecture notes preview value returns and `std::move`,
-while the Week 12 lecture notes supply the full copy/move and ownership model.
+notes provides the needed foundation for template definitions, iterators,
+algorithms, and lambdas in the Week 11 lecture notes. Week 8 uses value returns
+as an interface principle without showing explicit move operations; Week 12
+then supplies the full copy/move and ownership model.
 Both midterms exclude material first presented on the Tuesday immediately before
 the exam.
 
 ## 6. Proposed Project Spine
 
-The course uses two different legacy projects: a C expression compiler for the
+The course uses two different previous projects: a C expression compiler for the
 midterm and an Allegro C++ game extension for the final. They are not one
 evolving codebase. Their continuity comes from a common engineering method:
 students map unfamiliar code, state ownership, make incremental changes, build

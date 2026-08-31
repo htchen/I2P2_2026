@@ -51,7 +51,7 @@ integration, not onboarding.
 | 10 | No lecture; Tuesday is reserved for the midterm project demo | Add a small non-graphical component across header/source/test files | Change-impact map, tests, invariant explanation |
 | 11 | Templates, containers, algorithms, invalidation | Quiz 2; implement a bounded standard-library pipeline; audit one project container mutation | Quiz result, tests, complexity argument, and invalidation trace |
 | 12 | Copy/move, Rule of Zero, smart pointers | Map one raw-owning collection or resource boundary and implement one bounded improvement | Ownership map, tests, and sanitizer evidence |
-| 13 | Inheritance, composition, `variant` | Midterm 2; asynchronously design one polymorphic or composed vertical slice | Design map and test plan; no Thursday lab |
+| 13 | Inheritance, polymorphic ownership, composition | Midterm 2; asynchronously design one polymorphic or composed vertical slice | Design map and test plan; no Thursday lab |
 | 14 | Graph/state-space search and test boundaries | Implement the approved vertical slice, testable FSM, game rule, or search/pathfinding extension | Working slice, automated logic tests, and manual graphics plan |
 | 15 | Integration and review | Failure handling, regression pass, feature freeze, demo rehearsal | Release checklist, known-limitations list, rehearsal change |
 | 16 | Final project demo (date TBD) | Individual explanation and AI-free modification | Final release and demonstration |

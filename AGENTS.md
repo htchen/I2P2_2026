@@ -42,12 +42,18 @@ student workflow.
 
 ## Coding Style & Naming Conventions
 
-Use four spaces for code indentation and never tabs. Use descriptive Markdown
-headings, CommonMark-compatible lists, and relative links within the repository.
-Refer to notes by week rather than ordinal lecture number. Follow modern C++
-practices: prefer RAII, standard-library types, and explicit ownership. Name
-files and functions with `snake_case`, types with `PascalCase`, and constants
-with `kPascalCase`. Keep headers self-contained.
+Follow `STYLE_GUIDE.md` and the repository `.clang-format` file. Use two spaces
+for C/C++ indentation and no C/C++ tabs. C functions use `snake_case`; C++ ordinary
+functions use `MixedCase`; property accessors may follow the property spelling.
+Types use `PascalCase`. C macros use `UPPER_SNAKE_CASE`, while C++ named
+compile-time or namespace/class-scope constants use `kPascalCase`. Keep headers
+self-contained and preserve strict C17 syntax in Weeks 1–7 and C++17 syntax in
+Weeks 8–14.
+
+Use descriptive Markdown headings, CommonMark-compatible lists, and relative
+links within the repository. Refer to notes by week rather than ordinal lecture
+number. Follow modern C++ ownership practices: prefer RAII, standard-library
+types, and the Rule of Zero.
 
 ## Testing Guidelines
 

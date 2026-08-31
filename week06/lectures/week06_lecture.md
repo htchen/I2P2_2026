@@ -1,6 +1,6 @@
 # Week 6 Lecture Notes — Recursion and Binary Trees
 
-> October 13, 2026 · Source lineage: the legacy recursion and binary-tree notes,
+> October 13, 2026 · Source lineage: previous recursion and binary-tree notes,
 > the 2025 Week 3–4 notebooks, and the instructor-provided *From C to Assembly*
 > handout
 
@@ -37,10 +37,9 @@ A correct recursive design needs:
 4. a **decreasing measure** that guarantees reaching a base case.
 
 ```c
-unsigned long long factorial(unsigned int n)
-{
-    if (n <= 1) return 1;
-    return n * factorial(n - 1);
+unsigned long long factorial(unsigned int n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
 }
 ```
 
@@ -117,10 +116,9 @@ being replaced with iteration.
 ### Euclid's algorithm
 
 ```c
-int gcd(int a, int b)
-{
-    if (b == 0) return a < 0 ? -a : a;
-    return gcd(b, a % b);
+int gcd(int a, int b) {
+  if (b == 0) return a < 0 ? -a : a;
+  return gcd(b, a % b);
 }
 ```
 
@@ -134,12 +132,11 @@ a wider type or reject that case.
 Fast exponentiation reduces the exponent by half instead of by one:
 
 ```c
-long long power(long long base, unsigned int exponent)
-{
-    if (exponent == 0) return 1;
-    long long half = power(base, exponent / 2);
-    if (exponent % 2 == 0) return half * half;
-    return half * half * base;
+long long power(long long base, unsigned int exponent) {
+  if (exponent == 0) return 1;
+  long long half = power(base, exponent / 2);
+  if (exponent % 2 == 0) return half * half;
+  return half * half * base;
 }
 ```
 
@@ -171,12 +168,11 @@ To move `n` disks from peg `A` to peg `C` using peg `B`:
 3. move the `n - 1` disks from `B` to `C`.
 
 ```c
-void hanoi(unsigned int n, char from, char temporary, char to)
-{
-    if (n == 0) return;
-    hanoi(n - 1, from, to, temporary);
-    printf("move disk %u: %c -> %c\n", n, from, to);
-    hanoi(n - 1, temporary, from, to);
+void hanoi(unsigned int n, char from, char temporary, char to) {
+  if (n == 0) return;
+  hanoi(n - 1, from, to, temporary);
+  printf("move disk %u: %c -> %c\n", n, from, to);
+  hanoi(n - 1, temporary, from, to);
 }
 ```
 
@@ -236,9 +232,9 @@ case. Then explain which one uses “undo” and why the other two do not.
 
 ```c
 struct TreeNode {
-    int value;
-    struct TreeNode *left;
-    struct TreeNode *right;
+  int value;
+  struct TreeNode* left;
+  struct TreeNode* right;
 };
 ```
 
@@ -260,28 +256,25 @@ flowchart TD
 ```
 
 ```c
-void preorder(const struct TreeNode *node)
-{
-    if (node == NULL) return;
-    printf("%d ", node->value);
-    preorder(node->left);
-    preorder(node->right);
+void preorder(const struct TreeNode* node) {
+  if (node == NULL) return;
+  printf("%d ", node->value);
+  preorder(node->left);
+  preorder(node->right);
 }
 
-void inorder(const struct TreeNode *node)
-{
-    if (node == NULL) return;
-    inorder(node->left);
-    printf("%d ", node->value);
-    inorder(node->right);
+void inorder(const struct TreeNode* node) {
+  if (node == NULL) return;
+  inorder(node->left);
+  printf("%d ", node->value);
+  inorder(node->right);
 }
 
-void postorder(const struct TreeNode *node)
-{
-    if (node == NULL) return;
-    postorder(node->left);
-    postorder(node->right);
-    printf("%d ", node->value);
+void postorder(const struct TreeNode* node) {
+  if (node == NULL) return;
+  postorder(node->left);
+  postorder(node->right);
+  printf("%d ", node->value);
 }
 ```
 
@@ -305,18 +298,16 @@ to the two recursive calls exactly matches the order's definition.
 ### 4. Aggregate queries
 
 ```c
-size_t tree_size(const struct TreeNode *node)
-{
-    if (node == NULL) return 0;
-    return 1 + tree_size(node->left) + tree_size(node->right);
+size_t tree_size(const struct TreeNode* node) {
+  if (node == NULL) return 0;
+  return 1 + tree_size(node->left) + tree_size(node->right);
 }
 
-int tree_height(const struct TreeNode *node)
-{
-    if (node == NULL) return -1; /* height measured in edges */
-    int left = tree_height(node->left);
-    int right = tree_height(node->right);
-    return 1 + (left > right ? left : right);
+int tree_height(const struct TreeNode* node) {
+  if (node == NULL) return -1; /* height measured in edges */
+  int left = tree_height(node->left);
+  int right = tree_height(node->right);
+  return 1 + (left > right ? left : right);
 }
 ```
 
@@ -353,25 +344,24 @@ all values in the right subtree are larger under our no-duplicates policy.
 ```c
 #include <stdlib.h>
 
-int bst_insert(struct TreeNode **link, int value)
-{
-    while (*link != NULL) {
-        if (value < (*link)->value) {
-            link = &(*link)->left;
-        } else if (value > (*link)->value) {
-            link = &(*link)->right;
-        } else {
-            return 1; /* already present */
-        }
+int bst_insert(struct TreeNode** link, int value) {
+  while (*link != NULL) {
+    if (value < (*link)->value) {
+      link = &(*link)->left;
+    } else if (value > (*link)->value) {
+      link = &(*link)->right;
+    } else {
+      return 1; /* already present */
     }
+  }
 
-    struct TreeNode *node = malloc(sizeof(*node));
-    if (node == NULL) return 0;
-    node->value = value;
-    node->left = NULL;
-    node->right = NULL;
-    *link = node;
-    return 1;
+  struct TreeNode* node = malloc(sizeof(*node));
+  if (node == NULL) return 0;
+  node->value = value;
+  node->left = NULL;
+  node->right = NULL;
+  *link = node;
+  return 1;
 }
 ```
 
@@ -382,12 +372,11 @@ invariant and handle allocation failure.
 ### 6. Destruction is postorder
 
 ```c
-void tree_destroy(struct TreeNode *node)
-{
-    if (node == NULL) return;
-    tree_destroy(node->left);
-    tree_destroy(node->right);
-    free(node);
+void tree_destroy(struct TreeNode* node) {
+  if (node == NULL) return;
+  tree_destroy(node->left);
+  tree_destroy(node->right);
+  free(node);
 }
 ```
 
@@ -471,21 +460,22 @@ degrade into a linked list when values arrive in sorted order.
 ### Search and extrema
 
 ```c
-const struct TreeNode *bst_find(const struct TreeNode *node, int target)
-{
-    while (node != NULL) {
-        if (target < node->value) node = node->left;
-        else if (target > node->value) node = node->right;
-        else return node;
-    }
-    return NULL;
+const struct TreeNode* bst_find(const struct TreeNode* node, int target) {
+  while (node != NULL) {
+    if (target < node->value)
+      node = node->left;
+    else if (target > node->value)
+      node = node->right;
+    else
+      return node;
+  }
+  return NULL;
 }
 
-const struct TreeNode *bst_minimum(const struct TreeNode *node)
-{
-    if (node == NULL) return NULL;
-    while (node->left != NULL) node = node->left;
-    return node;
+const struct TreeNode* bst_minimum(const struct TreeNode* node) {
+  if (node == NULL) return NULL;
+  while (node->left != NULL) node = node->left;
+  return node;
 }
 ```
 
@@ -602,7 +592,7 @@ BST removal separates three cases:
 Implement deletion with a pointer-to-pointer to the root link. Draw ownership
 before coding and test leaf, one-child, and two-child roots under a sanitizer.
 
-## References and legacy sources
+## References and source materials
 
 - [Instructor handout: *From C to Assembly*](../../assets/references/from_c_to_assembly.pdf)
 - [Recursion](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Recursive/README.md>)

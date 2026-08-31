@@ -1,6 +1,6 @@
 # Week 3 Lecture Notes — Structures, Modules, Builds, and Debugging
 
-> September 22, 2026 · Source lineage: the legacy structures, multi-file build,
+> September 22, 2026 · Source lineage: previous structures, multi-file build,
 > program-style, and debugging notes
 
 ## Learning objectives
@@ -30,9 +30,9 @@ equivalent has a fixed compile-time layout:
 
 ```c
 struct Student {
-    int id;
-    char name[32];
-    double grade;
+  int id;
+  char name[32];
+  double grade;
 };
 
 struct Student student = {1001, "Ada", 92.5};
@@ -52,17 +52,11 @@ pointer to avoid copying a large record or to allow modification.
 ### 2. Tagged alternatives with `enum`
 
 ```c
-enum TokenKind {
-    TokenInteger,
-    TokenPlus,
-    TokenMinus,
-    TokenEnd,
-    TokenInvalid
-};
+enum TokenKind { TokenInteger, TokenPlus, TokenMinus, TokenEnd, TokenInvalid };
 
 struct Token {
-    enum TokenKind kind;
-    int value;
+  enum TokenKind kind;
+  int value;
 };
 ```
 
@@ -88,11 +82,11 @@ observe an object. For a rational number:
 
 ```c
 struct Rational {
-    int numerator;
-    int denominator;
+  int numerator;
+  int denominator;
 };
 
-int rational_make(int numerator, int denominator, struct Rational *out);
+int rational_make(int numerator, int denominator, struct Rational* out);
 ```
 
 The constructor-like function can reject zero and normalize the representation.
@@ -104,11 +98,7 @@ C designated initializers make field meaning explicit and tolerate field order
 changes better than positional initialization:
 
 ```c
-struct Student student = {
-    .id = 1001,
-    .name = "Ada",
-    .grade = 92.5
-};
+struct Student student = {.id = 1001, .name = "Ada", .grade = 92.5};
 ```
 
 Unspecified members are initialized to zero. This differs from an uninitialized
@@ -123,24 +113,29 @@ tag that records the active representation:
 enum ValueKind { ValueInteger, ValueReal, ValueError };
 
 struct Value {
-    enum ValueKind kind;
-    union {
-        long integer;
-        double real;
-        const char *error;
-    } as;
+  enum ValueKind kind;
+  union {
+    long integer;
+    double real;
+    const char* error;
+  } as;
 };
 ```
 
 Reading a union member inconsistent with `kind` violates the abstraction. This
-is the C predecessor of C++ tagged alternatives such as `std::variant`.
+combination of a tag and several alternative payloads is a general technique
+for representing “exactly one of these cases.” Every function that reads the
+payload must first inspect the tag, and every function that changes the case
+must update the tag and payload together.
 
 ### Hour 1 design exercise
 
 Design a `struct Date` and functions `date_make`, `date_next`, and `date_print`.
-Decide whether the structure is public or opaque. State leap-year and valid-day
-invariants and give boundary tests for February, month transitions, and invalid
-construction.
+Decide which representation and operations belong in the public header. State
+leap-year and valid-day invariants and give boundary tests for February, month
+transitions, and invalid construction. After Week 4, revisit whether hiding the
+representation behind an opaque pointer would improve the interface enough to
+justify its ownership costs.
 
 ## Hour 2 — Headers, the preprocessor, and the build graph
 
@@ -155,12 +150,12 @@ construction.
 #include <stdio.h>
 
 struct Rational {
-    int numerator;
-    int denominator;
+  int numerator;
+  int denominator;
 };
 
-int rational_make(int numerator, int denominator, struct Rational *out);
-void rational_print(FILE *stream, const struct Rational *value);
+int rational_make(int numerator, int denominator, struct Rational* out);
+void rational_print(FILE* stream, const struct Rational* value);
 
 #endif
 ```
@@ -168,39 +163,37 @@ void rational_print(FILE *stream, const struct Rational *value);
 `rational.c`:
 
 ```c
-#include "rational.h"
-
 #include <assert.h>
 #include <limits.h>
 
-static int gcd(int a, int b)
-{
-    while (b != 0) {
-        int remainder = a % b;
-        a = b;
-        b = remainder;
-    }
-    return a < 0 ? -a : a;
+#include "rational.h"
+
+static int gcd(int a, int b) {
+  while (b != 0) {
+    int remainder = a % b;
+    a = b;
+    b = remainder;
+  }
+  return a < 0 ? -a : a;
 }
 
-int rational_make(int numerator, int denominator, struct Rational *out)
-{
-    if (denominator == 0 || numerator == INT_MIN ||
-        denominator == INT_MIN || out == NULL) return 0;
-    if (denominator < 0) {
-        numerator = -numerator;
-        denominator = -denominator;
-    }
-    int divisor = gcd(numerator, denominator);
-    out->numerator = numerator / divisor;
-    out->denominator = denominator / divisor;
-    return 1;
+int rational_make(int numerator, int denominator, struct Rational* out) {
+  if (denominator == 0 || numerator == INT_MIN || denominator == INT_MIN ||
+      out == NULL)
+    return 0;
+  if (denominator < 0) {
+    numerator = -numerator;
+    denominator = -denominator;
+  }
+  int divisor = gcd(numerator, denominator);
+  out->numerator = numerator / divisor;
+  out->denominator = denominator / divisor;
+  return 1;
 }
 
-void rational_print(FILE *stream, const struct Rational *value)
-{
-    assert(stream != NULL && value != NULL);
-    fprintf(stream, "%d/%d", value->numerator, value->denominator);
+void rational_print(FILE* stream, const struct Rational* value) {
+  assert(stream != NULL && value != NULL);
+  fprintf(stream, "%d/%d", value->numerator, value->denominator);
 }
 ```
 
@@ -227,24 +220,33 @@ cc rational.o main.o -o rational_demo
 Include your own header first in its implementation file. If the header is not
 self-contained, the mistake is found close to its source.
 
-### Opaque structures
+### Encapsulation before opaque ownership
 
-When clients do not need the layout, a header can expose only an incomplete type:
+A module can begin with a visible structure definition while still requiring
+clients to use its functions:
 
 ```c
 /* counter.h */
-struct Counter;
+struct Counter {
+  long value;
+};
 
-struct Counter *counter_create(void);
-void counter_increment(struct Counter *counter);
-long counter_value(const struct Counter *counter);
-void counter_destroy(struct Counter **counter);
+void counter_initialize(struct Counter* counter);
+void counter_increment(struct Counter* counter);
+long counter_value(const struct Counter* counter);
 ```
 
-`counter.c` defines `struct Counter`. Clients can hold pointers and call the
-interface but cannot access members or allocate the structure directly. This
-creates stronger encapsulation at the cost of dynamic allocation or additional
-initialization APIs.
+The visible layout means the compiler knows how much storage a `Counter` needs,
+so a client can declare one directly. The function contracts still centralize
+valid initialization and state changes. This is convention-based
+encapsulation: the compiler does not prevent a client from writing `value`.
+
+A stronger design can hide the members behind an incomplete, or **opaque**,
+structure type. Doing so normally requires clients to manipulate pointers and
+raises allocation and destruction questions. Week 4 introduces the necessary
+pointer, lifetime, and ownership model before presenting that interface. The
+ordering matters: hiding representation is useful only when we can also state
+who creates, owns, and destroys the hidden object.
 
 ### Preprocessor discipline
 
@@ -305,10 +307,9 @@ Use assertions for internal conditions that indicate a programmer error:
 ```c
 #include <assert.h>
 
-int array_sum(const int values[], size_t count)
-{
-    assert(values != NULL || count == 0);
-    /* ... */
+int array_sum(const int values[], size_t count) {
+  assert(values != NULL || count == 0);
+  /* ... */
 }
 ```
 
@@ -329,23 +330,22 @@ Typical debugger commands are `break`, `run`, `next`, `step`, `print`, and
 
 ### File I/O is another contract boundary
 
-The legacy notes used redirection and `FILE *`. A module can accept a stream
+The previous notes used redirection and `FILE *`. A module can accept a stream
 instead of opening a hard-coded path:
 
 ```c
-int students_read(FILE *input, struct Student students[],
-                  size_t capacity, size_t *count)
-{
-    *count = 0;
-    while (*count < capacity) {
-        struct Student next;
-        int converted = fscanf(input, "%d %31s %lf",
-                               &next.id, next.name, &next.grade);
-        if (converted == EOF) return 1;
-        if (converted != 3) return 0;
-        students[(*count)++] = next;
-    }
-    return fscanf(input, "%*s") == EOF; /* reject extra records */
+int students_read(FILE* input, struct Student students[], size_t capacity,
+                  size_t* count) {
+  *count = 0;
+  while (*count < capacity) {
+    struct Student next;
+    int converted =
+        fscanf(input, "%d %31s %lf", &next.id, next.name, &next.grade);
+    if (converted == EOF) return 1;
+    if (converted != 3) return 0;
+    students[(*count)++] = next;
+  }
+  return fscanf(input, "%*s") == EOF; /* reject extra records */
 }
 ```
 
@@ -412,7 +412,7 @@ record and pipeline map, not project implementation.
 - Compilation checks each translation unit; linking connects them.
 - Invariants, assertions, focused tests, and debuggers turn failures into evidence.
 
-## References and legacy sources
+## References and source materials
 
 - [Structures, enumerations, and related C topics](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/Supplementary%20Material%202/README.md>)
 - [Compiling multiple source files](<https://github.com/htchen/i2p-nthu/blob/master/程式設計一/如何compile多個檔案/如何%20compile%20多個檔案.md>)

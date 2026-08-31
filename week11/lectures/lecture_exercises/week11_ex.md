@@ -14,7 +14,7 @@
 
 ### Task
 
-Implement `count_equal` for a sorted iterator range using `std::lower_bound` and
+Implement `CountEqual` for a sorted iterator range using `std::lower_bound` and
 `std::upper_bound`. State the sorted-range precondition and complexity. Test an
 empty range, a missing key, and duplicates.
 

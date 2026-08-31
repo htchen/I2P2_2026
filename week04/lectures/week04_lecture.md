@@ -1,6 +1,6 @@
 # Week 4 Lecture Notes — Pointers, Lifetime, and Dynamic Memory
 
-> September 29, 2026 · Source lineage: the legacy pointer, dynamic allocation,
+> September 29, 2026 · Source lineage: previous pointer, dynamic allocation,
 > double-pointer, and linked-data notes plus the instructor-provided
 > *From C to Assembly* handout
 
@@ -28,10 +28,10 @@ By the end of this lecture, you should be able to:
 
 ```c
 int value = 7;
-int *pointer = &value;
+int* pointer = &value;
 
 printf("value=%d\n", value);
-printf("address=%p\n", (void *)&value);
+printf("address=%p\n", (void*)&value);
 printf("through pointer=%d\n", *pointer);
 ```
 
@@ -52,55 +52,63 @@ Read `int *pointer` as “pointer is a pointer to int.” In a multi-declaration
 star belongs to each declarator:
 
 ```c
-int *first;
-int *second;
+int* first;
+int* second;
 ```
 
 This is clearer than `int *first, second`, where `second` is not a pointer.
 
 You will see both `int *pointer` and `int* pointer`. They declare the same type;
-spacing does not change the program. This course writes the `*` next to the
-variable name because a declaration may contain both a pointer and a non-pointer:
+spacing does not change the program. The course formatter writes
+`int* pointer`, emphasizing “pointer to int” as the type. That spacing does not
+change C's declaration grammar:
 
 ```c
 int *first, count; /* first is int*, but count is int */
 ```
 
-For beginners, one declaration per line is usually the clearest choice.
+Because `count` is still an `int`, not a pointer, do not depend on spacing to
+communicate a multi-declaration. One variable per declaration is the clearest
+course style:
 
-### C and C++ initialize structures differently
+```c
+int* first;
+int count;
+```
 
-Week 3 introduced structures. In C17, a member declaration cannot contain a
-C++-style default initializer:
+### Initialize structure objects explicitly
+
+Week 3 introduced structures. In C17, a member declaration describes layout;
+it cannot contain an initializer. Initialize each object when it is created:
 
 ```c
 typedef struct Node {
-    int value;
-    struct Node *next; /* no "= NULL" here in C17 */
+  int value;
+  struct Node* next; /* no "= NULL" here in C17 */
 } Node;
 
 Node node = {0, NULL}; /* initialize an object when it is created */
 ```
 
-C++ permits member initializers, but C does not. Also notice that the body uses
-`struct Node *`: the typedef name `Node` becomes available only after the closing
-brace.
+Also notice that the body uses `struct Node*`: the typedef name `Node` becomes
+available only after the closing brace. For dynamically allocated nodes,
+initialization happens after allocation and before another function observes
+the node. Week 5 centralizes this work in a node-creation function so every new
+node begins with the same valid invariant.
 
 ### 2. Pass an address to modify a caller's object
 
 ```c
-void swap(int *left, int *right)
-{
-    int temporary = *left;
-    *left = *right;
-    *right = temporary;
+void swap(int* left, int* right) {
+  int temporary = *left;
+  *left = *right;
+  *right = temporary;
 }
 
-int main(void)
-{
-    int a = 10;
-    int b = 20;
-    swap(&a, &b);
+int main(void) {
+  int a = 10;
+  int b = 20;
+  swap(&a, &b);
 }
 ```
 
@@ -113,17 +121,16 @@ copy modifies `a`.
 A pointer parameter can promise that the function only reads the array:
 
 ```c
-int contains_zero(const int *values, size_t count)
-{
-    for (size_t i = 0; i < count; ++i) {
-        if (values[i] == 0) return 1;
-    }
-    return 0;
+int contains_zero(const int* values, size_t count) {
+  for (size_t i = 0; i < count; ++i) {
+    if (values[i] == 0) return 1;
+  }
+  return 0;
 }
 ```
 
 Without `const`, a typo such as `values[i] = 0` is a valid assignment and can
-silently modify the caller's array. With `const int *`, the compiler rejects
+silently modify the caller's array. With `const int*`, the compiler rejects
 that assignment. `const` is therefore both a contract for the caller and a
 safety check for the function author.
 
@@ -137,7 +144,7 @@ Consider three different C operations:
 
 ```c
 int value = 7;
-int *pointer = &value; /* form an address */
+int* pointer = &value; /* form an address */
 int copy = *pointer;   /* load through an address */
 *pointer = 9;          /* store through an address */
 ```
@@ -183,11 +190,11 @@ dereference it.
 ### Read declarations from the identifier outward
 
 ```c
-int *p;                    /* pointer to int */
-const int *read_only;      /* pointer to const int */
-int *const fixed = &value; /* const pointer to int */
-const int *const both = &value;
-int (*operation)(int, int);/* pointer to function */
+int* p;                    /* pointer to int */
+const int* read_only;      /* pointer to const int */
+int* const fixed = &value; /* const pointer to int */
+const int* const both = &value;
+int (*operation)(int, int); /* pointer to function */
 ```
 
 `const` applies to the item immediately to its left, or to its right when there
@@ -198,11 +205,11 @@ callback, but do not use them to avoid learning the underlying type.
 
 ```c
 int values[] = {10, 20, 30, 40};
-int *first = values;
-int *last = values + 4;
+int* first = values;
+int* last = values + 4;
 
-for (int *position = first; position != last; ++position) {
-    printf("index=%td value=%d\n", position - first, *position);
+for (int* position = first; position != last; ++position) {
+  printf("index=%td value=%d\n", position - first, *position);
 }
 ```
 
@@ -226,10 +233,9 @@ make the parse explicit. Do not run the code until the prediction is written.
 ### 4. Lifetime is different from scope
 
 ```c
-int *bad_address(void)
-{
-    int local = 42;
-    return &local; /* wrong: local's lifetime ends on return */
+int* bad_address(void) {
+  int local = 42;
+  return &local; /* wrong: local's lifetime ends on return */
 }
 ```
 
@@ -250,30 +256,29 @@ passed when an interface permits “no object,” but it must never be dereferen
 #include <stdio.h>
 #include <stdlib.h>
 
-int *read_values(size_t count)
-{
-    if (count > SIZE_MAX / sizeof(int)) return NULL;
+int* read_values(size_t count) {
+  if (count > SIZE_MAX / sizeof(int)) return NULL;
 
-    int *values = malloc(count * sizeof(*values));
-    if (values == NULL && count != 0) return NULL;
+  int* values = malloc(count * sizeof(*values));
+  if (values == NULL && count != 0) return NULL;
 
-    for (size_t i = 0; i < count; ++i) {
-        if (scanf("%d", &values[i]) != 1) {
-            free(values);
-            return NULL;
-        }
+  for (size_t i = 0; i < count; ++i) {
+    if (scanf("%d", &values[i]) != 1) {
+      free(values);
+      return NULL;
     }
-    return values;
+  }
+  return values;
 }
 ```
 
 At the call site:
 
 ```c
-int *values = read_values(count);
+int* values = read_values(count);
 if (values == NULL && count != 0) {
-    fprintf(stderr, "could not read values\n");
-    return 1;
+  fprintf(stderr, "could not read values\n");
+  return 1;
 }
 /* use values */
 free(values);
@@ -287,26 +292,24 @@ changed. Check multiplication before allocation when sizes may be untrusted.
 
 ```c
 struct IntBuffer {
-    int *data;
-    size_t size;
-    size_t capacity;
+  int* data;
+  size_t size;
+  size_t capacity;
 };
 
-int buffer_push(struct IntBuffer *buffer, int value)
-{
-    if (buffer->size == buffer->capacity) {
-        size_t next = buffer->capacity == 0 ? 8 : buffer->capacity * 2;
-        if (next < buffer->capacity || next > SIZE_MAX / sizeof(*buffer->data)) {
-            return 0;
-        }
-        int *replacement = realloc(buffer->data,
-                                   next * sizeof(*buffer->data));
-        if (replacement == NULL) return 0;
-        buffer->data = replacement;
-        buffer->capacity = next;
+int buffer_push(struct IntBuffer* buffer, int value) {
+  if (buffer->size == buffer->capacity) {
+    size_t next = buffer->capacity == 0 ? 8 : buffer->capacity * 2;
+    if (next < buffer->capacity || next > SIZE_MAX / sizeof(*buffer->data)) {
+      return 0;
     }
-    buffer->data[buffer->size++] = value;
-    return 1;
+    int* replacement = realloc(buffer->data, next * sizeof(*buffer->data));
+    if (replacement == NULL) return 0;
+    buffer->data = replacement;
+    buffer->capacity = next;
+  }
+  buffer->data[buffer->size++] = value;
+  return 1;
 }
 ```
 
@@ -327,20 +330,20 @@ Never overwrite the only pointer before confirming `realloc` succeeded:
 
 ```c
 if (new_count == 0) {
-    free(values);
-    values = NULL;
+  free(values);
+  values = NULL;
 } else {
-    if (new_count > SIZE_MAX / sizeof(*values)) {
-        handle_failure();
+  if (new_count > SIZE_MAX / sizeof(*values)) {
+    handle_failure();
+  } else {
+    int* resized = realloc(values, new_count * sizeof(*values));
+    if (resized == NULL) {
+      /* values is still valid */
+      handle_failure();
     } else {
-        int *resized = realloc(values, new_count * sizeof(*values));
-        if (resized == NULL) {
-            /* values is still valid */
-            handle_failure();
-        } else {
-            values = resized;
-        }
+      values = resized;
     }
+  }
 }
 ```
 
@@ -383,20 +386,19 @@ remains valid; the lifetime argument must still be made at the C level.
 Examples:
 
 ```c
-void print_values(const int *borrowed, size_t count);
-int *values_clone(const int *source, size_t count); /* caller owns result */
-void values_destroy(int **owned);                   /* releases and nulls */
+void print_values(const int* borrowed, size_t count);
+int* values_clone(const int* source, size_t count); /* caller owns result */
+void values_destroy(int** owned);                   /* releases and nulls */
 ```
 
 The double pointer in `values_destroy` lets the function change the caller's
 pointer as well as free the allocation:
 
 ```c
-void values_destroy(int **owned)
-{
-    if (owned == NULL) return;
-    free(*owned);
-    *owned = NULL;
+void values_destroy(int** owned) {
+  if (owned == NULL) return;
+  free(*owned);
+  *owned = NULL;
 }
 ```
 
@@ -405,8 +407,8 @@ void values_destroy(int **owned)
 The C standard library provides a generic sorting function:
 
 ```c
-void qsort(void *base, size_t count, size_t element_size,
-           int (*compare)(const void *, const void *));
+void qsort(void* base, size_t count, size_t element_size,
+           int (*compare)(const void*, const void*));
 ```
 
 `qsort` does not know the element type. The caller supplies the array address,
@@ -417,21 +419,20 @@ array of student records:
 #include <stdlib.h>
 
 struct Student {
-    int id;
-    double grade;
+  int id;
+  double grade;
 };
 
-int compare_grade_descending(const void *left, const void *right)
-{
-    const struct Student *a = left;
-    const struct Student *b = right;
-    return (b->grade > a->grade) - (b->grade < a->grade);
+int compare_grade_descending(const void* left, const void* right) {
+  const struct Student* a = left;
+  const struct Student* b = right;
+  return (b->grade > a->grade) - (b->grade < a->grade);
 }
 
 qsort(students, count, sizeof(students[0]), compare_grade_descending);
 ```
 
-The callback borrows two elements as `const void *` and casts them back to the
+The callback borrows two elements as `const void*` and casts them back to the
 actual element type. Returning only `-1`, `0`, or `1` avoids overflow errors such
 as `return a->id - b->id`. Passing the wrong element size or comparator type
 creates undefined behavior that the generic C API cannot detect.
@@ -489,9 +490,9 @@ report without restoring the ownership rule.
 
 ## Check yourself
 
-1. Draw the objects and arrows after `int x = 3; int *p = &x;`.
+1. Draw the objects and arrows after `int x = 3; int* p = &x;`.
 2. Why is returning `&local` invalid but returning a `malloc` result possible?
-3. What is the difference between `const int *p` and `int *const p`?
+3. What is the difference between `const int* p` and `int* const p`?
 4. Write the ownership contract for `read_values`.
 5. Explain why `values = realloc(values, bytes)` can leak memory.
 
@@ -503,7 +504,7 @@ report without restoring the ownership rule.
 - Every successful allocation needs one eventual release on every path.
 - Pointer contracts should state nullability, size, mutability, and ownership.
 
-## References and legacy sources
+## References and source materials
 
 - [Instructor handout: *From C to Assembly*](../../assets/references/from_c_to_assembly.pdf)
 - [Instructor slides: *Assembly*](../../assets/references/lee_assembly.pptx)

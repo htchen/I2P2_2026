@@ -4,7 +4,7 @@
 
 ## Hour 1 — Address and alias trace
 
-Draw the objects and arrows created by `int *p = &value` and by a pointer into an
+Draw the objects and arrows created by `int* p = &value` and by a pointer into an
 array. Predict which writes change the original object and identify the valid
 half-open pointer range.
 
