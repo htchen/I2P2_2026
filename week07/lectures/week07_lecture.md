@@ -120,16 +120,21 @@ passing a negative plain `char` other than `EOF` is undefined behavior.
 The declarations above and all helper definitions appear together in the
 [complete Week 7 example](examples.c). The
 [starter file](lecture_exercises/week07_starter.c) uses the same `TokenKind`,
-`Token`, `Lexer`, `AstKind`, `Ast`, and `Parser` types. Lecture fragments below
-focus on one idea at a time; use the complete example when you need a compilable
-program rather than guessing an omitted helper.
+`Token`, `Lexer`, `AstKind`, `Ast`, and `Parser` types. It supplies the lexer,
+AST construction and destruction, higher-precedence parser functions,
+evaluation, tree printing, and a test `main`; only `parse_unary` is left as a
+bounded student task. Lecture fragments below focus on one idea at a time; use
+the complete example when you need a second compilable reference rather than
+guessing an omitted helper.
 
 ### Hour 1 lexer lab
 
-For input `" 12 + 3*x"`, write every token with `[start,end)`, kind, and
+For input `" 12 + 3*(4 - 1)"`, write every token with `[start,end)`, kind, and
 value/lexeme. Then test empty input, every operator, `LONG_MAX`, one overflowing
-integer, an invalid byte between valid tokens, and repeated calls after end.
-The parser should never need to inspect raw characters or repeat overflow logic.
+integer, the unsupported identifier in `"12 + x"`, and repeated calls after
+end. In this teaching grammar, `x` is an invalid token rather than an identifier;
+identifier support is introduced below as a project extension. The parser should
+never need to inspect raw characters or repeat overflow logic.
 
 ## Hour 2 — Precedence grammar, recursive descent, and AST ownership
 
@@ -317,10 +322,18 @@ static struct Ast* parse_primary(struct Parser* parser) {
 
 ### Hour 2 guided implementation
 
-Implement `parse_unary` and `parse_term`. Use malformed cases to inspect cleanup
-paths: `1 +`, `2 * )`, `(3 + 4`, `--`, and a forced allocation failure after the
-left subtree exists. Require the first error position and verify that no AST
-allocation leaks.
+The starter supplies `parse_primary`, `parse_term`, and `parse_expression`, and
+leaves only `parse_unary` for implementation. This keeps the task focused on the
+recursive production `unary -> ('+' | '-') unary | primary` and its ownership
+contract. Trace `+5`, `-5`, `--5`, and `-(2 + 3)` before writing code. If
+creating an `AST_NEGATE` node fails, the parser still owns and must destroy the
+operand returned by the recursive call.
+
+After the implementation, use malformed cases to inspect cleanup paths: `1 +`,
+`2 * )`, `(3 + 4`, and an incomplete `-`. Require the first error position and
+verify that no AST allocation leaks. The exercise guide specifies the expected
+AST shapes, values, rejection cases, and final test summary, so correctness does
+not depend on guessing an implicit output contract.
 
 ## Hour 3 — Semantics, evaluation, and code generation
 
