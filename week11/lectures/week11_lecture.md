@@ -113,6 +113,21 @@ std::sort(values.begin(), values.end(), absolute_less);
 
 The lambda's call operator is a template. Its comparator must provide a strict
 weak ordering; returning `<=` instead of `<` violates the sorting contract.
+“Strict weak ordering” means more than returning `false` for equal values:
+
+- **irreflexive:** `less(x, x)` is always `false`;
+- **asymmetric:** if `less(a, b)` is `true`, `less(b, a)` is `false`;
+- **transitive:** if `a` comes before `b` and `b` before `c`, then `a` comes
+  before `c`; and
+- values for which neither direction is less form consistent equivalence
+  groups.
+
+For example, comparing only a student's grade may make equal-grade students
+equivalent. Adding a name tie-breaker refines that group, but the tie-breaker
+must be applied consistently. A comparator that changes its answer during the
+sort, or creates a cycle such as `a < b`, `b < c`, and `c < a`, violates the
+algorithm's precondition.
+
 For signed integers, `std::abs(INT_MIN)` is not representable. Restrict the input
 domain or compare magnitudes through a checked, wider representation when that
 value is possible.
@@ -423,6 +438,8 @@ std::sort(ranking.begin(), ranking.end(),
 The map builds counts; the vector supports ranking by a different order. This is
 often clearer than forcing one container to serve incompatible access patterns.
 Prove the comparator is strict for equal pairs.
+Then check asymmetry and transitivity, including records with equal frequencies;
+checking only `compare(x, x) == false` is necessary but not sufficient.
 
 ### 11. `optional` makes expected absence explicit
 

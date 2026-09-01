@@ -10,8 +10,10 @@ object.
 
 ## Hour 2 — Conventional value operations
 
-Implement equality and addition without exposing representation fields. Test
-negative values, reducible results, and equality across different source forms.
+Implement `==`, `!=`, and addition through the public accessors rather than
+granting the operators representation access. In C++17, define `!=` explicitly
+in terms of `==`. Test negative values, reducible results, and equality across
+different source forms.
 
 ## Hour 3 — Header/source separation
 

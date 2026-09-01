@@ -18,4 +18,7 @@ upper bounds and use their difference to count duplicates in sorted data.
 Implement `copy_word` so it always terminates the destination when capacity is
 positive and returns `1` only when the complete source string fits. Test exact
 fit, truncation, empty input, and zero capacity. Explain why the function needs
-the destination capacity rather than only the source length.
+the destination capacity rather than only the source length. Unlike the
+all-or-nothing `string_copy` shown in the lecture, this exercise intentionally
+uses a **truncating** contract: it preserves the longest prefix that fits and
+then appends `\0` when capacity is positive.

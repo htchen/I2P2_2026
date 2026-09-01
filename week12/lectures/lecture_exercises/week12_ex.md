@@ -9,8 +9,11 @@ Identify the alias, double-destruction risk, and missing ownership contract.
 
 ## Hour 2 — Copy/move exercise
 
-Complete the copy constructor, copy assignment via copy-and-swap, and move
-operations in the starter. Test self-assignment and moved-from destruction.
+Complete the size constructor, destructor, copy constructor, copy assignment
+via copy-and-swap, and both move operations in the starter. These are one
+ordinary constructor plus five ownership-sensitive special member functions,
+not “six special members.” Test self-assignment, independent copies, and
+moved-from destruction.
 
 ## Hour 3 — Rule-of-Zero refactor
 

@@ -417,6 +417,13 @@ The same argument recursively reconstructs both subtrees. A simple linear
 search for each root gives O(n²) worst-case time; an index map can reduce it to
 O(n), provided values are unique.
 
+The Week 6 exercise uses the symmetric inorder-plus-postorder form. Postorder
+places the root last. Find that last value in inorder; values to its left form
+the left subtree, values to its right form the right subtree, and those subtree
+sizes split the preceding postorder range. Recursively repeat the same rule.
+This is the same structural argument, with the root read from the opposite end
+of the second traversal.
+
 ### Which traversal pairs are sufficient?
 
 With distinct labels:
@@ -493,10 +500,12 @@ mutation or destruction may invalidate them.
 
 ### Reconstruction implementation plan
 
-Use half-open ranges in the traversal arrays. A helper receives preorder range,
-inorder range, and an output tree link. Allocate the root only after validating
-that it appears in the inorder range. If either subtree fails, destroy any
-partial children and the root before returning failure.
+Use half-open ranges in the traversal arrays. A helper receives an inorder range,
+a matching preorder or postorder range, and an output tree link. The supplied
+exercise uses postorder, so its root is the final element of that range. Allocate
+the root only after validating that it appears in the inorder range. If either
+subtree fails, destroy any partial children and the root before returning
+failure.
 
 ### Hour 3 integration test
 

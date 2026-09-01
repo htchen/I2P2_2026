@@ -18,4 +18,10 @@ returned block.
 
 Complete `resize_sequence` using a temporary pointer. Exercise normal and
 failure paths under AddressSanitizer/UndefinedBehaviorSanitizer and show that
-each successful allocation has exactly one eventual `free`.
+each successful allocation has exactly one eventual `free`. Its contract is:
+
+- `values` identifies the caller's owning pointer;
+- when `old_size > 0`, that pointer owns a block of at least `old_size` integers;
+- growth zero-initializes indices `[old_size, new_size)`;
+- `new_size == 0` releases the block and publishes `NULL`; and
+- overflow or allocation failure returns `false` without changing the owner.

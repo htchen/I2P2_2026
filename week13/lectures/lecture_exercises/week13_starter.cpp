@@ -1,4 +1,5 @@
 #include <memory>
+#include <variant>
 #include <vector>
 
 class Function {
@@ -23,3 +24,23 @@ class Variable final : public Function {
 };
 
 using FunctionList = std::vector<std::unique_ptr<Function>>;
+
+FunctionList MakeSampleFunctions() {
+  // TODO: add one Constant and one Variable with std::make_unique.
+  return {};
+}
+
+struct ConstantValue {
+  double value;
+};
+
+struct VariableValue {};
+
+using FunctionValue = std::variant<ConstantValue, VariableValue>;
+
+double EvalValue(const FunctionValue& function, double x) {
+  // TODO: evaluate the closed set of alternatives with std::visit.
+  (void)function;
+  (void)x;
+  return 0.0;
+}

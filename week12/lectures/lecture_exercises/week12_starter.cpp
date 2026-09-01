@@ -24,5 +24,6 @@ class Buffer {
   int* data_ = nullptr;
 };
 
-// TODO: define the six ownership-sensitive operations, then refactor the class
-// to std::vector<int> and remove them.
+// TODO: define the size constructor and the five ownership-sensitive special
+// member functions (destructor, copy/move constructors, and copy/move
+// assignments), then refactor the class to std::vector<int> and remove the five.

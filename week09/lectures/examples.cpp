@@ -23,42 +23,49 @@ class Rational {
     denominator_ /= divisor;
   }
 
-  friend Rational operator+(const Rational& left, const Rational& right) {
-    static_assert(std::numeric_limits<long long>::digits >=
-                  2 * std::numeric_limits<int>::digits + 1);
-    long long numerator =
-        static_cast<long long>(left.numerator_) * right.denominator_ +
-        static_cast<long long>(right.numerator_) * left.denominator_;
-    long long denominator =
-        static_cast<long long>(left.denominator_) * right.denominator_;
-    const long long divisor = std::gcd(numerator, denominator);
-    numerator /= divisor;
-    denominator /= divisor;
-    if (numerator < std::numeric_limits<int>::min() ||
-        numerator > std::numeric_limits<int>::max() ||
-        denominator > std::numeric_limits<int>::max()) {
-      throw std::overflow_error{"rational result is outside the int range"};
-    }
-    return {static_cast<int>(numerator), static_cast<int>(denominator)};
+  int numerator() const {
+    return numerator_;
   }
-
-  friend std::ostream& operator<<(std::ostream& out, const Rational& value) {
-    return out << value.numerator_ << '/' << value.denominator_;
-  }
-
-  friend bool operator==(const Rational& left, const Rational& right) {
-    return left.numerator_ == right.numerator_ &&
-           left.denominator_ == right.denominator_;
-  }
-
-  friend bool operator!=(const Rational& left, const Rational& right) {
-    return !(left == right);
+  int denominator() const {
+    return denominator_;
   }
 
  private:
   int numerator_;
   int denominator_;
 };
+
+Rational operator+(const Rational& left, const Rational& right) {
+  static_assert(std::numeric_limits<long long>::digits >=
+                2 * std::numeric_limits<int>::digits + 1);
+  long long numerator =
+      static_cast<long long>(left.numerator()) * right.denominator() +
+      static_cast<long long>(right.numerator()) * left.denominator();
+  long long denominator =
+      static_cast<long long>(left.denominator()) * right.denominator();
+  const long long divisor = std::gcd(numerator, denominator);
+  numerator /= divisor;
+  denominator /= divisor;
+  if (numerator < std::numeric_limits<int>::min() ||
+      numerator > std::numeric_limits<int>::max() ||
+      denominator > std::numeric_limits<int>::max()) {
+    throw std::overflow_error{"rational result is outside the int range"};
+  }
+  return {static_cast<int>(numerator), static_cast<int>(denominator)};
+}
+
+std::ostream& operator<<(std::ostream& out, const Rational& value) {
+  return out << value.numerator() << '/' << value.denominator();
+}
+
+bool operator==(const Rational& left, const Rational& right) {
+  return left.numerator() == right.numerator() &&
+         left.denominator() == right.denominator();
+}
+
+bool operator!=(const Rational& left, const Rational& right) {
+  return !(left == right);
+}
 
 int main() {
   const Rational result = Rational{1, 6} + Rational{1, 3};

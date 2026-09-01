@@ -17,4 +17,7 @@ operation. Explain why destruction must occur after both owned subtrees.
 Given distinct inorder and postorder sequences, reconstruct the tree recursively
 and verify its preorder traversal. Then give two different trees with the same
 preorder and postorder sequences to show why those two traversals alone may be
-ambiguous.
+ambiguous. Implement `tree_build_from_inorder_postorder`: validate pointer and
+distinct-label preconditions, use half-open subranges, return an owned root
+through `out`, and release every partially built subtree if reconstruction or
+allocation fails.

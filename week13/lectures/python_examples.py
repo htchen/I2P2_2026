@@ -115,6 +115,47 @@ class GameObject(ABC):
         pass
 
 
+class Function(ABC):
+    @abstractmethod
+    def evaluate(self, input_value: float) -> float:
+        raise NotImplementedError
+
+
+@dataclass(frozen=True)
+class Constant(Function):
+    value: float
+
+    def evaluate(self, input_value: float) -> float:
+        del input_value
+        return self.value
+
+
+class Variable(Function):
+    def evaluate(self, input_value: float) -> float:
+        return input_value
+
+
+@dataclass(frozen=True)
+class ConstantValue:
+    value: float
+
+
+@dataclass(frozen=True)
+class VariableValue:
+    pass
+
+
+FunctionValue = Union[ConstantValue, VariableValue]
+
+
+def evaluate_value(function: FunctionValue, input_value: float) -> float:
+    if isinstance(function, ConstantValue):
+        return function.value
+    if isinstance(function, VariableValue):
+        return input_value
+    raise TypeError("unknown function alternative")
+
+
 class Rule(ABC):
     @abstractmethod
     def evaluate(self, input_value: float) -> float:
@@ -213,6 +254,17 @@ def main() -> None:
         pass
     else:
         raise AssertionError("override mismatch was not observed")
+
+    functions: list[Function] = [Constant(0.5), Variable()]
+    assert [function.evaluate(2.0) for function in functions] == [0.5, 2.0]
+    function_values: list[FunctionValue] = [
+        ConstantValue(0.5),
+        VariableValue(),
+    ]
+    assert [evaluate_value(function, 2.0) for function in function_values] == [
+        0.5,
+        2.0,
+    ]
 
     rule = Add(Literal(2.0), Literal(3.0))
     assert rule.evaluate(100.0) == 5.0

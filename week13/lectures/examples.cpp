@@ -1,8 +1,6 @@
-#include <cmath>
 #include <iostream>
 #include <memory>
-#include <stdexcept>
-#include <utility>
+#include <variant>
 #include <vector>
 
 class Function {
@@ -23,27 +21,53 @@ class Constant final : public Function {
   double value_;
 };
 
-class Sine final : public Function {
+class Variable final : public Function {
  public:
-  explicit Sine(std::unique_ptr<Function> argument)
-      : argument_{std::move(argument)} {
-    if (argument_ == nullptr) {
-      throw std::invalid_argument{"sine argument is required"};
-    }
-  }
   double Eval(double x) const override {
-    return std::sin(argument_->Eval(x));
+    return x;
   }
-
- private:
-  std::unique_ptr<Function> argument_;
 };
 
-int main() {
-  std::vector<std::unique_ptr<Function>> functions;
+using FunctionList = std::vector<std::unique_ptr<Function>>;
+
+FunctionList MakeSampleFunctions() {
+  FunctionList functions;
   functions.push_back(std::make_unique<Constant>(0.5));
-  functions.push_back(std::make_unique<Sine>(std::make_unique<Constant>(0.5)));
+  functions.push_back(std::make_unique<Variable>());
+  return functions;
+}
+
+struct ConstantValue {
+  double value;
+};
+
+struct VariableValue {};
+
+using FunctionValue = std::variant<ConstantValue, VariableValue>;
+
+struct EvalVisitor {
+  double x;
+
+  double operator()(const ConstantValue& constant) const {
+    return constant.value;
+  }
+  double operator()(const VariableValue&) const {
+    return x;
+  }
+};
+
+double EvalValue(const FunctionValue& function, double x) {
+  return std::visit(EvalVisitor{x}, function);
+}
+
+int main() {
+  const FunctionList functions = MakeSampleFunctions();
   for (const auto& function : functions) {
-    std::cout << function->Eval(0.0) << '\n';
+    std::cout << function->Eval(2.0) << '\n';
+  }
+
+  const std::vector<FunctionValue> values{ConstantValue{0.5}, VariableValue{}};
+  for (const FunctionValue& function : values) {
+    std::cout << EvalValue(function, 2.0) << '\n';
   }
 }

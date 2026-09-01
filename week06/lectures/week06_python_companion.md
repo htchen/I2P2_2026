@@ -287,6 +287,36 @@ must be stated for the C reconstruction. Slicing allocates sublists; index-range
 parameters avoid that overhead. Preorder alone still permits both two-node
 shapes shown in the source note, so Python does not remove the ambiguity.
 
+For the exercise's inorder-plus-postorder form, the root moves from the first
+preorder element to the last postorder element. The inorder split still
+determines both subtree sizes:
+
+```python
+def reconstruct_from_inorder_postorder(
+    inorder_values: list[int], postorder_values: list[int]
+) -> TreeNode | None:
+    if (
+        len(inorder_values) != len(postorder_values)
+        or len(set(inorder_values)) != len(inorder_values)
+        or len(set(postorder_values)) != len(postorder_values)
+        or set(inorder_values) != set(postorder_values)
+    ):
+        raise ValueError("traversals must contain the same unique values")
+    if not inorder_values:
+        return None
+    root_value = postorder_values[-1]
+    middle = inorder_values.index(root_value)
+    return TreeNode(
+        root_value,
+        reconstruct_from_inorder_postorder(
+            inorder_values[:middle], postorder_values[:middle]
+        ),
+        reconstruct_from_inorder_postorder(
+            inorder_values[middle + 1 :], postorder_values[middle:-1]
+        ),
+    )
+```
+
 ## What the Python versions must not hide
 
 - Python recursion limits and arbitrary integers differ from C stack and

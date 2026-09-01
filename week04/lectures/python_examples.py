@@ -68,6 +68,15 @@ def values_destroy(owned: list[int]) -> None:
     owned.clear()
 
 
+def resized_sequence(values: Sequence[int], new_size: int) -> list[int]:
+    """Returns resized contents; Python has no direct realloc equivalent."""
+    if new_size < 0:
+        raise ValueError("negative size")
+    preserved = list(values[:new_size])
+    preserved.extend([0] * (new_size - len(preserved)))
+    return preserved
+
+
 def rank_students(students: Sequence[Student]) -> list[Student]:
     return sorted(students, key=lambda student: student.grade, reverse=True)
 
@@ -94,6 +103,8 @@ def main() -> None:
 
     original = [1, 2, 3]
     clone = values_clone(original)
+    assert resized_sequence(original, 5) == [1, 2, 3, 0, 0]
+    assert resized_sequence(original, 2) == [1, 2]
     values_destroy(clone)
     assert original == [1, 2, 3]
     assert clone == []

@@ -39,7 +39,10 @@ static bool rational_make(int numerator, int denominator, Rational* out) {
 
 int main(void) {
   Rational value;
-  assert(rational_make(-6, -8, &value));
+  if (!rational_make(-6, -8, &value)) {
+    fputs("could not construct rational value\n", stderr);
+    return 1;
+  }
   assert(value.numerator == 3 && value.denominator == 4);
   printf("%d/%d\n", value.numerator, value.denominator);
   return 0;

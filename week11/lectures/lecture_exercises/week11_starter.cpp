@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstddef>
+#include <iterator>
 #include <optional>
 
 template <class ForwardIt, class T>

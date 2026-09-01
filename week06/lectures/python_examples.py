@@ -164,6 +164,31 @@ def reconstruct(
     )
 
 
+def reconstruct_from_inorder_postorder(
+    inorder_values: list[int], postorder_values: list[int]
+) -> TreeNode | None:
+    if (
+        len(inorder_values) != len(postorder_values)
+        or len(set(inorder_values)) != len(inorder_values)
+        or len(set(postorder_values)) != len(postorder_values)
+        or set(inorder_values) != set(postorder_values)
+    ):
+        raise ValueError("traversals must contain the same unique values")
+    if not inorder_values:
+        return None
+    root_value = postorder_values[-1]
+    middle = inorder_values.index(root_value)
+    return TreeNode(
+        root_value,
+        reconstruct_from_inorder_postorder(
+            inorder_values[:middle], postorder_values[:middle]
+        ),
+        reconstruct_from_inorder_postorder(
+            inorder_values[middle + 1 :], postorder_values[middle:-1]
+        ),
+    )
+
+
 def main() -> None:
     assert factorial(5) == 120
     assert greatest_common_divisor(54, 24) == 6
@@ -191,6 +216,10 @@ def main() -> None:
 
     rebuilt = reconstruct([4, 2, 1, 3, 6, 5, 7], inorder(root))
     assert preorder(rebuilt) == preorder(root)
+    rebuilt_from_postorder = reconstruct_from_inorder_postorder(
+        inorder(root), postorder(root)
+    )
+    assert preorder(rebuilt_from_postorder) == preorder(root)
     try:
         reconstruct([1, 2], [2, 3])
     except ValueError:

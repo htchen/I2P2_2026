@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
-from enum import Enum, auto
 from typing import Optional
 
 Graph = list[list[int]]
@@ -118,6 +117,56 @@ def multi_source_distances(
     return distance
 
 
+def shortest_grid_distance(
+    grid: list[str], starts: list[tuple[int, int]], target: tuple[int, int]
+) -> Optional[int]:
+    if not grid or not grid[0]:
+        raise ValueError("grid must be nonempty")
+    if any(len(row) != len(grid[0]) for row in grid):
+        raise ValueError("grid must be rectangular")
+    rows = len(grid)
+    columns = len(grid[0])
+
+    def is_open(position: tuple[int, int]) -> bool:
+        row, column = position
+        return (
+            0 <= row < rows
+            and 0 <= column < columns
+            and grid[row][column] != "#"
+        )
+
+    if not is_open(target):
+        raise ValueError("target must be an open grid cell")
+    distance: list[list[Optional[int]]] = [
+        [None] * columns for _ in range(rows)
+    ]
+    frontier: deque[tuple[int, int]] = deque()
+    for source in starts:
+        if not is_open(source):
+            raise ValueError("every source must be an open grid cell")
+        row, column = source
+        if distance[row][column] is None:
+            distance[row][column] = 0
+            frontier.append(source)
+
+    directions = ((1, 0), (-1, 0), (0, 1), (0, -1))
+    while frontier:
+        row, column = frontier.popleft()
+        current_distance = distance[row][column]
+        assert current_distance is not None
+        if (row, column) == target:
+            return current_distance
+        for row_offset, column_offset in directions:
+            next_position = (row + row_offset, column + column_offset)
+            if not is_open(next_position):
+                continue
+            next_row, next_column = next_position
+            if distance[next_row][next_column] is None:
+                distance[next_row][next_column] = current_distance + 1
+                frontier.append(next_position)
+    return None
+
+
 def are_neighbors(
     left: tuple[int, int], right: tuple[int, int], radius: int
 ) -> bool:
@@ -134,22 +183,19 @@ class State:
     b: int
 
 
-class Action(Enum):
-    FILL_A = auto()
-    FILL_B = auto()
-    EMPTY_A = auto()
-    EMPTY_B = auto()
-    POUR_A_TO_B = auto()
-    POUR_B_TO_A = auto()
+@dataclass(frozen=True)
+class Transition:
+    state: State
+    action: str
 
 
 @dataclass(frozen=True)
-class Step:
-    parent: State
-    action: Action
+class SolutionStep:
+    state: State
+    action: str
 
 
-def successors(state: State, cap_a: int, cap_b: int) -> list[State]:
+def successors(state: State, cap_a: int, cap_b: int) -> list[Transition]:
     if (
         cap_a < 0
         or cap_b < 0
@@ -158,20 +204,57 @@ def successors(state: State, cap_a: int, cap_b: int) -> list[State]:
     ):
         raise ValueError("invalid jug state or capacity")
     result = [
-        State(cap_a, state.b),
-        State(state.a, cap_b),
-        State(0, state.b),
-        State(state.a, 0),
+        Transition(State(cap_a, state.b), "fill A"),
+        Transition(State(state.a, cap_b), "fill B"),
+        Transition(State(0, state.b), "empty A"),
+        Transition(State(state.a, 0), "empty B"),
     ]
     a_to_b = min(state.a, cap_b - state.b)
-    result.append(State(state.a - a_to_b, state.b + a_to_b))
+    result.append(
+        Transition(
+            State(state.a - a_to_b, state.b + a_to_b), "pour A into B"
+        )
+    )
     b_to_a = min(state.b, cap_a - state.a)
-    result.append(State(state.a + b_to_a, state.b - b_to_a))
+    result.append(
+        Transition(
+            State(state.a + b_to_a, state.b - b_to_a), "pour B into A"
+        )
+    )
     return result
 
 
 def is_valid_state(state: State, cap_a: int, cap_b: int) -> bool:
     return 0 <= state.a <= cap_a and 0 <= state.b <= cap_b
+
+
+def shortest_jug_solution(
+    cap_a: int, cap_b: int, target: int
+) -> Optional[list[SolutionStep]]:
+    if cap_a <= 0 or cap_b <= 0 or not 0 <= target <= max(cap_a, cap_b):
+        raise ValueError("invalid jug capacity or target")
+    start = State(0, 0)
+    discovered: dict[State, tuple[Optional[State], str]] = {
+        start: (None, "start")
+    }
+    frontier = deque([start])
+    while frontier:
+        current = frontier.popleft()
+        if current.a == target or current.b == target:
+            reversed_path: list[SolutionStep] = []
+            cursor = current
+            while True:
+                parent, action = discovered[cursor]
+                reversed_path.append(SolutionStep(cursor, action))
+                if parent is None:
+                    break
+                cursor = parent
+            return list(reversed(reversed_path))
+        for transition in successors(current, cap_a, cap_b):
+            if transition.state not in discovered:
+                discovered[transition.state] = (current, transition.action)
+                frontier.append(transition.state)
+    return None
 
 
 def main() -> None:
@@ -185,6 +268,7 @@ def main() -> None:
     assert shortest_path(graph, 0, 2) == [0, 1, 2]
     assert shortest_path(graph, 0, 5) is None
     assert multi_source_distances(graph, [0, 4]) == [0, 1, 2, 1, 0, None]
+    assert shortest_grid_distance(["..#", "..."], [(0, 0)], (1, 2)) == 3
     try:
         reachable_dfs(graph, -1, 2)
     except IndexError:
@@ -196,14 +280,14 @@ def main() -> None:
     assert not are_neighbors((0, 0), (3, 4), 4)
 
     initial = State(0, 0)
-    next_states = successors(initial, 3, 5)
-    assert len(next_states) == 6
-    assert all(is_valid_state(state, 3, 5) for state in next_states)
-    discovered = {
-        State(3, 0): Step(initial, Action.FILL_A),
-        State(0, 5): Step(initial, Action.FILL_B),
-    }
-    assert discovered[State(3, 0)].action is Action.FILL_A
+    transitions = successors(initial, 3, 5)
+    assert len(transitions) == 6
+    assert all(
+        is_valid_state(transition.state, 3, 5)
+        for transition in transitions
+    )
+    solution = shortest_jug_solution(3, 5, 4)
+    assert solution is not None and solution[-1].state.b == 4
     try:
         successors(State(4, 0), 3, 5)
     except ValueError:

@@ -122,9 +122,10 @@ The declarations above and all helper definitions appear together in the
 [starter file](lecture_exercises/week07_starter.c) uses the same `TokenKind`,
 `Token`, `Lexer`, `AstKind`, `Ast`, and `Parser` types. It supplies the lexer,
 AST construction and destruction, higher-precedence parser functions,
-evaluation, tree printing, and a test `main`; only `parse_unary` is left as a
-bounded student task. Lecture fragments below focus on one idea at a time; use
-the complete example when you need a second compilable reference rather than
+evaluation, tree printing, and a test `main`. Its `parse_unary` is a worked
+implementation for tracing and failure-injection rather than an undisclosed
+exercise answer. Lecture fragments below focus on one idea at a time; use the
+complete example when you need a second compilable reference rather than
 guessing an omitted helper.
 
 ### Hour 1 lexer lab

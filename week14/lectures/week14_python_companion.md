@@ -254,6 +254,18 @@ row, column = frontier.popleft()
 Both forms unpack a two-field value. Python performs this at runtime and does
 not require a declared `pair<int, int>` element type.
 
+### Invalid grid input versus no path
+
+The C++ reference now reserves `nullopt` for one meaning: the grid and
+coordinates satisfy their contract, but no source can reach the target. The
+Python translation follows the same semantic boundary with `None`. It raises
+`ValueError` for an empty or ragged grid, an out-of-bounds coordinate, or a
+blocked source/target. This distinction prevents malformed input from being
+reported as an ordinary search result.
+
+Python integers remove the C++ distance-overflow concern, but they do not remove
+the need to validate the model before indexing the grid.
+
 ## Water Jugs state and ordering
 
 ```python
@@ -268,14 +280,21 @@ class State:
 
 `frozen=True` prevents ordinary field reassignment and makes the generated
 state hashable, so it can be a dictionary or set key. `order=True` gives
-lexicographic field ordering similar to the C++ `tie` comparison. BFS itself
-only needs equality and hashing; total ordering is included to match the
-ordered-map source example.
+lexicographic field ordering: compare `a` first, then `b` when the `a` values
+are equal. This matches the explicit two-step C++ `operator<`. BFS itself only
+needs equality and hashing; total ordering is included to match the ordered-map
+source example.
 
 ## Successor generation and invariants
 
 ```python
-def successors(state: State, cap_a: int, cap_b: int) -> list[State]:
+@dataclass(frozen=True)
+class Transition:
+    state: State
+    action: str
+
+
+def successors(state: State, cap_a: int, cap_b: int) -> list[Transition]:
     if (
         cap_a < 0
         or cap_b < 0
@@ -284,17 +303,25 @@ def successors(state: State, cap_a: int, cap_b: int) -> list[State]:
     ):
         raise ValueError("invalid jug state or capacity")
     result = [
-        State(cap_a, state.b),
-        State(state.a, cap_b),
-        State(0, state.b),
-        State(state.a, 0),
+        Transition(State(cap_a, state.b), "fill A"),
+        Transition(State(state.a, cap_b), "fill B"),
+        Transition(State(0, state.b), "empty A"),
+        Transition(State(state.a, 0), "empty B"),
     ]
 
     a_to_b = min(state.a, cap_b - state.b)
-    result.append(State(state.a - a_to_b, state.b + a_to_b))
+    result.append(
+        Transition(
+            State(state.a - a_to_b, state.b + a_to_b), "pour A into B"
+        )
+    )
 
     b_to_a = min(state.b, cap_a - state.a)
-    result.append(State(state.a + b_to_a, state.b - b_to_a))
+    result.append(
+        Transition(
+            State(state.a + b_to_a, state.b - b_to_a), "pour B into A"
+        )
+    )
     return result
 ```
 
@@ -316,31 +343,24 @@ explore illegal negative or over-capacity states.
 
 ```python
 from dataclasses import dataclass
-from enum import Enum, auto
-
-
-class Action(Enum):
-    FILL_A = auto()
-    FILL_B = auto()
-    EMPTY_A = auto()
-    EMPTY_B = auto()
-    POUR_A_TO_B = auto()
-    POUR_B_TO_A = auto()
 
 
 @dataclass(frozen=True)
-class Step:
-    parent: State
-    action: Action
+class SolutionStep:
+    state: State
+    action: str
 
 
-discovered: dict[State, Step] = {}
+discovered: dict[State, tuple[State | None, str]] = {
+    State(0, 0): (None, "start")
+}
 ```
 
-The enum and record preserve the explanation boundary: a result can name an
-action rather than only list amounts. Python's dictionary combines the C++
-map's key-to-step relationship with average O(1) lookup, but iteration follows
-insertion order rather than sorted state order.
+The transition and result records preserve the explanation boundary: a result
+can name an action rather than only list amounts. The dictionary records the
+parent and incoming action at first discovery. Python's dictionary combines the
+C++ map's key-to-record relationship with average O(1) lookup, but iteration
+follows insertion order rather than sorted state order.
 
 The minimal parent/frontier declarations are correspondingly:
 

@@ -77,6 +77,37 @@ def reverse(values: LinkedList) -> None:
     values.head = reversed_head
 
 
+def reverse_range(values: LinkedList, first: int, last: int) -> bool:
+    if not 0 <= first <= last <= values.size:
+        return False
+
+    before: Node | None = None
+    current = values.head
+    for _ in range(first):
+        before = current
+        assert current is not None
+        current = current.next
+
+    after = current
+    for _ in range(last - first):
+        assert after is not None
+        after = after.next
+
+    reversed_head = after
+    for _ in range(last - first):
+        assert current is not None
+        next_node = current.next
+        current.next = reversed_head
+        reversed_head = current
+        current = next_node
+
+    if before is None:
+        values.head = reversed_head
+    else:
+        before.next = reversed_head
+    return True
+
+
 def remove_all(values: LinkedList, target: int) -> int:
     removed_count = 0
     previous: Node | None = None
@@ -129,6 +160,10 @@ def main() -> None:
     assert remove_first(values, 3)
     assert to_list(values) == [1, 3, 5]
     push_front(values, 3)
+    assert reverse_range(values, 1, 4)
+    assert to_list(values) == [3, 5, 3, 1]
+    assert reverse_range(values, 1, 4)
+    assert to_list(values) == [3, 1, 3, 5]
     assert remove_all(values, 3) == 2
     reverse(values)
     assert to_list(values) == [5, 1]

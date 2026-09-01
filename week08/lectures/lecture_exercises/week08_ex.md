@@ -10,7 +10,9 @@ copying the vector and contrast them with copying a raw pointer.
 ## Hour 2 — References and `const`
 
 Complete `Normalize` with a mutable reference and queries with `const&`.
-Classify each parameter as value, mutable borrow, or read-only borrow.
+Classify each parameter as value, mutable borrow, or read-only borrow. Reject a
+sum that is zero, positive or negative infinity, or NaN before modifying any
+element, so failure leaves the vector unchanged.
 
 ## Hour 3 — RAII and exceptions
 

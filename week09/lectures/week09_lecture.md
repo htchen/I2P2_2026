@@ -176,7 +176,11 @@ Rational operator+(Rational left, const Rational& right) {
 
 Passing `left` by value intentionally creates the result object. This design
 supports implicit conversion on either operand more symmetrically than a member
-`operator+` and avoids duplicating normalization logic.
+`operator+` **when the class intentionally provides a non-`explicit` converting
+constructor**. The `Rational` developed here requires two constructor arguments,
+so it currently provides no such implicit conversion. The nonmember design is
+still appropriate because neither operand owns the operation, and it avoids
+duplicating normalization logic.
 
 Output is also a nonmember because the left operand is a stream:
 

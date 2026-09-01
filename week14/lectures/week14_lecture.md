@@ -432,17 +432,23 @@ For water jugs with capacities A and B, one state is the current amount in each
 jug:
 
 ```cpp
-#include <tuple>
-
 struct State {
   int a;
   int b;
 
-  friend bool operator<(const State& left, const State& right) {
-    return std::tie(left.a, left.b) < std::tie(right.a, right.b);
+  bool operator<(const State& other) const {
+    if (a != other.a) {
+      return a < other.a;
+    }
+    return b < other.b;
   }
 };
 ```
+
+This comparison orders states first by the amount in jug A and then, when those
+amounts are equal, by jug B. `std::map` needs a stable strict ordering to use a
+`State` as a key. The explicit two-step comparison reuses Week 11's comparator
+contract without introducing tuple utilities in the middle of the solver.
 
 Vertices do not need to be stored in advance. A successor function generates
 legal next states:
@@ -450,22 +456,32 @@ legal next states:
 ```cpp
 #include <algorithm>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
-std::vector<State> Successors(State state, int cap_a, int cap_b) {
+struct Transition {
+  State state;
+  std::string action;
+};
+
+std::vector<Transition> Successors(State state, int cap_a, int cap_b) {
   if (cap_a < 0 || cap_b < 0 || state.a < 0 || state.a > cap_a ||
       state.b < 0 || state.b > cap_b) {
     throw std::invalid_argument{"invalid jug state or capacity"};
   }
 
-  std::vector<State> result{
-      {cap_a, state.b}, {state.a, cap_b}, {0, state.b}, {state.a, 0}};
+  std::vector<Transition> result{{{cap_a, state.b}, "fill A"},
+                                 {{state.a, cap_b}, "fill B"},
+                                 {{0, state.b}, "empty A"},
+                                 {{state.a, 0}, "empty B"}};
 
-  int a_to_b = std::min(state.a, cap_b - state.b);
-  result.push_back({state.a - a_to_b, state.b + a_to_b});
+  const int a_to_b = std::min(state.a, cap_b - state.b);
+  result.push_back(
+      {{state.a - a_to_b, state.b + a_to_b}, "pour A into B"});
 
-  int b_to_a = std::min(state.b, cap_a - state.a);
-  result.push_back({state.a + b_to_a, state.b - b_to_a});
+  const int b_to_a = std::min(state.b, cap_a - state.a);
+  result.push_back(
+      {{state.a + b_to_a, state.b - b_to_a}, "pour B into A"});
   return result;
 }
 ```
@@ -485,19 +501,26 @@ maze routing, and game AI.
 
 ```cpp
 #include <map>
+#include <optional>
 
-enum class Action { FillA, FillB, EmptyA, EmptyB, PourAToB, PourBToA };
-
-struct Step {
-  State parent;
-  Action action;
+struct SolutionStep {
+  State state;
+  std::string action;
 };
 
-std::map<State, Step> discovered;
+struct ParentRecord {
+  std::optional<State> parent;
+  std::string action;
+};
+
+std::map<State, ParentRecord> discovered;
 ```
 
-Path reconstruction can now explain “fill the 5-liter jug” rather than printing
-only coordinate pairs. Explainable paths help both demos and successor debugging.
+At first discovery, store both the predecessor and the action from that
+predecessor. The start state has no parent and uses a label such as `"start"`.
+Following parents backward and then reversing the collected `SolutionStep`
+objects can explain “fill the 5-liter jug” rather than printing only coordinate
+pairs. Explainable paths help both demos and successor debugging.
 
 ### Water Jugs feasibility
 
@@ -534,9 +557,10 @@ has a correct equality operation and hash function.
 ### 9. Search is an engineering boundary
 
 Keep I/O and visualization outside the solver. A solver that receives a model
-and returns `optional<vector<State>>` can be unit-tested without a terminal or
-game window. The final project should isolate non-graphical game logic in the
-same way.
+and returns `optional<vector<SolutionStep>>` can be unit-tested without a
+terminal or game window. Reserve absence for a valid but unreachable target;
+reject malformed capacities or states at the contract boundary. The final
+project should isolate non-graphical game logic in the same way.
 
 AI-generated search code often looks plausible while it:
 

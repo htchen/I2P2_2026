@@ -1,10 +1,12 @@
 # Week 7 Lecture Exercises: Parsing and Syntax Trees
 
-[Starter code](week07_starter.c) · [Complete example](../examples.c)
+[Starter code](week07_starter.c)
 
-Both files use the same token, lexer, parser, and AST types. The complete example
-is the reference for helper names and ownership conventions. The starter is a
-complete testable pipeline except for one bounded task: `parse_unary`.
+The starter is a complete testable pipeline. Use `parse_unary` as a worked
+example of how a grammar production becomes control flow and how ownership is
+handled when recursive construction fails. The activities below emphasize
+tracing, contract explanation, and testing rather than copying a missing
+implementation from another repository file.
 
 ## Hour 1 — Tokens and pipeline boundaries
 
@@ -48,7 +50,7 @@ The starter prints the same shape in prefix form:
 (+ 12 (* 4 (- 3 1)))
 ```
 
-Complete only `parse_unary`. Follow this production exactly:
+Trace `parse_unary` against this production:
 
 ```text
 unary -> ('+' | '-') unary | primary
@@ -63,7 +65,8 @@ contract.
 
 Test `+5`, `-5`, `--5`, `-(2 + 3)`, and an incomplete `-`. For every case, mark
 the current token before and after `parse_unary` and the owner of each allocated
-node.
+node. Then temporarily inject an `ast_create` failure and verify that the
+operand subtree is released.
 
 ## Hour 3 — Evaluation and code generation
 
@@ -74,8 +77,8 @@ cc -std=c17 -Wall -Wextra -Wpedantic week07_starter.c -o week07_starter
 ./week07_starter
 ```
 
-After `parse_unary` is correct, the final line must be `7/7 tests passed`. The
-first three successful AST lines must be:
+The final line must be `7/7 tests passed`. The first three successful AST lines
+must be:
 
 ```text
 AST:  12 + 4 * (3 - 1) => (+ 12 (* 4 (- 3 1)))

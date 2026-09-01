@@ -470,8 +470,12 @@ int string_copy(char destination[], size_t capacity, const char source[]) {
 ```
 
 The copy loop uses `<= length` deliberately. A successful string copy must copy
-the terminator as well as visible characters. Discuss why calling either
-function on a nonterminated array violates its precondition.
+the terminator as well as visible characters. This function follows an
+**all-or-nothing** contract: if the complete source does not fit, it reports
+failure and leaves the destination unchanged. The exercise later in this week
+deliberately explores a different, truncating contract so that the two policies
+can be compared. Discuss why calling either function on a nonterminated array
+violates its precondition.
 
 ### Validate the line representation before processing it
 

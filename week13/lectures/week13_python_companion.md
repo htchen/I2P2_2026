@@ -307,6 +307,13 @@ reach the same strategy.
 
 ## Downcasting and closed alternatives
 
+The runnable comparison also uses a compact numeric `Function` interface with
+`Constant` and `Variable` implementations. A `list[Function]` demonstrates
+ordinary dynamic dispatch. Separate `ConstantValue` and `VariableValue`
+dataclasses plus an `isinstance` chain approximate the C++ `variant`/`visit`
+version, but Python does not enforce that the alternatives are closed or that
+every case is handled statically.
+
 The closest dynamic-cast test is:
 
 ```python

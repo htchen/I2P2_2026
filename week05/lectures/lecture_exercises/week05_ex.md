@@ -17,4 +17,7 @@ length is accepted for insertion.
 
 Reverse a bounded half-open segment without copying node payloads, then destroy
 the complete list. Trace every changed link before running the code under a
-sanitizer.
+sanitizer. Implement `list_reverse_range(head, first, last)` with the following
+contract: `[first, last)` is measured in node indices; equal boundaries are a
+successful no-op; and an invalid or out-of-range boundary returns `false`
+without changing the list.

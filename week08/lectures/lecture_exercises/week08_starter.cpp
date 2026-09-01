@@ -1,8 +1,9 @@
+#include <cmath>
 #include <stdexcept>
 #include <vector>
 
 void Normalize(std::vector<double>& values) {
-  // TODO: divide by the sum; throw if the sum is zero.
+  // TODO: divide by the sum; throw unless the sum is finite and nonzero.
   (void)values;
 }
 

@@ -447,18 +447,24 @@ define and implement an explicit total ordering for it.
 
 ### Sanitizer triage studio
 
-Run a seeded program containing one each of:
+Run a seeded program containing one each of these actual memory errors:
 
 - read one element beyond a dynamic array;
 - use an element pointer after `realloc`;
 - free a stack address;
 - leak on an early return;
-- dereference a null output parameter;
-- call `values_destroy` twice.
+- dereference a null output parameter.
 
 For every report, record the invalid operation, where the affected allocation
 was created/released, and the ownership rule that would have prevented it. Fix
 the contract or control flow, not only the single reported line.
+
+Then call the `values_destroy` implementation above twice with the same owning
+pointer. This is a **safety check**, not a seeded error: the first call sets the
+owner to `NULL`, and the second call reaches `free(NULL)`, which is defined to do
+nothing. Confirm that the sanitizer emits no report. Contrast this behavior with
+a destroy function that frees the allocation but leaves the caller's pointer
+dangling.
 
 ### 7. Failure patterns
 

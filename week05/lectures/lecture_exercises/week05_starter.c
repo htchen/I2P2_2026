@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 typedef struct Node {
   int value;
@@ -18,6 +19,16 @@ bool list_erase(Node** head, size_t index) {
   /* TODO: unlink and free exactly one node when index exists. */
   (void)head;
   (void)index;
+  return false;
+}
+
+bool list_reverse_range(Node** head, size_t first, size_t last) {
+  /* TODO: reverse [first, last) by rewiring links. Return false, without
+     modifying the list, when head is NULL, first > last, or either boundary
+     is beyond the list length. */
+  (void)head;
+  (void)first;
+  (void)last;
   return false;
 }
 
