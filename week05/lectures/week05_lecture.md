@@ -465,6 +465,10 @@ contiguous arrays win because allocation and memory locality matter.
 
 ### 10. Circular lists and Josephus
 
+> **Algorithm application:** the required list foundation is a correct owned
+> linear list. Circular links and Josephus compare representations after those
+> invariants are secure.
+
 In a circular list, the last node points back to the first instead of `NULL`.
 This can model repeated elimination in the Josephus problem. It also changes
 the invariant and termination condition: traversal must remember the starting

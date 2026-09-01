@@ -13,7 +13,7 @@
 using Graph = std::vector<std::vector<int>>;
 
 static std::size_t DfsSize(const Graph& graph, int start,
-                           std::vector<bool>& visited) {
+                           std::vector<char>& visited) {
   if (start < 0 || static_cast<std::size_t>(start) >= graph.size() ||
       visited.size() != graph.size()) {
     throw std::invalid_argument{"DFS vertex or visited-array size is invalid"};
@@ -189,7 +189,7 @@ static std::optional<std::vector<SolutionStep>> ShortestJugSolution(
 
 int main() {
   const Graph graph{{1}, {0, 2}, {1}, {}};
-  std::vector<bool> visited(graph.size());
+  std::vector<char> visited(graph.size());
   std::cout << "component size = " << DfsSize(graph, 0, visited) << '\n';
 
   const std::vector<std::vector<char>> grid{{'.', '.', '#'}, {'.', '.', '.'}};

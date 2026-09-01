@@ -205,6 +205,10 @@ dereference it.
 
 ### Read declarations from the identifier outward
 
+> **Supporting syntax:** pointer-to-data and pointer-to-const declarations are
+> required. Const-pointer and function-pointer forms are recognition material
+> here; the later callback section gives the function-pointer form a purpose.
+
 ```c
 int* p;                    /* pointer to int */
 const int* read_only;      /* pointer to const int */
@@ -342,6 +346,10 @@ the 0→8 and 8→16 boundaries and verify the object can be destroyed after any
 failed `push`.
 
 ### `calloc` and `realloc`
+
+> **Supporting library detail:** understand the allocate-copy-free effect and
+> the failure-safe temporary-pointer pattern. Memorizing every zero-size corner
+> case is reference knowledge.
 
 - `calloc(count, size)` allocates and zeroes the bytes.
 - `realloc(old, new_size)` may resize in place or move the allocation.

@@ -149,6 +149,10 @@ elision; log count is not the abstraction's contract.
 
 ### 3. The special member functions
 
+> **Mechanism study:** implementing a raw owner once exposes the copy and move
+> rules. For ordinary production code, prefer standard-library members and the
+> Rule of Zero rather than routinely writing all five operations by hand.
+
 The ownership-relevant operations are:
 
 ```cpp
@@ -254,6 +258,10 @@ move elements during reallocation without risking loss of the original data.
 
 ### Exception-safety levels
 
+> **Supporting robustness model:** know that operations must preserve invariants
+> and ownership when they fail. The formal guarantee names and copy-and-swap
+> technique are secondary to leak-free, valid state.
+
 - **No-throw guarantee:** operation cannot fail by exception.
 - **Strong guarantee:** failure leaves the original observable state unchanged.
 - **Basic guarantee:** failure preserves invariants and leaks nothing, but the
@@ -299,6 +307,10 @@ We implement a raw owning class once to understand the mechanism, then prefer
 the Rule of Zero.
 
 ### 7. Smart pointers encode ownership
+
+> **Ownership priority:** use `unique_ptr` for the central one-owner model.
+> `shared_ptr` and `weak_ptr` are recognition-level tools for lifetimes that are
+> genuinely shared; they are not default replacements for deciding ownership.
 
 ```cpp
 #include <memory>

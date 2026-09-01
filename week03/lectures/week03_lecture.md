@@ -107,6 +107,10 @@ Do not make every caller rediscover these rules.
 
 ### Designated initializers and partial initialization
 
+> **Supporting C syntax:** designated initializers improve clarity for records,
+> but understanding structure members and invariants is more important than
+> memorizing this initializer form.
+
 C designated initializers make field meaning explicit and tolerate field order
 changes better than positional initialization:
 
@@ -119,8 +123,13 @@ automatic structure, whose members have indeterminate values.
 
 ### Tagged unions
 
-The earlier C course introduced unions. They are useful only when paired with a
-tag that records the active representation:
+> **Project-oriented representation:** tagged unions prepare for the token and
+> syntax-tree alternatives used in Week 7. They are not a replacement for an
+> ordinary `struct` when every member exists at the same time.
+
+A `union` overlays several members in the same storage, so only one member's
+value is active at a time. Because the storage alone does not remember which
+member is active, reliable code pairs the union with an `enum` tag:
 
 ```c
 enum ValueKind { ValueInteger, ValueReal, ValueError };
@@ -172,6 +181,12 @@ void rational_print(FILE* stream, const struct Rational* value);
 
 #endif
 ```
+
+`FILE` is a standard-library type declared by `<stdio.h>`. A `FILE*` is a
+handle through which functions read or write a stream such as standard output
+or an opened file. This interface accepts a stream so the formatting logic is
+not tied specifically to `stdout`; the pointer is borrowed and is not closed by
+`rational_print`.
 
 `rational.c`:
 
@@ -235,6 +250,10 @@ self-contained, the mistake is found close to its source.
 
 ### Encapsulation before opaque ownership
 
+> **Design preview:** opaque pointer interfaces become important when a module
+> must hide a dynamically owned representation. This week keeps the structure
+> visible so the separate-compilation model remains the main idea.
+
 A module can begin with a visible structure definition while still requiring
 clients to use its functions:
 
@@ -263,6 +282,9 @@ who creates, owns, and destroys the hidden object.
 
 ### Preprocessor discipline
 
+> **Supporting C tooling:** recognize header guards and simple macros, but
+> prefer typed functions and constants for ordinary program logic.
+
 Object-like macros perform token substitution and have no type:
 
 ```c
@@ -281,6 +303,9 @@ same intent. Use conditional compilation for genuine platform or build choices,
 not to hide multiple unrelated implementations in one file.
 
 ### A minimal Makefile
+
+> **Tooling reference:** students need to understand the compile and link
+> commands. Memorizing Makefile syntax is not a C-language objective.
 
 ```make
 CC = cc
@@ -352,8 +377,11 @@ Typical debugger commands are `break`, `run`, `next`, `step`, `print`, and
 
 ### File I/O is another contract boundary
 
-The previous notes used redirection and `FILE *`. A module can accept a stream
-instead of opening a hard-coded path:
+> **Supporting interface technique:** stream parameters make code testable, but
+> the central lesson is still to state input, output, and failure contracts.
+
+The header example earlier in this note introduced `FILE*` as a borrowed stream
+handle. A module can accept such a handle instead of opening a hard-coded path:
 
 ```c
 int students_read(FILE* input, struct Student students[], size_t capacity,

@@ -79,6 +79,10 @@ edge to an unseen vertex from an edge back to a vertex already discovered.
 
 ### 2. Adjacency-list representation
 
+> **Robustness extension:** the rollback in `AddUndirectedEdge` demonstrates a
+> strong failure guarantee. For the graph-search core, assume validated input
+> and focus on adjacency, visited state, and traversal invariants.
+
 For integer vertices `0 .. n-1`:
 
 ```cpp
@@ -115,7 +119,7 @@ Validate external vertex numbers before converting them to vector indices.
 ### 3. Depth-first search
 
 ```cpp
-void DfsVisit(const Graph& graph, int vertex, std::vector<bool>& visited) {
+void DfsVisit(const Graph& graph, int vertex, std::vector<char>& visited) {
   visited.at(vertex) = true;
   for (int neighbor : graph.at(vertex)) {
     if (!visited.at(neighbor)) {
@@ -125,11 +129,16 @@ void DfsVisit(const Graph& graph, int vertex, std::vector<bool>& visited) {
 }
 
 bool ReachableDfs(const Graph& graph, int start, int goal) {
-  std::vector<bool> visited(graph.size(), false);
+  std::vector<char> visited(graph.size(), false);
   DfsVisit(graph, start, visited);
   return visited.at(goal);
 }
 ```
+
+Each `char` stores only the states zero and one here. This avoids
+`std::vector<bool>`, a specialized container whose element access returns a
+proxy object rather than an ordinary `bool&`; that exception is unnecessary
+for learning DFS.
 
 DFS explores one branch deeply before backtracking. It is useful for reachability,
 connected components, cycle-related algorithms, and exhaustive backtracking.
@@ -538,6 +547,10 @@ objects can explain “fill the 5-liter jug” rather than printing only coordin
 pairs. Explainable paths help both demos and successor debugging.
 
 ### Water Jugs feasibility
+
+> **Supporting mathematical shortcut:** BFS state modeling and duplicate
+> control are the required search skills. The gcd condition is a useful early
+> rejection rule, not a general requirement for BFS problems.
 
 For positive jug capacities and standard fill/empty/pour actions, a target is
 reachable only if it lies in `[0, max(cap_a, cap_b)]` and is divisible by

@@ -175,6 +175,9 @@ Explain why naive Fibonacci is exponential while the other two need not be.
 
 ### Classic divide-and-recombine example: Towers of Hanoi
 
+> **Supporting recursion example:** use Hanoi to trace recursive decomposition;
+> reproducing the complete solution from memory is not a C-language objective.
+
 To move `n` disks from peg `A` to peg `C` using peg `B`:
 
 1. move the top `n - 1` disks from `A` to `B`;
@@ -197,6 +200,10 @@ The number of moves satisfies `T(n) = 2T(n - 1) + 1 = 2^n - 1`. Trace `n = 3`
 before running it and check that no larger disk is ever placed on a smaller one.
 
 ### Backtracking: choose, recurse, undo
+
+> **Supporting algorithmic pattern:** backtracking extends recursive reasoning.
+> The required skill is to identify the choice, progress measure, base case,
+> and undo step; N-Queens is the worked illustration.
 
 Some small search spaces are naturally described by a sequence of decisions.
 A backtracking function maintains a partial answer, chooses one permitted next
@@ -412,6 +419,10 @@ root = NULL;
 ```
 
 ### 7. Reconstructing from traversals
+
+> **Algorithm application:** traversal order and recursive tree ownership are
+> the core. Reconstruction is a structured application of those ideas, not
+> additional C syntax.
 
 For distinct values, preorder gives the root first and inorder tells which
 values belong to the left and right subtrees.

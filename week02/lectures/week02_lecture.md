@@ -175,6 +175,11 @@ short Python expression.
 
 ### Scope, storage duration, and `static` locals
 
+> **Supporting C feature:** local variables normally exist only during one
+> function call. Read this section to recognize the less common case in which a
+> local name refers to storage that lasts for the whole program; ordinary local
+> variables remain the default in this course.
+
 Ordinary local variables are created on entry and cease to exist on return.
 A `static` local retains its value for the program's lifetime:
 
@@ -197,6 +202,10 @@ return success plus an output parameter, or return a pointer to the element.
 The third design will be analyzed fully after the Week 4 lecture notes.
 
 ## Hour 2 — Array layout, prefix queries, and boundary algorithms
+
+> **Algorithm applications:** prefix tables and boundary search develop array
+> invariants and indexing discipline. They are problem-solving techniques, not
+> additional C syntax; trace the contracts before memorizing either loop.
 
 ### 3. Arrays are contiguous fixed-size storage
 
@@ -453,6 +462,11 @@ if (fgets(line, sizeof line, stdin) == NULL) {
 line[strcspn(line, "\n")] = '\0';
 printf("You entered %zu characters: %s\n", strlen(line), line);
 ```
+
+`NULL` is C's conventional null-pointer constant: it means that a pointer does
+not designate an object. Here, `fgets` returns `NULL` when it cannot read a
+line. Week 4 develops null pointers together with pointer validity and dynamic
+memory; for now, compare the returned pointer with `NULL` before using it.
 
 If the input is longer than the buffer, `fgets` reads only a prefix. Production
 code must detect whether the newline was read and decide whether to reject,

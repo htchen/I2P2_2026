@@ -11,7 +11,7 @@
 
 using Graph = std::vector<std::vector<int>>;
 
-void Dfs(const Graph& graph, int vertex, std::vector<bool>& visited) {
+void Dfs(const Graph& graph, int vertex, std::vector<char>& visited) {
   // TODO: validate vertex, mark it, then recursively explore unseen neighbors.
   (void)graph;
   (void)vertex;
@@ -38,7 +38,7 @@ bool WithinRadius(Point left, Point right, int radius) {
 }
 
 std::size_t GeometricDfs(const std::vector<Point>& points, int radius,
-                         std::size_t vertex, std::vector<bool>& visited) {
+                         std::size_t vertex, std::vector<char>& visited) {
   // TODO: mark vertex and recursively visit every unseen point in range.
   (void)points;
   (void)radius;
@@ -118,7 +118,7 @@ static bool Check(bool condition, const char* message) {
 
 int main() {
   const Graph graph{{1}, {0, 2}, {1}, {}};
-  std::vector<bool> visited(graph.size(), false);
+  std::vector<char> visited(graph.size(), false);
   Dfs(graph, 0, visited);
   if (!Check(visited[0] && visited[1] && visited[2] && !visited[3],
              "adjacency-list DFS")) {

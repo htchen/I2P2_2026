@@ -95,6 +95,10 @@ code is valuable when multiple types share the same meaningful operation.
 
 ### Requirements before C++20 concepts
 
+> **Supporting terminology:** in this C++17 course, state the operations a
+> template expects and learn to locate the first failed expression. C++20
+> `concepts` syntax is outside the required scope.
+
 In C++17, template requirements are implicit in expressions. For `Maximum<T>`,
 `left < right` must be valid and usable as a condition. A compiler error may be
 long because it reports the failed instantiation path. Read from the first
@@ -105,6 +109,10 @@ comparison returns an unsuitable type. Instantiate `Maximum` and classify the
 errors. Then state the requirement in a comment beside the template.
 
 ### Function objects and generic lambdas
+
+> **Supporting generic technique:** ordinary lambdas used with algorithms are
+> common. Generic `auto` parameters and the function-object model explain how
+> they work, but are secondary to writing the algorithm call correctly.
 
 An algorithm sometimes needs behavior supplied by its caller. For example,
 sorting needs a comparison operation. A **function object** is an object that
@@ -168,6 +176,10 @@ the exercise to make standard-algorithm contracts explicit.
 
 ### 3. Choose containers by required operations
 
+> **Reference survey:** learn the decision factors and know how to consult the
+> table. The required working set is `vector`, `queue`, and associative lookup;
+> memorizing every container operation is unnecessary.
+
 | Container | Strengths | Important costs |
 |-----------|-----------|-----------------|
 | `vector<T>` | contiguous, fast indexing, cache friendly | middle insertion O(n) |
@@ -203,9 +215,8 @@ can reconnect nodes without moving the other node objects, but reaching element
 `i` requires following links and each node carries allocation/link overhead.
 
 Default to `vector` unless another container's semantics or complexity solves a
-specific need. The previous course used `list` frequently; modern code should not
-choose it merely because insertions look O(1)—finding the position is still a
-cost and locality often dominates.
+specific need. Do not choose `list` merely because insertions look O(1): finding
+the position is still a cost, and locality often dominates.
 
 ### Container-selection scenarios
 
@@ -391,7 +402,7 @@ O(n) iterator increments. This is why calling `std::lower_bound` on a linked
 list does not create random access; an ordered associative container's member
 `lower_bound` can follow its tree structure in O(log n).
 
-### Comparator and projection exercise
+### Comparator and search-key exercise
 
 Sort a vector of records by `(category, identifier)`. Specify, without writing
 a complete query program, the comparator and search key required to find the

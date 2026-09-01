@@ -137,6 +137,11 @@ goal is not to memorize messages but to locate responsibility in the pipeline.
 
 ### Assembly is an observation window
 
+> **Supporting observation:** use generated assembly as evidence that C is
+> translated, but do not memorize instruction names, executable sections, or
+> machine-specific encodings. The translation stages and diagnostic categories
+> are the required ideas.
+
 Generated assembly exposes the compiler's choices, not a portable translation
 recipe. Instruction names, register names, symbol spelling, calling conventions,
 and section names depend on the target architecture, object format, compiler,

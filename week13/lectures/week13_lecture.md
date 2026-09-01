@@ -198,6 +198,11 @@ alone cannot detect.
 
 ### Non-virtual interface pattern
 
+> **Supporting design pattern:** first master an abstract interface, correct
+> overrides, virtual destruction, and explicit ownership. This private-virtual
+> customization pattern is an additional way for a base class to enforce a
+> workflow.
+
 ```cpp
 class GameObject {
  public:

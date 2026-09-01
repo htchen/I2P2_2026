@@ -280,6 +280,10 @@ This is a design convention, not a rule enforced by the compiler.
 
 ### 8. Named factories and private construction
 
+> **Supporting class-design technique:** ordinary constructors are the default
+> starting point. Use a named factory only when its name or failure policy makes
+> creation meaningfully clearer.
+
 A `static` member function belongs to the class rather than to one existing
 object, has no `this` pointer, and can access private constructors. It can
 therefore expose a named creation policy instead of a large set of ambiguous
@@ -367,8 +371,12 @@ stronger representation.
 
 For every public operation, fill a table with valid input, possible failure,
 state change, and invariant restoration point. Seed one bug that bypasses
-`Normalize`, use a property test (`denominator() > 0` and gcd equals one) to find
-it, then add the smallest regression case.
+`Normalize`, generate several inputs, and check the representation properties
+after every operation: `denominator() > 0` and the numerator and denominator
+have greatest common divisor one. This is an **invariant-based repeated test**:
+it checks a rule that must hold for many inputs rather than comparing only one
+precomputed output. Once it exposes the bug, add the smallest failing input as
+a permanent regression case.
 
 ## Final project connection — A class must enter the system safely
 

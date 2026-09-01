@@ -38,6 +38,10 @@ By the end of this lecture, you should be able to:
 
 ## Hour 1 — Compiler stages and lexical analysis
 
+> **Project application:** a compiler is not a fundamental C-language feature.
+> This week deliberately integrates strings, tagged data, pointers, recursion,
+> trees, ownership, and testing in the midterm-project domain.
+
 ### 1. A small compiler is a pipeline
 
 ```mermaid
@@ -487,6 +491,11 @@ can connect emitted instructions back to AST structure.
 
 ### Register pressure and evaluation order
 
+> **Optional compiler extension:** first generate correct instructions for the
+> teaching target. Register-demand heuristics and spilling are advanced code-
+> generation concerns unless the project specification explicitly requires
+> them.
+
 For a target with a small fixed register set, annotate every subtree with the
 number of registers required without spilling. A useful heuristic evaluates the
 more demanding subtree first. If both results cannot remain in registers, emit
@@ -497,6 +506,10 @@ value resides. Optimization must preserve that invariant and observable side
 effects; fewer cycles are irrelevant if evaluation order becomes incorrect.
 
 ### Differential testing and demo rehearsal
+
+> **Supporting testing technique:** the required skill is comparing two
+> implementations on deliberate cases. Automated generation and round-trip
+> properties are useful extensions after the ordinary unit tests pass.
 
 Execute each AST in two ways: direct evaluation and generated code in the ASMC
 simulator. Generate many small valid expressions and compare results, then keep
@@ -511,7 +524,11 @@ small live change, and add a test that fails without the change.
 
 - Lexer: whitespace, multi-digit integers, each operator, invalid characters.
 - Parser: precedence, associativity, parentheses, unary chains, missing tokens.
-- Semantics: division by zero or invalid update targets, as specified.
+- Semantics: invalid update targets and other rules that can be decided from
+  the parsed program alone, as specified. Division by a compile-time-known zero
+  may belong here if the language specification rejects it statically;
+  otherwise division by zero is an evaluator or generated-program run-time
+  error.
 - Generator: smallest tree for every node kind and nested combinations.
 - End to end: compare interpreter and generated-code results.
 
