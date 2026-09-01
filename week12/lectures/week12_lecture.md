@@ -5,6 +5,19 @@
 
 > Python bridge: [Python Contrast Companion for Week 12](week12_python_companion.md)
 
+## Student route
+
+- **Core:** trace one raw owning array through destruction, copy, assignment,
+  and move; then replace that manual ownership with a Rule-of-Zero type.
+- **Practice:** complete the [Week 12 Buffer exercise](lecture_exercises/week12_ex.md).
+  It is a fixed-size teaching type, whereas this note's `IntVec` also demonstrates
+  capacity; the ownership rules are the same. Compare with
+  [the complete example](examples.cpp) after attempting the starter.
+- **Supporting ideas:** strong exception guarantees and shared immutable graphs
+  are robustness/design extensions after basic independent-copy behavior works.
+- **Python bridge:** use the companion to contrast Python name binding with C++
+  copy and move operations.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

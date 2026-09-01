@@ -5,6 +5,19 @@
 
 > Python bridge: [Python Contrast Companion for Week 13](week13_python_companion.md)
 
+## Student route
+
+- **Core:** call an override through a base reference, preserve safe destruction
+  through a virtual destructor, own heterogeneous objects with `unique_ptr`, and
+  build a composite through the same interface.
+- **Practice:** complete the [Week 13 exercise](lecture_exercises/week13_ex.md),
+  which transfers the same design from shapes to numeric functions. Compare
+  afterward with [the complete example](examples.cpp).
+- **Optional:** `std::variant`, downcasting, and multiple-interface designs are
+  alternatives or extensions; they are not required by the core exercise.
+- **Python bridge:** use the companion to compare dynamic dispatch while keeping
+  C++ ownership and destruction explicit.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -225,9 +238,11 @@ step.
 
 ### Hour 1 studio
 
-Add `Rectangle` and `CompositeShape`. Run the same center/translate/area contract
-tests through `Shape&`. Intentionally omit `const` or change a parameter type and
-observe how `override` converts a silent overload into a compile error.
+Run the same center/translate/area contract tests against the supplied `Circle`
+and `Rectangle` through `Shape&`. Then create a deliberately incorrect override
+by omitting `const` or changing a parameter type, observe the compiler error, and
+repair it. Do not add `CompositeShape` yet: Hour 2 introduces polymorphic
+ownership before constructing a branch that owns child shapes.
 
 ## Hour 2 — Dynamic dispatch, ownership, and destruction
 

@@ -5,6 +5,20 @@
 
 > Python bridge: [Python Contrast Companion for Week 2](week02_python_companion.md)
 
+## Student route
+
+- **Core:** write typed functions, traverse an array with an explicit length,
+  build/query a boundary-indexed prefix table, trace lower/upper bounds, and keep
+  a C string inside its destination capacity.
+- **Practice:** complete the [Week 2 exercise](lecture_exercises/week02_ex.md)
+  and use its test driver before opening [the complete example](examples.c).
+  The prefix implementation remains undisclosed; the example demonstrates the
+  neighboring array, boundary-search, and bounded-string techniques.
+- **Supporting ideas:** Big-O vocabulary and overflow contracts explain design
+  choices; first make the ordinary loop or query correct on the stated inputs.
+- **Python bridge:** use the companion for sequence comparisons rather than
+  reading it as a second required lecture.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

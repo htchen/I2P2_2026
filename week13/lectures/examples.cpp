@@ -1,5 +1,7 @@
 #include <iostream>
 #include <memory>
+#include <stdexcept>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -28,6 +30,24 @@ class Variable final : public Function {
   }
 };
 
+class Sum final : public Function {
+ public:
+  Sum(std::unique_ptr<Function> left, std::unique_ptr<Function> right)
+      : left_{std::move(left)}, right_{std::move(right)} {
+    if (left_ == nullptr || right_ == nullptr) {
+      throw std::invalid_argument{"a Sum requires two operands"};
+    }
+  }
+
+  double Eval(double x) const override {
+    return left_->Eval(x) + right_->Eval(x);
+  }
+
+ private:
+  std::unique_ptr<Function> left_;
+  std::unique_ptr<Function> right_;
+};
+
 using FunctionList = std::vector<std::unique_ptr<Function>>;
 
 FunctionList MakeSampleFunctions() {
@@ -44,6 +64,9 @@ struct ConstantValue {
 struct VariableValue {};
 
 using FunctionValue = std::variant<ConstantValue, VariableValue>;
+
+// Optional closed-alternative comparison; the Function/Sum hierarchy above is
+// the core exercise path.
 
 struct EvalVisitor {
   double x;
@@ -66,6 +89,11 @@ int main() {
     std::cout << function->Eval(2.0) << '\n';
   }
 
+  const Sum expression{std::make_unique<Constant>(4.0),
+                       std::make_unique<Variable>()};
+  std::cout << expression.Eval(3.0) << '\n';
+
+  // Optional std::variant comparison.
   const std::vector<FunctionValue> values{ConstantValue{0.5}, VariableValue{}};
   for (const FunctionValue& function : values) {
     std::cout << EvalValue(function, 2.0) << '\n';

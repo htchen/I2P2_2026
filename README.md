@@ -49,6 +49,53 @@ C/C++ representation, lifetime, ownership, or compilation model assessed in
 the course. Each companion also provides a deterministic, standard-library-only
 Python example file for executable comparisons.
 
+## How to Study the Weekly Materials
+
+Each lecture note begins with a **Student route**. Use it to distinguish the
+week's required ideas from supporting details and optional enrichment.
+
+1. Read the listed **core** sections and make the requested prediction or trace.
+2. Open the weekly exercise guide and attempt the starter without consulting the
+   completed example first.
+3. Compile and run the tests or compare with the stated expected output. A
+   starter is an exercise scaffold; a file named `examples.c` or `examples.cpp`
+   is a complete executable reference to inspect after the attempt. It
+   demonstrates the week's interfaces and techniques but may deliberately omit
+   a task whose finished implementation would disclose an assigned solution.
+4. Use the Python companion when the C/C++ representation is unclear. It is an
+   on-demand bridge from prior knowledge, not a second required lecture and not
+   a source of examinable Python syntax.
+5. Return to sections labelled **robustness note** after the core mechanism
+   works. These sections explain failure handling and production concerns but
+   should not hide the central algorithm on a first reading.
+
+Unless a lecture explicitly says **complete program**, a fenced source-code
+block is a focused fragment that may depend on declarations or headers shown
+elsewhere. Use the week's `examples` file when a standalone compilable program
+is needed. Sections titled **Optional enrichment** are not part of that week's
+minimum learning path unless an instructor assigns them separately.
+
+### Course vocabulary
+
+These recurring words describe program reasoning rather than special C/C++
+syntax:
+
+| Term | Meaning in these notes |
+|------|------------------------|
+| Contract | The behavior an interface promises and requires |
+| Precondition | What must be true before an operation begins |
+| Postcondition | What a successful operation guarantees afterward |
+| Invariant | A fact that remains true at a stated program point or for every valid object |
+| Owner | The object or variable responsible for eventually releasing a resource |
+| Borrow | Temporary access that does not transfer release responsibility |
+| Publish | Make a fully initialized value or resource reachable by its intended user |
+| Sentinel | A distinguished value or position representing a boundary or absence |
+| One-past | A permitted boundary pointer/iterator that may be compared but not dereferenced |
+
+When one of these words appears in a lecture, identify the corresponding C/C++
+objects and operations rather than searching for a language keyword with the
+same name.
+
 ## Learning Outcomes
 
 By the end of the course, students should be able to:

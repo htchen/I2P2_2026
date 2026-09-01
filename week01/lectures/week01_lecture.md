@@ -6,6 +6,19 @@
 
 > Python bridge: [Python Contrast Companion for Week 1](week01_python_companion.md)
 
+## Student route
+
+- **Core:** follow one program from source to executable, classify compile/link/
+  run-time failures, then write typed expressions, formatted I/O, branches, and
+  loops in C.
+- **Practice:** complete the [Week 1 exercise](lecture_exercises/week01_ex.md)
+  before comparing with [the complete example](examples.c).
+- **First-reading limit:** in the translation section, remember the pipeline and
+  diagnostic categories. Assembly sections are evidence for that model, not a
+  requirement to memorize instructions.
+- **Python bridge:** consult the companion only when a C behavior is hard to
+  connect to prior Python knowledge.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -78,6 +91,13 @@ cc hello.o -o hello
 
 `-Wall -Wextra -Wpedantic` requests useful warnings. `-g` records information
 for a debugger. A program that compiles with a warning is not necessarily safe.
+
+> **Minimum takeaway for the first reading:** source code is checked and
+> translated before it runs; the linker combines separately translated pieces;
+> and failures at compilation, linking, and execution are different evidence.
+> You do not need to memorize file suffixes, loader details, or assembly
+> instructions yet. Use the commands above to observe the stages and return to
+> their lower-level details after writing the first C program.
 
 ### Hour 1 live build: classify the diagnostic
 

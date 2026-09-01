@@ -25,3 +25,17 @@ distinguish normal end-of-file from a non-integer input token. Arrays and
 reusable array functions begin in Week 2, so this exercise deliberately uses
 only the selection and iteration model introduced this week. Compile with all
 course warnings enabled.
+
+## Compile and verify
+
+From the repository root:
+
+```sh
+cc -std=c17 -Wall -Wextra -Wpedantic \
+  week01/lectures/lecture_exercises/week01_starter.c -o /tmp/week01_starter
+printf '2 -3 4 5\n' | /tmp/week01_starter
+```
+
+After the TODO is correct, the sample output is `6`. Also run the empty-input,
+zero, malformed-token, and near-`LLONG_MAX` cases named above. Compare with
+[`../examples.c`](../examples.c) only after writing and testing the loop.

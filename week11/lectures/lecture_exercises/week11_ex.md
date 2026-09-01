@@ -28,3 +28,18 @@ rewrite one unsafe mutation loop.
 
 Return `std::optional<std::size_t>` from a lookup rather than using a magic
 index. Require the caller to handle both branches.
+
+## Compile and verify
+
+From the repository root:
+
+```sh
+c++ -std=c++17 -Wall -Wextra -Wpedantic \
+  week11/lectures/lecture_exercises/week11_starter.cpp -o /tmp/week11_starter
+/tmp/week11_starter
+```
+
+After both TODOs are complete, the final line is
+`all Week 11 starter checks passed`. `CountEqual` requires a sorted range and at
+least forward iterators; the separate invalidation audit remains a written trace.
+Compare afterward with [`../examples.cpp`](../examples.cpp).

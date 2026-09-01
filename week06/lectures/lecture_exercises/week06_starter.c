@@ -46,3 +46,31 @@ void tree_destroy(TreeNode* root) {
   /* TODO: destroy owned children before their parent. */
   (void)root;
 }
+
+int main(void) {
+  const int inorder[] = {2, 1, 3};
+  const int postorder[] = {2, 3, 1};
+  TreeNode* root = NULL;
+  if (!tree_build_from_inorder_postorder(inorder, postorder, 3, &root)) {
+    fputs("check failed: reconstruct valid traversals\n", stderr);
+    return 1;
+  }
+  if (tree_size(root) != 3 || root == NULL || root->value != 1 ||
+      root->left == NULL || root->left->value != 2 || root->right == NULL ||
+      root->right->value != 3) {
+    fputs("check failed: reconstructed tree shape\n", stderr);
+    tree_destroy(root);
+    return 1;
+  }
+
+  printf("preorder: ");
+  tree_print_preorder(root);
+  printf("\ninorder: ");
+  tree_print_inorder(root);
+  printf("\npostorder: ");
+  tree_print_postorder(root);
+  putchar('\n');
+  tree_destroy(root);
+  puts("all Week 6 starter checks passed");
+  return 0;
+}

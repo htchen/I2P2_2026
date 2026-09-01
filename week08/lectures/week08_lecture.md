@@ -5,6 +5,18 @@
 
 > Python bridge: [Python Contrast Companion for Week 8](week08_python_companion.md)
 
+## Student route
+
+- **Core:** use streams, `std::string`, `std::vector`, references, and `const`,
+  then trace how RAII releases local resources on every exit path.
+- **Practice:** complete the [Week 8 exercise](lecture_exercises/week08_ex.md)
+  before comparing with [the complete example](examples.cpp).
+- **Supporting ideas:** exception taxonomy and explicit cast syntax support the
+  core model. Resource-transfer design is deferred to Week 12; this week uses
+  standard-library values rather than custom ownership-taking interfaces.
+- **Python bridge:** consult the companion for a familiar baseline, not as a
+  substitute for C++ lifetime reasoning.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -257,6 +269,13 @@ double Mean(const std::vector<int>& values) {
 
 The signature says the vector is required, borrowed, and not modified. The
 range loop copies each `int`, which is appropriate for a small scalar.
+`static_cast<double>(values.size())` explicitly converts the unsigned size to a
+`double` before division. Read the syntax as “convert this expression to
+`double`.” C++ provides several named cast forms because each conversion category
+has different risks; `static_cast` is the ordinary checked-at-compilation form
+for a numeric conversion such as this one. A C-style cast is shorter but hides
+which kind of conversion was intended.
+
 Accumulating in `double` avoids signed-integer overflow, although a large sum
 can round and floating-point overflow must still be considered for an
 unrestricted numeric interface.
@@ -315,7 +334,8 @@ For each operation, choose `T`, `T&`, `const T&`, or `T*` and explain why:
 1. print a vector;
 2. sort it in place;
 3. accept an optional output destination;
-4. take ownership of a string for long-term storage;
+4. store an independent string value for long-term use (take it by value this
+   week; Week 12 explains how that value can be moved into owned storage);
 5. return a filtered vector.
 
 Then rewrite one index loop as a range loop. State whether its loop variable is

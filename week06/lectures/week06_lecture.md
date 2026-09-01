@@ -6,6 +6,18 @@
 
 > Python bridge: [Python Contrast Companion for Week 6](week06_python_companion.md)
 
+## Student route
+
+- **Core:** identify a base case and decreasing measure, trace stack frames,
+  perform the three tree traversals, reconstruct from inorder/postorder, and
+  destroy owned subtrees in postorder.
+- **Practice:** complete the [Week 6 exercise](lecture_exercises/week06_ex.md)
+  before comparing with [the complete example](examples.c).
+- **Supporting ideas:** Hanoi, backtracking, ambiguity counting, and stack-limit
+  analysis reinforce the recursion model; first master the small tree trace.
+- **Python bridge:** use the companion when manual allocation obscures the
+  recursive algorithm shared by both languages.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

@@ -6,6 +6,18 @@
 
 > Python bridge: [Python Contrast Companion for Week 4](week04_python_companion.md)
 
+## Student route
+
+- **Core:** draw what a pointer designates, distinguish lifetime from scope,
+  allocate/resize/free one dynamic array, and state who owns it.
+- **Practice:** complete the [Week 4 exercise](lecture_exercises/week04_ex.md)
+  before comparing with [the complete example](examples.c).
+- **Supporting ideas:** declaration-precedence puzzles, `ptrdiff_t`, function
+  pointers, and `qsort` extend the model; they should not replace the central
+  address, bounds, lifetime, and ownership reasoning on a first reading.
+- **Python bridge:** use the companion for conceptual comparison; Python object
+  references are not C pointers.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -228,11 +240,13 @@ used in many programming exercises, an `int` index is often practical; use
 pointer positions, including the one-past pointer, and mark which four may be
 dereferenced.
 
-### Hour 1 checkpoint
+### Supporting syntax checkpoint
 
 For each expression, state whether it changes the pointer, the pointed-to value,
 both, or neither: `*p++`, `(*p)++`, `*++p`, `++*p`. Then add parentheses that
-make the parse explicit. Do not run the code until the prediction is written.
+make the parse explicit. Do this after the basic dereference and array-boundary
+trace; these compact forms test precedence but are not preferred introductory
+style. Do not run the code until the prediction is written.
 
 ## Hour 2 — Lifetime and dynamic storage
 
@@ -409,6 +423,10 @@ void values_destroy(int** owned) {
 ```
 
 ### Function pointers and `qsort`
+
+> **Supporting extension:** first secure allocation, ownership, and ordinary
+> typed function calls. This section shows why callback types and `void*` exist;
+> it is not a prerequisite for the dynamic-array exercise.
 
 The C standard library provides a generic sorting function:
 

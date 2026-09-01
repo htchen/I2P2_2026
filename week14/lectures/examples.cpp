@@ -10,20 +10,22 @@
 #include <utility>
 #include <vector>
 
-using Graph = std::vector<std::vector<std::size_t>>;
+using Graph = std::vector<std::vector<int>>;
 
-static std::size_t DfsSize(const Graph& graph, std::size_t start,
+static std::size_t DfsSize(const Graph& graph, int start,
                            std::vector<bool>& visited) {
-  if (start >= graph.size() || visited.size() != graph.size()) {
+  if (start < 0 || static_cast<std::size_t>(start) >= graph.size() ||
+      visited.size() != graph.size()) {
     throw std::invalid_argument{"DFS vertex or visited-array size is invalid"};
   }
-  visited[start] = true;
+  const std::size_t index = static_cast<std::size_t>(start);
+  visited[index] = true;
   std::size_t size = 1;
-  for (const std::size_t neighbor : graph[start]) {
-    if (neighbor >= graph.size()) {
+  for (const int neighbor : graph[index]) {
+    if (neighbor < 0 || static_cast<std::size_t>(neighbor) >= graph.size()) {
       throw std::invalid_argument{"graph contains an invalid neighbor"};
     }
-    if (!visited[neighbor]) {
+    if (!visited[static_cast<std::size_t>(neighbor)]) {
       size += DfsSize(graph, neighbor, visited);
     }
   }
@@ -40,8 +42,8 @@ static std::optional<std::size_t> ShortestDistance(
   if (grid.size() > static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
       grid.front().size() >
           static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
-      grid.size() > std::numeric_limits<std::size_t>::max() /
-                        grid.front().size()) {
+      grid.size() >
+          std::numeric_limits<std::size_t>::max() / grid.front().size()) {
     throw std::length_error{"grid dimensions are too large"};
   }
   const int rows = static_cast<int>(grid.size());
@@ -60,8 +62,7 @@ static std::optional<std::size_t> ShortestDistance(
     throw std::invalid_argument{"target must be an open grid cell"};
   }
 
-  constexpr std::size_t kUnvisited =
-      std::numeric_limits<std::size_t>::max();
+  constexpr std::size_t kUnvisited = std::numeric_limits<std::size_t>::max();
   std::vector<std::vector<std::size_t>> distance(
       rows, std::vector<std::size_t>(columns, kUnvisited));
   std::queue<std::pair<int, int>> frontier;
@@ -114,8 +115,8 @@ struct Transition {
 };
 
 static std::vector<Transition> Successors(State state, int cap_a, int cap_b) {
-  if (cap_a < 0 || cap_b < 0 || state.a < 0 || state.a > cap_a ||
-      state.b < 0 || state.b > cap_b) {
+  if (cap_a < 0 || cap_b < 0 || state.a < 0 || state.a > cap_a || state.b < 0 ||
+      state.b > cap_b) {
     throw std::invalid_argument{"invalid jug state or capacity"};
   }
 
@@ -125,12 +126,10 @@ static std::vector<Transition> Successors(State state, int cap_a, int cap_b) {
                                  {{state.a, 0}, "empty B"}};
 
   const int a_to_b = std::min(state.a, cap_b - state.b);
-  result.push_back(
-      {{state.a - a_to_b, state.b + a_to_b}, "pour A into B"});
+  result.push_back({{state.a - a_to_b, state.b + a_to_b}, "pour A into B"});
 
   const int b_to_a = std::min(state.b, cap_a - state.a);
-  result.push_back(
-      {{state.a + b_to_a, state.b - b_to_a}, "pour B into A"});
+  result.push_back({{state.a + b_to_a, state.b - b_to_a}, "pour B into A"});
   return result;
 }
 

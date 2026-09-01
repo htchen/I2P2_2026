@@ -6,6 +6,18 @@
 
 > Python bridge: [Python Contrast Companion for Week 7](week07_python_companion.md)
 
+## Student route
+
+- **Core:** trace characters to tokens to an AST, use the grammar to explain
+  precedence, evaluate the tree, and release every owned node.
+- **Practice:** the [Week 7 exercise](lecture_exercises/week07_ex.md) uses a
+  complete starter. `parse_unary` is intentionally supplied for tracing and
+  failure-injection; it is not a TODO.
+- **Complete references:** both the starter and [complete example](examples.c)
+  compile; use the example only when a lecture fragment omits supporting code.
+- **Python bridge:** use the companion when parser structure is clearer without
+  C ownership details, then return to the C lifetime contracts.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -21,7 +33,7 @@ By the end of this lecture, you should be able to:
 | Hour | Main question | In-class production |
 |------|---------------|---------------------|
 | 1 | How do characters become a trustworthy token stream? | Complete and test a position-aware lexer |
-| 2 | How does grammar become an owning syntax tree? | Trace recursive descent and implement one precedence level |
+| 2 | How does grammar become an owning syntax tree? | Trace one precedence level and audit its failure cleanup |
 | 3 | How does tree meaning become checked instructions? | Add semantic checks, generate code, and test end to end |
 
 ## Hour 1 — Compiler stages and lexical analysis
@@ -150,6 +162,21 @@ term        -> unary (('*' | '/') unary)*
 unary       -> ('+' | '-') unary | primary
 primary     -> INTEGER | '(' expression ')'
 ```
+
+Read the notation before reading parser code:
+
+- `name -> form` means “the construct on the left may have the form on the
+  right.”
+- `|` separates alternatives; it does not mean C's bitwise-or operator here.
+- Parentheses group grammar symbols.
+- A trailing `*` means “repeat the grouped form zero or more times”; it is not
+  multiplication or pointer dereferencing.
+- Uppercase `INTEGER` names a token produced by the lexer. Lowercase names such
+  as `term` name other grammar rules.
+
+For example, `8 - 3 - 2` starts with one `term`, then repeats `'-' term` twice.
+The loop in `parse_expression` combines those repetitions from left to right,
+producing `(8 - 3) - 2`.
 
 An identifier extension would add an `IDENTIFIER` token and AST node to
 `primary`, together with a lexical rule and an environment used during
@@ -321,20 +348,21 @@ static struct Ast* parse_primary(struct Parser* parser) {
 }
 ```
 
-### Hour 2 guided implementation
+### Hour 2 guided trace and controlled modification
 
-The starter supplies `parse_primary`, `parse_term`, and `parse_expression`, and
-leaves only `parse_unary` for implementation. This keeps the task focused on the
-recursive production `unary -> ('+' | '-') unary | primary` and its ownership
-contract. Trace `+5`, `-5`, `--5`, and `-(2 + 3)` before writing code. If
-creating an `AST_NEGATE` node fails, the parser still owns and must destroy the
-operand returned by the recursive call.
+The starter supplies a complete `parse_unary` implementation. Do not rewrite it
+as a hidden TODO. Trace how it implements
+`unary -> ('+' | '-') unary | primary` for `+5`, `-5`, `--5`, and
+`-(2 + 3)`. For every recursive call, record the current token and the owner of
+the returned subtree. If creating an `AST_NEGATE` node fails, the parser still
+owns and must destroy the operand returned by the recursive call.
 
-After the implementation, use malformed cases to inspect cleanup paths: `1 +`,
-`2 * )`, `(3 + 4`, and an incomplete `-`. Require the first error position and
-verify that no AST allocation leaks. The exercise guide specifies the expected
-AST shapes, values, rejection cases, and final test summary, so correctness does
-not depend on guessing an implicit output contract.
+After the trace, make one controlled modification: temporarily omit that cleanup
+or inject a construction failure, run a memory checker, explain its evidence,
+and restore the correct code. Then use malformed cases to inspect existing
+cleanup paths: `1 +`, `2 * )`, `(3 + 4`, and an incomplete `-`. The exercise
+guide specifies expected AST shapes, values, rejection cases, and the final test
+summary, so correctness does not depend on guessing an implicit output contract.
 
 ## Hour 3 — Semantics, evaluation, and code generation
 

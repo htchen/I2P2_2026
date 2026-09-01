@@ -5,6 +5,18 @@
 
 > Python bridge: [Python Contrast Companion for Week 9](week09_python_companion.md)
 
+## Student route
+
+- **Core:** establish a class invariant in its constructor, distinguish observer
+  and mutating members, and implement conventional value operators consistently.
+- **Practice:** complete the [Week 9 Rational exercise](lecture_exercises/week09_ex.md);
+  its API matches the compound-operator design in this note. Compare afterward
+  with [the complete example](examples.cpp).
+- **Supporting ideas:** named factories and multi-file organization extend the
+  same class boundary after the normalized value type works.
+- **Python bridge:** use the companion to compare class syntax while retaining
+  C++ value, reference, and `const` semantics.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -222,9 +234,11 @@ input range. Algebraic correctness alone is not machine-level correctness.
 
 ### Hour 2 implementation task
 
-Complete `operator-=`, unary minus, `operator-`, `operator==`, `operator!=`, and
-stream output. Each compound operation must preserve normalization. Add a test
-proving that a nonmember binary operator does not mutate either operand.
+In the starter, complete normalization, `operator+=`, `operator-=`, unary minus,
+and `operator==`. The supplied nonmember `operator+` and `operator-` delegate to
+the compound operators; the supplied C++17 `operator!=` delegates to `==`; and
+stream output delegates to the public accessors. Test all three delegations and
+prove that a nonmember binary operator does not mutate either operand.
 
 ## Hour 3 — Multi-file class design, creation policies, and verification
 

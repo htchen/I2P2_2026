@@ -20,3 +20,18 @@ Trace the lifetime of a local `std::vector` and `std::ifstream` through normal,
 early-return, and throwing paths. Replace one manual C acquisition/release pair
 with an appropriate standard-library value and explain why each path releases
 the resource. Defining custom constructors and destructors begins in Week 9.
+
+## Compile and verify
+
+From the repository root:
+
+```sh
+c++ -std=c++17 -Wall -Wextra -Wpedantic \
+  week08/lectures/lecture_exercises/week08_starter.cpp -o /tmp/week08_starter
+/tmp/week08_starter
+```
+
+After both functions are correct, the final line is
+`all Week 8 starter checks passed`. The invalid-input test also verifies the
+stated no-partial-modification contract. Compare afterward with
+[`../examples.cpp`](../examples.cpp).

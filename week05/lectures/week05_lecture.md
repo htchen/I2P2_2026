@@ -5,6 +5,19 @@
 
 > Python bridge: [Python Contrast Companion for Week 5](week05_python_companion.md)
 
+## Student route
+
+- **Core:** draw node ownership, use a `Node**` link-location cursor for head and
+  interior changes, reverse links without losing nodes, and destroy the list.
+- **Practice:** complete the [Week 5 exercise](lecture_exercises/week05_ex.md),
+  which deliberately uses a bare owning head pointer; compare it afterward with
+  [the complete example](examples.c).
+- **Supporting ideas:** the `struct List` representation adds a cached size;
+  circular lists and Josephus are comparative applications after the linear-list
+  invariant is secure.
+- **Python bridge:** use the companion to compare references and mutation, while
+  keeping C allocation and ownership explicit.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -66,6 +79,24 @@ Our representation invariant is:
 - following `next` reaches exactly `size` nodes and then `NULL`;
 - every reachable node is owned by this list;
 - no node is reachable twice (the list has no cycle).
+
+### Two interfaces used this week
+
+The lecture uses `struct List` because a public container abstraction can cache
+its size and protect a larger invariant. The exercise starter deliberately
+removes that wrapper and passes `Node** head` so that the link-location technique
+is visible with less surrounding code. Translate between them as follows:
+
+| Lecture representation | Exercise representation |
+|------------------------|-------------------------|
+| owning link `list->head` | owning link `*head` |
+| address of owning link `&list->head` | address already received as `head` |
+| cached `list->size` | determine boundaries by walking nodes |
+
+Do not mix the two function signatures in one implementation. The node and
+ownership reasoning is identical; only the container wrapper differs. A later
+refactor can place the exercise's head pointer in `struct List` and update the
+cached size after every successful mutation.
 
 Initialize every link before publishing the node into the list.
 

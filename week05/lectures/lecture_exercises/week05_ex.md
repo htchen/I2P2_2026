@@ -2,6 +2,10 @@
 
 [Starter code](week05_starter.c)
 
+The lecture uses `struct List { Node* head; size_t size; }`; this focused starter
+uses only `Node* head`. Consequently, its functions receive `Node** head` and do
+not update a cached size. The owning-link algorithm is the same in both forms.
+
 ## Hour 1 — Representation and ownership
 
 Draw the empty, one-node, and three-node states of the starter list. Label the
@@ -21,3 +25,17 @@ sanitizer. Implement `list_reverse_range(head, first, last)` with the following
 contract: `[first, last)` is measured in node indices; equal boundaries are a
 successful no-op; and an invalid or out-of-range boundary returns `false`
 without changing the list.
+
+## Compile and verify
+
+From the repository root:
+
+```sh
+cc -std=c17 -Wall -Wextra -Wpedantic \
+  week05/lectures/lecture_exercises/week05_starter.c -o /tmp/week05_starter
+/tmp/week05_starter
+```
+
+After every TODO is correct, the final line is
+`all Week 5 starter checks passed`. Run the same executable with AddressSanitizer
+before consulting [`../examples.c`](../examples.c).

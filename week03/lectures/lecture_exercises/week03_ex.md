@@ -18,3 +18,19 @@ each translation unit separately.
 
 Seed one violated assertion and one linker error. Record the complete diagnostic,
 form a hypothesis, make the smallest repair, and add a regression assertion.
+
+## Compile and verify
+
+Before splitting the starter into three files, compile it from the repository
+root:
+
+```sh
+cc -std=c17 -Wall -Wextra -Wpedantic \
+  week03/lectures/lecture_exercises/week03_starter.c -o /tmp/week03_starter
+/tmp/week03_starter
+```
+
+The completed constructor prints `all Week 3 starter checks passed`. Preserve
+the same tests when moving the declaration to `rational.h`, the definition to
+`rational.c`, and the driver to `main.c`. Consult [`../examples.c`](../examples.c)
+only after the first implementation attempt.

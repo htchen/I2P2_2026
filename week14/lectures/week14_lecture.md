@@ -5,6 +5,21 @@
 
 > Python bridge: [Python Contrast Companion for Week 14](week14_python_companion.md)
 
+## Student route
+
+- **Core:** trace DFS on an adjacency list, implement geometric connected
+  components, trace multi-source BFS by layers, and model a small puzzle as an
+  implicit graph.
+- **Practice:** the [Week 14 exercise](lecture_exercises/week14_ex.md) and starter
+  provide one scaffold for each hour, including geometric DFS. The
+  [complete example](examples.cpp) supplies adjacent graph-search references but
+  intentionally leaves that exercise implementation undisclosed.
+- **Robustness notes:** malformed-input checks and arithmetic bounds matter, but
+  first verify the visited-set, frontier, and component invariants on small valid
+  inputs.
+- **Python bridge:** use the companion when container syntax obscures the graph
+  algorithm shared by both languages.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

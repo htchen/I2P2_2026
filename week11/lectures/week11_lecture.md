@@ -5,6 +5,19 @@
 
 > Python bridge: [Python Contrast Companion for Week 11](week11_python_companion.md)
 
+## Student route
+
+- **Core:** instantiate one function template, use a `vector` iterator range,
+  trace invalidation, and compose `lower_bound`/`upper_bound` with an explicit
+  sorted-range precondition.
+- **Practice:** complete the [Week 11 exercise](lecture_exercises/week11_ex.md)
+  before comparing with [the complete example](examples.cpp).
+- **Reference material:** the full container survey is a selection guide. Do not
+  try to memorize every member function; learn which operation and invalidation
+  guarantee a problem requires.
+- **Python bridge:** use the companion to compare generic algorithms, while
+  remembering that C++ iterator validity is an explicit program obligation.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -437,6 +450,11 @@ std::sort(ranking.begin(), ranking.end(),
 
 The map builds counts; the vector supports ranking by a different order. This is
 often clearer than forcing one container to serve incompatible access patterns.
+`std::sort` requires random-access iterators, which `vector` provides. It cannot
+sort a `std::list` range; `std::list` instead supplies its own `list::sort`
+member because linked nodes can be reordered without random access. Always check
+an algorithm's iterator requirement instead of assuming every container works
+with every algorithm.
 Prove the comparator is strict for equal pairs.
 Then check asymmetry and transitivity, including records with equal frequencies;
 checking only `compare(x, x) == false` is necessary but not sufficient.

@@ -25,3 +25,17 @@ each successful allocation has exactly one eventual `free`. Its contract is:
 - growth zero-initializes indices `[old_size, new_size)`;
 - `new_size == 0` releases the block and publishes `NULL`; and
 - overflow or allocation failure returns `false` without changing the owner.
+
+## Compile and verify
+
+From the repository root:
+
+```sh
+cc -std=c17 -Wall -Wextra -Wpedantic \
+  week04/lectures/lecture_exercises/week04_starter.c -o /tmp/week04_starter
+/tmp/week04_starter
+```
+
+The completed program prints `all Week 4 starter checks passed`. Repeat with
+the sanitizers available on your system, then compare with
+[`../examples.c`](../examples.c).

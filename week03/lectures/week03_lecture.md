@@ -5,6 +5,17 @@
 
 > Python bridge: [Python Contrast Companion for Week 3](week03_python_companion.md)
 
+## Student route
+
+- **Core:** state a `struct` invariant, separate declarations from definitions,
+  compile multiple translation units, and diagnose one failure from evidence.
+- **Practice:** complete the [Week 3 exercise](lecture_exercises/week03_ex.md)
+  before comparing with [the complete example](examples.c).
+- **Supporting ideas:** build-system conveniences are useful, but the required
+  model is source files to object files to one linked program.
+- **Python bridge:** use the companion when fixed-layout records or separate
+  compilation have no direct Python analogue.
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:

@@ -70,12 +70,19 @@ operand subtree is released.
 
 ## Hour 3 — Evaluation and code generation
 
+### Compile and verify
+
 Compile and run the starter:
 
 ```sh
-cc -std=c17 -Wall -Wextra -Wpedantic week07_starter.c -o week07_starter
-./week07_starter
+cc -std=c17 -Wall -Wextra -Wpedantic \
+  week07/lectures/lecture_exercises/week07_starter.c -o /tmp/week07_starter
+/tmp/week07_starter
 ```
+
+The command above is written for the repository root. If your shell is already
+inside `week07/lectures/lecture_exercises`, use `week07_starter.c` as the source
+path instead.
 
 The final line must be `7/7 tests passed`. The first three successful AST lines
 must be:
