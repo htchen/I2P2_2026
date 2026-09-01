@@ -88,6 +88,7 @@ def main() -> None:
     assert value.numerator == -1
     assert value.denominator == 2
     assert value == Rational(-1, 2)
+    assert value != Rational(1, 2)
     assert str(value) == "-1/2"
     value += Rational(3, 2)
     assert value == Rational(1, 1)

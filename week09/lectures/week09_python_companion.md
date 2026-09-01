@@ -29,7 +29,7 @@ Every fenced example in the Week 9 note is accounted for below.
 | `operator+=` and `this` | Closest model | Implement `__iadd__`, mutate `self`, and return it |
 | Nonmember `operator+` | Same value result | Implement `__add__`; Python dispatches through special methods |
 | Stream insertion operator | Same formatting goal | Implement `__str__` |
-| Equality operator | Direct normalized-value comparison | Implement `__eq__` or use value fields |
+| Equality operators | Direct normalized-value comparison, different fallback | Implement `__eq__`; Python normally derives `!=` when `__ne__` is absent, unlike C++17 |
 | Qualified constructor declaration | No separate declaration form | `__init__` is defined once in the class/module |
 | Compile/object/link commands | No link-step equivalent | Optionally byte-compile, import, and execute modules |
 | `SampleWindow` named factory | Direct design goal | Use `@classmethod`; constructor privacy remains a convention |
@@ -154,6 +154,11 @@ def __eq__(self, other: object) -> bool:
     )
 ```
 
+When `__ne__` is not implemented, Python normally obtains `a != b` by negating
+the equality result. The Week 9 C++17 class cannot rely on an analogous fallback:
+it must define `operator!=` explicitly. This is a language-rule difference, not
+a difference in the underlying normalized-value comparison.
+
 ## Definitions and modules
 
 Python has no separate spelling corresponding to
@@ -204,7 +209,9 @@ def test_normalization() -> None:
 ```
 
 The test observes the same public invariant and does not depend on the sequence
-of normalization assignments.
+of normalization assignments. Like C and C++ assertions, Python assertions can
+be disabled (for example with `python3 -O`), so they are appropriate for these
+internal teaching checks but not for validating ordinary user input.
 
 ## Constructor alternatives
 

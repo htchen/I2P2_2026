@@ -26,9 +26,11 @@ Every fenced example in the Week 11 note is accounted for below.
 | Class-template `Box` | Same goal, different static model | Use `Generic[T]` dataclass/property |
 | Generic absolute-value comparator | Closest facility | Use `sorted(values, key=abs)` rather than a comparator lambda |
 | Lambda value capture of threshold | Different capture rule | Freeze a default argument or closure value explicitly |
+| Vector/list layout diagram | Same design question, different object model | Contrast Python's dynamic array list with containers that follow different storage rules |
 | `find` iterator and distance | Direct search goal | Return an index or `None` through `enumerate` |
-| Vector iterator invalidation after append | No faithful equivalent | Python iterators have different mutation behavior; avoid mutation during iteration |
+| Vector reallocation and invalidation diagram | No faithful equivalent | Python iterators do not expose relocatable element addresses; preserve only the no-mutation rule |
 | Sort/find-if/accumulate pipeline | Direct algorithm | Use `sorted`, `next`, and `sum` |
+| `std::sort` versus `list::sort` | No direct container/API match | Python's `sorted` accepts any iterable and returns a new built-in list |
 | Lower/upper/equal boundaries | Direct algorithm | Use `bisect_left` and `bisect_right` |
 | Erase-remove idiom | Same filtering goal | Rebuild a list or assign a filtered slice |
 | Frequency map insertion | Direct counting goal | Use `dict.get` or `Counter`; Python indexing does not default-insert on read |
@@ -134,6 +136,16 @@ container-defined ways, leading to skipped, repeated, or newly visited logical
 items rather than C++ undefined behavior from an invalid iterator. The shared
 rule is simple: do not structurally mutate a collection while iterating unless
 the API explicitly defines it.
+
+The C++ layout diagram should therefore not be used to predict Python object
+addresses. Python's built-in `list` is an implementation-managed dynamic array
+of object references, while `collections.deque` and third-party containers have
+different layouts. Python's `sorted(iterable)` accepts any iterable and returns
+a new built-in list; it does not require the input itself to expose random-access
+iterators. This differs from C++ `std::sort`, which rearranges an existing range
+and rejects `std::list` iterators at compile time. The closest Python analogue
+to the C++ map-to-vector ranking pipeline is `sorted(frequency.items(), ...)`,
+which likewise materializes a sortable list of records.
 
 ## Algorithm pipeline
 

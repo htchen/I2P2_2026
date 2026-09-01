@@ -196,6 +196,40 @@ Use `sizeof value` to ask how many bytes an object occupies. Except for `char`,
 the exact size of basic types can depend on the implementation. Use the types
 from `<stdint.h>` when an exact width is part of the data format.
 
+### Basic operators and precedence
+
+The underlying operations are familiar from Python, but several spellings and
+type rules differ. Start with these groups:
+
+| Purpose | C operators | Important rule |
+|---------|-------------|----------------|
+| Arithmetic | `+`, `-`, `*`, `/`, `%` | `/` uses the operand types; `%` requires integer operands |
+| Comparison | `<`, `<=`, `>`, `>=`, `==`, `!=` | the result is `0` or `1` |
+| Logic | `&&`, `||`, `!` | `&&` and `||` short-circuit from left to right |
+| Assignment | `=`, `+=`, `-=`, `*=`, `/=`, `%=` | a compound assignment reads, computes, and stores |
+| Change by one | `++`, `--` | these modify an object; initially use them as separate statements |
+
+Multiplication, division, and remainder bind more tightly than addition and
+subtraction. Comparison happens after arithmetic, `&&` after comparison, and
+`||` after `&&`. Parentheses are preferable whenever the intended grouping is
+not immediately obvious:
+
+```c
+int quotient = 7 / 3;          /* 2: both operands are int */
+int remainder = 7 % 3;         /* 1 */
+int precedence = 2 + 3 * 4;    /* 14 */
+int grouped = (2 + 3) * 4;     /* 20 */
+
+int score = 10;
+score += 5;                    /* score is now 15 */
+++score;                       /* score is now 16 */
+```
+
+Prefix and postfix `++`/`--` differ when their value is used inside a larger
+expression. That distinction is rarely worth the reduced readability in an
+introductory program: prefer a separate `++index;` or `--count;` statement and
+do not modify the same object multiple times in one expression.
+
 ### Integer division and conversion
 
 ```c
@@ -238,6 +272,13 @@ int index = -1;
 size_t count = 10;
 /* index < count may be false after conversion of index to size_t. */
 ```
+
+An integer-literal suffix participates in the expression's type. The suffix
+`U` means “choose an unsigned integer type”; for the small literals `0U` and
+`1U`, that type is `unsigned int`. Therefore both operands in `0U - 1U` are
+unsigned, and the subtraction wraps to `UINT_MAX`. Related suffixes include
+`L`, `LL`, and combinations such as `ULL`. Use a suffix when the required type
+is part of the contract, not merely to silence a conversion warning.
 
 Do not “fix” every warning with a cast. First decide which domain the program
 means. Loop indices for array sizes commonly use `size_t`; values that must

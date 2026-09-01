@@ -28,6 +28,7 @@ Every fenced example in the Week 1 note is accounted for below.
 | Static objects and `add_one` | No faithful storage-section equivalent | Use module-level names and a local result, then explain what Python hides |
 | First `printf` program | Direct | Use `print` and an f-string |
 | Scalar C declarations | Same goal, different type model | Use values and type hints; explain arbitrary-precision integers and dynamic checking |
+| Basic operators and precedence | Mostly direct, different spelling and numeric rules | Translate arithmetic and assignment; contrast division, remainder, Boolean operators, and increment |
 | Integer division and cast | Same goal, different operators | Use `//` for floor division and `/` for real division |
 | Boolean eligibility expression | Direct | Use `and` with a Boolean expression |
 | `<limits.h>` report | No fixed-width `int` equivalent | Contrast arbitrary-precision Python integers with `sys.maxsize` |
@@ -150,6 +151,30 @@ decoded, = struct.unpack("<i", encoded)
 That is a data-format operation, not a declaration that every Python integer is
 32 bits.
 
+## Basic operators and precedence
+
+Most arithmetic grouping transfers directly, but division and increment do
+not have identical spelling:
+
+```python
+quotient = 7 // 3       # 2 for these nonnegative operands
+remainder = 7 % 3       # 1
+precedence = 2 + 3 * 4  # 14
+grouped = (2 + 3) * 4   # 20
+
+score = 10
+score += 5              # 15
+score += 1              # Python has no ++ operator
+```
+
+Python spells logical conjunction, disjunction, and negation as `and`, `or`,
+and `not`. They short-circuit like C's `&&` and `||`, but Python returns one of
+its operand objects while C's logical operators produce the integer `0` or `1`.
+For negative operands, Python `//` and `%` follow floor-division rules, while C
+integer division truncates toward zero and defines the remainder consistently
+with that quotient. These examples therefore transfer directly only for the
+shown nonnegative values.
+
 ## Division and conversion
 
 Using the same spelling does not give the same result:
@@ -233,10 +258,11 @@ raise `ValueError`, and the resulting integer does not overflow at C `int`
 boundaries. A faithful test of the C program must additionally check the C
 range and format contract.
 
-The checkpoint's `a / b` distinction follows the division discussion. The
-expression `0U - 1U` has no syntax or automatic wraparound equivalent in
-ordinary Python; `(0 - 1) % (2**32)` can model a chosen 32-bit result, but the
-width is an explicit assumption.
+The checkpoint's `a / b` distinction follows the division discussion. The `U`
+suffix in `0U - 1U` makes the C literals unsigned; Python has no corresponding
+literal suffix or automatic unsigned wraparound. The expression
+`(0 - 1) % (2**32)` can model one chosen 32-bit result, but the width is an
+explicit assumption rather than a property of Python's `int`.
 
 ## Selection and iteration
 

@@ -9,6 +9,17 @@ def add_one(value: int) -> int:
     return value + 1
 
 
+def basic_operator_results() -> tuple[int, int, int, int, int]:
+    quotient = 7 // 3
+    remainder = 7 % 3
+    precedence = 2 + 3 * 4
+    grouped = (2 + 3) * 4
+    score = 10
+    score += 5
+    score += 1
+    return quotient, remainder, precedence, grouped, score
+
+
 def read_two_integers(line: str) -> tuple[int, int]:
     fields = line.split()
     if len(fields) != 2:
@@ -44,6 +55,7 @@ def classify_integer(value: int) -> str:
 def main() -> None:
     assert twice(21) == 42
     assert add_one(7) == 8
+    assert basic_operator_results() == (2, 1, 14, 20, 16)
     assert read_two_integers("10 32") == (10, 32)
     assert sum_positive_squares(["-2 0 3", "4"]) == 25
     assert classify_integer(-3) == "-3 is negative and odd"

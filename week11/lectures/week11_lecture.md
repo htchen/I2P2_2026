@@ -151,6 +151,29 @@ the exercise to make standard-algorithm contracts explicit.
 | `queue<T>` | FIFO interface | intentionally limited access |
 | `stack<T>` | LIFO interface | intentionally limited access |
 
+The layout difference explains several performance and validity rules:
+
+```mermaid
+flowchart LR
+    subgraph vector["vector: one contiguous allocation"]
+        direction LR
+        v0["element 0<br/>10"] ---|"adjacent"| v1["element 1<br/>20"]
+        v1 ---|"adjacent"| v2["element 2<br/>30"]
+    end
+    subgraph list["list: separately allocated nodes"]
+        direction LR
+        head["head"] --> n0["10 | next"]
+        n0 --> n1["20 | next"]
+        n1 --> n2["30 | next"]
+        n2 --> null_node["null"]
+    end
+```
+
+The vector gives indexing and locality because its elements are adjacent. When
+that allocation is full, growth may require a different allocation. The list
+can reconnect nodes without moving the other node objects, but reaching element
+`i` requires following links and each node carries allocation/link overhead.
+
 Default to `vector` unless another container's semantics or complexity solves a
 specific need. The previous course used `list` frequently; modern code should not
 choose it merely because insertions look O(1)—finding the position is still a
@@ -192,6 +215,33 @@ auto position = values.begin();
 values.push_back(42);
 /* position may now be invalid */
 ```
+
+When `size == capacity`, a typical `push_back` cannot place another element in
+the old allocation. It obtains a larger allocation, moves or copies the elements,
+constructs the new element, and releases the old allocation:
+
+```mermaid
+flowchart LR
+    iterator["position<br/>identifies an element in A"] --> old["allocation A<br/>[10][20][30]"]
+    old -->|"push_back with no spare capacity"| allocate["allocate B"]
+    allocate --> moved["allocation B<br/>[10][20][30][42]"]
+    moved --> release["release allocation A"]
+    release -. "position still names A" .-> invalid["position is invalid"]
+```
+
+The invalidation rule follows from which element objects still exist at the
+same locations:
+
+| Operation | Handles that remain valid |
+|-----------|---------------------------|
+| `vector::push_back` without reallocation | existing element handles remain; the old past-the-end iterator does not |
+| `vector::push_back` with reallocation | no pointer, reference, or iterator to an element remains valid |
+| `vector::insert` without reallocation | handles before the insertion point remain valid |
+| `vector::erase` | handles before the erased position remain valid |
+| `list::insert` | handles to existing nodes remain valid |
+| `list::erase` | only handles to erased nodes become invalid |
+| `map::insert` | existing iterators and references remain valid |
+| `map::erase` | only handles to erased elements become invalid |
 
 Read the operation's invalidation rules. A valid iterator is a lifetime and
 ownership claim just as a valid C pointer is. Use indices when a vector mutation
@@ -253,6 +303,34 @@ Common algorithms include:
 
 An algorithm name states intent and centralizes boundary handling. A loop is
 still correct when the operation does not fit an algorithm cleanly.
+
+### Algorithm requirements are compile-time contracts
+
+`std::sort` requires **random-access iterators** because it must jump through a
+range efficiently. It works with `vector`, `deque`, and `array`, but not with
+`list`, whose iterators move only one link at a time. A linked list provides its
+own member `sort`, which can reorder links without requiring random access:
+
+```cpp
+#include <algorithm>
+#include <list>
+#include <vector>
+
+void DemonstrateSorting() {
+  std::vector<int> contiguous{3, 1, 2};
+  std::sort(contiguous.begin(), contiguous.end());
+
+  std::list<int> linked{3, 1, 2};
+  linked.sort();
+  /* std::sort(linked.begin(), linked.end()); would not compile. */
+}
+```
+
+An ordered `map` or `set` is already maintained in key order and does not permit
+an algorithm to rearrange its keys. When a different order is required—such as
+ranking map entries by frequency—copy the records into a sequence with
+random-access iterators and sort that sequence. The frequency-to-ranking
+pipeline below does exactly this.
 
 ### 8. Boundary algorithms on partitioned ranges
 

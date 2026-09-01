@@ -46,6 +46,22 @@ weighted or unweighted.
 Trees are graphs with additional structure. General graphs may contain cycles,
 so traversal needs a visited set.
 
+Use this graph for the DFS and BFS traces below. Assume each adjacency list is
+examined alphabetically:
+
+```mermaid
+flowchart TD
+    A((A)) --- B((B))
+    A --- C((C))
+    B --- D((D))
+    B --- E((E))
+    C --- E
+    C --- F((F))
+```
+
+The extra `C-E` edge makes a cycle. A traversal must therefore distinguish an
+edge to an unseen vertex from an edge back to a vertex already discovered.
+
 ### 2. Adjacency-list representation
 
 For integer vertices `0 .. n-1`:
@@ -103,6 +119,34 @@ bool ReachableDfs(const Graph& graph, int start, int goal) {
 DFS explores one branch deeply before backtracking. It is useful for reachability,
 connected components, cycle-related algorithms, and exhaustive backtracking.
 Its recursion depth can be O(V); an explicit `std::stack` avoids call-stack limits.
+
+On the example graph, alphabetical neighbor order discovers
+`A, B, D, E, C, F`. The call stack explains why DFS reaches `D` before it ever
+examines `A`'s second neighbor `C`:
+
+```mermaid
+sequenceDiagram
+    participant A
+    participant B
+    participant D
+    participant E
+    participant C
+    participant F
+    A->>B: discover B
+    B->>D: discover D
+    D-->>B: no unseen neighbor; return
+    B->>E: discover E
+    E->>C: discover C
+    C->>F: discover F
+    F-->>C: return
+    C-->>E: return
+    E-->>B: return
+    B-->>A: return
+```
+
+When the traversal sees an edge to an already visited vertex, such as `C-A` or
+`C-E`, it does not recurse again. The recursive calls shown above are exactly
+the active DFS stack; returns remove frames in reverse order.
 
 ### 4. Geometric proximity defines an implicit graph
 
@@ -240,6 +284,44 @@ paths. The selected path depends on adjacency order, but its length does not.
 
 Mark a vertex visited when it is enqueued, not when it is removed; otherwise
 many frontier entries may duplicate the same vertex.
+
+For the same graph and neighbor order, BFS discovers `A, B, C, D, E, F` by
+layers. Solid arrows are first-discovery parent edges; the dotted `C-E` edge
+finds `E` already discovered and therefore does not enqueue it again:
+
+```mermaid
+flowchart TB
+    subgraph layer0["distance 0"]
+        A0["A (1)"]
+    end
+    subgraph layer1["distance 1"]
+        B1["B (2)"]
+        C1["C (3)"]
+    end
+    subgraph layer2["distance 2"]
+        D2["D (4)"]
+        E2["E (5)"]
+        F2["F (6)"]
+    end
+    A0 --> B1
+    A0 --> C1
+    B1 --> D2
+    B1 --> E2
+    C1 -. "already discovered" .-> E2
+    C1 --> F2
+```
+
+| After processing | Queue from front to back |
+|------------------|--------------------------|
+| initial seed | `A` |
+| `A` | `B, C` |
+| `B` | `C, D, E` |
+| `C` | `D, E, F` |
+| `D`, then `E`, then `F` | eventually empty |
+
+The queue retains all earlier-layer work ahead of later-layer work. That FIFO
+ordering is the operational reason BFS cannot reach distance two before it has
+processed every queued vertex at distance one.
 
 ### Multi-source BFS: simultaneous starts
 

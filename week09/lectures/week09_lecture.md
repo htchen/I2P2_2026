@@ -200,7 +200,17 @@ bool operator==(const Rational& left, const Rational& right) {
   return left.numerator() == right.numerator() &&
          left.denominator() == right.denominator();
 }
+
+bool operator!=(const Rational& left, const Rational& right) {
+  return !(left == right);
+}
 ```
+
+This course compiles as C++17. In C++17, defining `operator==` does **not**
+automatically provide `operator!=`, so a complete equality interface must define
+both. Implement `!=` in terms of `==` so the two operations cannot disagree.
+C++20 added comparison rewriting that can use `==` for an expression written
+with `!=`; do not rely on that newer rule in this course.
 
 Ordering via cross multiplication may overflow `int`. A correct interface must
 either use a checked/wider intermediate representation or document a restricted
@@ -208,9 +218,9 @@ input range. Algebraic correctness alone is not machine-level correctness.
 
 ### Hour 2 implementation task
 
-Complete `operator-=`, unary minus, `operator-`, `operator==`, and stream output.
-Each compound operation must preserve normalization. Add a test proving that a
-nonmember binary operator does not mutate either operand.
+Complete `operator-=`, unary minus, `operator-`, `operator==`, `operator!=`, and
+stream output. Each compound operation must preserve normalization. Add a test
+proving that a nonmember binary operator does not mutate either operand.
 
 ## Hour 3 — Multi-file class design, creation policies, and verification
 
@@ -319,6 +329,15 @@ void TestNormalization() {
   assert(value.denominator() == 2);
 }
 ```
+
+`assert(condition)` documents a condition that must be true if the program and
+its internal reasoning are correct. If the condition is false, the program
+prints diagnostic information and terminates. It is useful for executable
+examples, tests, and internal invariants such as normalization; it is not a
+replacement for validating user input or reporting an expected failure.
+Including `<cassert>` declares the macro. A build that defines `NDEBUG` removes
+ordinary `assert` checks, so never put an essential side effect inside the
+condition and never make program correctness depend on an assertion running.
 
 Also test zero denominator, zero numerator, arithmetic sign combinations,
 chained compound assignment, and values near integer limits. The simple `int`

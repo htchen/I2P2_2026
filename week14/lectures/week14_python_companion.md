@@ -22,11 +22,13 @@ Every fenced example in the Week 14 note is accounted for below.
 
 | Source example | Relationship | Companion treatment |
 |---|---|---|
+| Shared cyclic graph diagram | Direct algorithmic model | Use the same vertices, edges, and alphabetical neighbor order |
 | `Graph` and `AddUndirectedEdge` | Direct idea, different container | Use a list of neighbor lists and validate indices explicitly |
-| Recursive `DfsVisit` and `ReachableDfs` | Direct algorithm | Preserve discovery-before-recursion and discuss Python's recursion limit |
+| Recursive DFS and call-stack diagram | Direct algorithm | Preserve discovery-before-recursion and the same return order; discuss Python's recursion limit |
 | Squared-distance predicate | Same behavior, different numeric guarantee | Use the same comparison; Python integers avoid fixed-width overflow |
 | Component-sweep invariant | Direct algorithm | Return component sizes while maintaining one visited set |
 | `ShortestPath` with `optional` and `queue` | Direct algorithm, different result type | Return `None` or a path and use `deque` as a FIFO queue |
+| BFS layer and queue diagrams | Direct algorithm | The same FIFO layers and discovery order apply to `deque` |
 | Multi-source distance invariant | Direct algorithm | Seed every source at distance zero before ordinary BFS |
 | Structured binding for a coordinate | Closest syntax | Unpack the tuple returned by `popleft()` |
 | Ordered Water Jugs `State` | Closest model | Use a frozen, ordered dataclass as a dictionary key |
@@ -90,6 +92,11 @@ an iterative one automatically. In fact, Python's default recursion limit is
 usually much smaller than the largest graph used in programming problems. Use
 an explicit list as a stack when a chain can contain many vertices; raising the
 recursion limit does not remove the underlying call-stack risk.
+
+The lecture's DFS call diagram transfers exactly: with the same graph and
+alphabetical adjacency order, Python also discovers `A, B, D, E, C, F` and
+returns from recursive calls in reverse stack order. The language changes the
+practical recursion limit, not the traversal invariant.
 
 ## Squared distance and numeric behavior
 
@@ -192,6 +199,12 @@ def shortest_path(
 that contract for readers and type checkers. It does not enforce the contract
 at runtime. Parent assignment still marks discovery before enqueueing, and the
 first parent still belongs to a shortest unweighted path.
+
+The lecture's BFS layer diagram also transfers directly. `deque.popleft()`
+preserves FIFO order, so the same example is discovered as `A, B, C, D, E, F`.
+The `C-E` edge does not append a duplicate because `E` received its parent when
+`B` first discovered it. Python list and C++ vector storage differ, but the
+queue/layer proof is language-independent.
 
 ## Multi-source BFS
 

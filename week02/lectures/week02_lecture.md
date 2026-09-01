@@ -34,6 +34,15 @@ By the end of this lecture, you should be able to:
 Python checks a function call while the program runs. A C compiler checks a
 prototype before generating the call.
 
+The first new qualifier is `const`, which creates a read-only view through a
+particular name or parameter. Read `const int values[]` as “an array of `int`
+elements that this function promises not to modify through `values`.” The
+compiler will reject an assignment such as `values[0] = 7` inside the function.
+It does not make the caller's array permanently immutable: the caller or another
+non-`const` access path may still modify it. Week 4 develops the corresponding
+pointer types; for now, use `const` on an input array whenever the function only
+observes its elements.
+
 ```c
 double mean(const int values[], size_t count);
 ```

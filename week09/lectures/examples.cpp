@@ -46,11 +46,24 @@ class Rational {
     return out << value.numerator_ << '/' << value.denominator_;
   }
 
+  friend bool operator==(const Rational& left, const Rational& right) {
+    return left.numerator_ == right.numerator_ &&
+           left.denominator_ == right.denominator_;
+  }
+
+  friend bool operator!=(const Rational& left, const Rational& right) {
+    return !(left == right);
+  }
+
  private:
   int numerator_;
   int denominator_;
 };
 
 int main() {
-  std::cout << Rational{1, 6} + Rational{1, 3} << '\n';
+  const Rational result = Rational{1, 6} + Rational{1, 3};
+  if (result != Rational{1, 2}) {
+    return 1;
+  }
+  std::cout << result << '\n';
 }
