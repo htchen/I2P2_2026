@@ -381,7 +381,7 @@ The following components determine the final course grade:
 
 | Component | Weight | Notes |
 |-----------|-------:|-------|
-| Midterm Exams | 20% + 20% | Two in-person midterm examinations |
+| Midterm Exams | 20% + 20% | Midterm Exam 1: Oct. 22; Midterm Exam 2: Dec. 3—both held in person |
 | Quizzes | 5% + 5% | Quiz 1: Oct. 8; Quiz 2: Nov. 19—each two weeks before its midterm |
 | Midterm Project | 20% | C expression-compiler project and demo |
 | Written Assessment | 5% | One written assessment, administered with Midterm Exam 1 only |
