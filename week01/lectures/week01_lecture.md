@@ -63,7 +63,7 @@ attempt.
 - **Extension:** remains beside the example for additional practice, but may be
   completed during a break, in the lab, or after class if time is short.
 
-The core-live exercises total about 17 minutes in Hour 1, 18 minutes in Hour 2,
+The core-live exercises total about 15 minutes in Hour 1, 18 minutes in Hour 2,
 and 16 minutes in Hour 3. This leaves time for transitions, questions, and a
 short break without removing the immediate practice opportunities.
 
@@ -389,17 +389,15 @@ int twice(int value) {
 }
 ```
 
-#### Try it now [Core live] — locate the failure stage (12 minutes)
+#### Try it now [Core live] — locate the failure stage (10 minutes)
 
 1. Remove the semicolon after `return value * 2`. Which stage rejects the
    program first?
 2. Keep the prototype but remove the definition. Which stage now fails?
-3. Change the format to `%s`. What does the warning say, and why should you not
-   run the resulting program?
-4. Run `cc -E` and locate the original source among preprocessed declarations.
-5. Run `cc -S`, find the code for `twice`, and then compare it with an `-O2`
+3. Run `cc -E` and locate the original source among preprocessed declarations.
+4. Run `cc -S`, find the code for `twice`, and then compare it with an `-O2`
    build without expecting a line-for-line correspondence.
-6. Run `cc -c`, inspect the object filename, and link it in a separate command.
+5. Run `cc -c`, inspect the object filename, and link it in a separate command.
 
 <details>
 <summary>Reveal solution</summary>
@@ -408,15 +406,11 @@ int twice(int value) {
    compilation fails before an object file is produced.
 2. The call agrees with the visible declaration, so compilation can succeed.
    Linking fails because no linked object supplies the definition of `twice`.
-3. `%s` requires a pointer to a null-terminated character sequence, but
-   `twice(21)` supplies an `int`. A warning-enabled compiler diagnoses the
-   mismatch. Running it would give `printf` an invalid argument type and invoke
-   undefined behavior.
-4. `hello.i` contains the included declarations plus recognizable lines from
+3. `hello.i` contains the included declarations plus recognizable lines from
    the original file.
-5. An unoptimized build normally contains code corresponding to `twice`; an
+4. An unoptimized build normally contains code corresponding to `twice`; an
    optimized build may simplify or inline the call while preserving the result.
-6. `cc -c hello.c -o hello.o` produces `hello.o`, and
+5. `cc -c hello.c -o hello.o` produces `hello.o`, and
    `cc hello.o -o hello` produces the executable.
 
 </details>
@@ -953,6 +947,26 @@ When a `bool` is passed to `printf`, it is promoted to `int`, so `%d` prints
 zero or one. Do not pass a `bool*` to `scanf` with `%d`: `%d` requires an
 `int*`. Read into an `int`, validate the accepted values, and then assign the
 result to a `bool`.
+
+#### Try it now [Extension] — interpret a format warning (2 minutes)
+
+Return to the Hour 1 `twice` program. Change only the output conversion from
+`%d` to `%f`, then compile with the course warning flags. What type does `%f`
+require, what type does `twice(21)` produce, and why should you restore the
+correct conversion before running the program?
+
+<details>
+<summary>Reveal solution</summary>
+
+For `printf`, `%f` requires a corresponding `double`, while `twice` is declared
+to return `int`. A warning-enabled compiler can therefore diagnose the mismatch.
+`printf` relies on the format string to decide how to interpret every following
+argument. Supplying the wrong type gives the call **undefined behavior**, which
+means C specifies no required result; Section 7 develops that concept. An
+apparently plausible output would not make the call correct. Restore `%d`
+because the program intends to print the integer result of `twice(21)`.
+
+</details>
 
 #### Try it now [Extension] — build a format checklist (2 minutes)
 
