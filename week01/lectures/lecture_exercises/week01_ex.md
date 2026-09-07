@@ -37,5 +37,8 @@ printf '2 -3 4 5\n' | /tmp/week01_starter
 ```
 
 After the TODO is correct, the sample output is `6`. Also run the empty-input,
-zero, malformed-token, and near-`LLONG_MAX` cases named above. Compare with
-[`../examples.c`](../examples.c) only after writing and testing the loop.
+zero, and malformed-token cases named above. Because the input elements are
+`int` and the accumulator begins at zero, reaching `LLONG_MAX` would require an
+impractically large input on ordinary systems. Review the overflow condition
+algebraically instead of attempting to generate billions of values. Compare
+with [`../examples.c`](../examples.c) only after writing and testing the loop.

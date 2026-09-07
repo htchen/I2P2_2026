@@ -18,14 +18,16 @@ exam expectations.
 
 ## Coverage map
 
-Every fenced example in the Week 1 note is accounted for below.
+The core teaching examples in the Week 1 note are accounted for below. The
+collapsible practice solutions deliberately reuse those same concepts and are
+not listed as separate translations in this map.
 
 | Source example | Relationship | Companion treatment |
 |---|---|---|
 | `cc ... hello.c` and `./hello` | Same goal, different mechanism | Run a source file with `python3`; there is normally no student-visible link step |
 | `cc -E`, `-S`, `-c`, and link commands | No faithful equivalent | Contrast bytecode compilation and `dis` with the C translation pipeline |
 | Declaration/definition of `twice` | Direct algorithm, different program model | Define `twice` before it is called; Python has no C-style declaration or link error |
-| Static objects and `add_one` | No faithful storage-section equivalent | Use module-level names and a local result, then explain what Python hides |
+| Static objects, `counts_total`, and `add_one` | No faithful storage-section equivalent | Use module-level names and local results, then explain what Python hides |
 | First `printf` program | Direct | Use `print` and an f-string |
 | Scalar C declarations | Same goal, different type model | Use values and type hints; explain arbitrary-precision integers and dynamic checking |
 | Basic operators and precedence | Mostly direct, different spelling and numeric rules | Translate arithmetic and assignment; contrast division, remainder, Boolean operators, and increment |
@@ -86,16 +88,21 @@ if __name__ == "__main__":
 Python does not need a separate declaration before `main` is compiled. The name
 `twice` must instead be bound when execution reaches the call. Removing the
 definition therefore produces a run-time `NameError` if that path executes,
-not a C link-time “undefined reference.” Passing a string may also survive until
-the multiplication is executed because Python checks operations dynamically.
+not a C link-time “undefined reference.” Passing a string may also survive
+until the multiplication is executed because Python checks operations
+dynamically.
 
 ## Module names are not C storage sections
 
 The closest surface rewrite of the static/local example is:
 
 ```python
-zero_count = 0
-initial_count = 7
+ZERO_COUNT = 0
+INITIAL_COUNT = 7
+
+
+def counts_total() -> int:
+    return ZERO_COUNT + INITIAL_COUNT
 
 
 def add_one(value: int) -> int:
@@ -280,9 +287,9 @@ The command selection can be expressed without C's fallthrough behavior:
 
 ```python
 if command == "q":
-    running = False
+    print("quit")
 elif command == "h":
-    print_help()
+    print("help")
 else:
     print("unknown command")
 ```
@@ -319,8 +326,9 @@ incorrect C pattern `while (!feof(stdin))`.
 
 ## Streaming the positive-square calculation
 
-The comprehension in the C note is already the concise Python reference. A
-closer representation match to the requested streaming C solution is:
+The comprehension in the C note reads one line. The C exercise intentionally
+changes that organization to a whitespace-separated stream ending at EOF. A
+closer Python representation match to that revised stream contract is:
 
 ```python
 def sum_positive_squares(lines: list[str], maximum: int = 100) -> int:
@@ -331,6 +339,8 @@ def sum_positive_squares(lines: list[str], maximum: int = 100) -> int:
             if count == maximum:
                 raise ValueError("too many integers")
             value = int(token)
+            if value < -30000 or value > 30000:
+                raise ValueError("integer outside the supported range")
             if value > 0:
                 answer += value * value
             count += 1
@@ -339,8 +349,9 @@ def sum_positive_squares(lines: list[str], maximum: int = 100) -> int:
 
 This avoids retaining the converted integers but still lets `split` create a
 small list of strings for each input line. Python integers do not reproduce C
-overflow, so the C version still needs a stated numeric range and checked
-arithmetic.
+overflow. Under its stated precondition that numeric tokens fit in `int`, the C
+version combines the narrower exercise range with a `long long` accumulator
+whose guaranteed range is sufficient for the maximum possible sum.
 
 ## Integer classification
 

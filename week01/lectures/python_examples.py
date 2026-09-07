@@ -1,6 +1,14 @@
 """Runnable Python contrasts for the Week 1 C examples."""
 
 
+ZERO_COUNT = 0
+INITIAL_COUNT = 7
+
+
+def counts_total() -> int:
+    return ZERO_COUNT + INITIAL_COUNT
+
+
 def twice(value: int) -> int:
     return value * 2
 
@@ -35,6 +43,8 @@ def sum_positive_squares(lines: list[str], maximum: int = 100) -> int:
             if count == maximum:
                 raise ValueError("too many integers")
             value = int(token)
+            if value < -30000 or value > 30000:
+                raise ValueError("integer outside the supported range")
             if value > 0:
                 answer += value * value
             count += 1
@@ -53,11 +63,18 @@ def classify_integer(value: int) -> str:
 
 
 def main() -> None:
+    assert counts_total() == 7
     assert twice(21) == 42
     assert add_one(7) == 8
     assert basic_operator_results() == (2, 1, 14, 20, 16)
     assert read_two_integers("10 32") == (10, 32)
     assert sum_positive_squares(["-2 0 3", "4"]) == 25
+    try:
+        sum_positive_squares(["30001"])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("out-of-range input was accepted")
     assert classify_integer(-3) == "-3 is negative and odd"
     assert classify_integer(0) == "0 is zero and even"
     print("Week 1 Python contrasts passed.")

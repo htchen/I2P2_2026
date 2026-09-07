@@ -38,9 +38,10 @@ By the end of this lecture, you should be able to:
 | 2 | How are Python-familiar values represented and formatted? | Type/conversion worksheet and robust input fragment |
 | 3 | How do we translate control flow without inheriting C-specific bugs? | Complete and test a judge-style classification program |
 
-Each hour interleaves about 35–40 minutes of explanation/live coding with about
-20–25 minutes of prediction, editing, testing, and discussion. Short breaks can
-be placed between the hours without changing the sequence.
+Each hour interleaves about 35–45 minutes of explanation and live coding with
+15–18 minutes of core practice. The remaining time is a buffer for discussion,
+transitions, and a short break; optional extensions can use that buffer when
+the class is ready.
 
 ### Inline practice routine
 
@@ -57,6 +58,14 @@ The exercises are deliberately small. Their purpose is immediate retrieval and
 feedback, not copying a complete solution from the note. Only the question is
 visible initially; expand **Reveal solution** after making and testing your own
 attempt.
+
+- **Core live:** part of the planned in-class path.
+- **Extension:** remains beside the example for additional practice, but may be
+  completed during a break, in the lab, or after class if time is short.
+
+The core-live exercises total about 17 minutes in Hour 1, 18 minutes in Hour 2,
+and 15 minutes in Hour 3. This leaves time for transitions, questions, and a
+short break without removing the immediate practice opportunities.
 
 ## Hour 1 — Program translation and the C execution model
 
@@ -105,10 +114,26 @@ cc -std=c17 -c hello.c -o hello.o
 cc hello.o -o hello
 ```
 
-> **Try it now — name the artifact (2 minutes):** without running the commands,
-> write the expected output filename after each line. Then run them later with
-> the complete `hello.c` program below and correct your predictions. Which
-> command produces something that can be executed directly?
+The command-line pieces used this week mean:
+
+| Command or option | Purpose |
+|-------------------|---------|
+| `cc` | run the system's C compiler driver |
+| `-std=c17` | select the C17 language version |
+| `-Wall -Wextra -Wpedantic` | request useful warning groups |
+| `-g` | retain information used by a debugger |
+| `-o filename` | name the output file |
+| `-E` | stop after preprocessing |
+| `-S` | stop after producing assembly text |
+| `-c` | stop after producing an object file |
+| `-O0` | minimize optimization so source structure is easier to observe |
+| `-O2` | enable a substantial, commonly used optimization level |
+| `./hello` | run the file named `hello` from the current directory |
+
+> **Try it now [Core live] — name the artifact (2 minutes):** without running
+> the commands, write the expected output filename after each line. Then run
+> them later with the complete `hello.c` program below and correct your
+> predictions. Which command produces something that can be executed directly?
 
 <details>
 <summary>Reveal solution</summary>
@@ -125,8 +150,9 @@ executable named by `-o`.
 
 </details>
 
-`-Wall -Wextra -Wpedantic` requests useful warnings. `-g` records information
-for a debugger. A program that compiles with a warning is not necessarily safe.
+A program that compiles with a warning is not necessarily safe. Read the first
+diagnostic, locate the referenced source, and decide whether the code or the
+stated contract is wrong.
 
 > **Minimum takeaway for the first reading:** source code is checked and
 > translated before it runs; the linker combines separately translated pieces;
@@ -160,7 +186,7 @@ int twice(int value) {
 }
 ```
 
-#### Try it now — locate the failure stage (12 minutes)
+#### Try it now [Core live] — locate the failure stage (12 minutes)
 
 1. Remove the semicolon after `return value * 2`. Which stage rejects the
    program first?
@@ -229,28 +255,37 @@ Compile this file with both `-O0 -S` and `-O2 -S`:
 static int zero_count;
 static int initial_count = 7;
 
+int counts_total(void) {
+  return zero_count + initial_count;
+}
+
 int add_one(int value) {
   int result = value + 1;
   return result;
 }
 ```
 
-#### Try it now — observe without memorizing (4 minutes)
+#### Try it now [Extension] — observe without memorizing (4 minutes)
 
-Locate evidence for the two static objects and for the calculation in both
-assembly files. Which observations remain true even when instruction sequences,
-registers, and labels differ?
+At `-O0`, locate evidence for the two static objects and both calculations. At
+`-O2`, determine which names or storage locations remain and which may have
+been replaced by constants or simpler instructions. Which semantic observations
+remain true even when instruction sequences, registers, and labels differ?
 
 <details>
 <summary>Reveal solution</summary>
 
-`zero_count` has static storage duration and an initial value of zero, so it is
-commonly represented in a zero-initialized region such as `.bss`.
-`initial_count` is writable and begins as seven, so it is commonly represented
-in `.data`. The function's portable meaning is that it returns a value one
-greater than its argument. At `-O2`, the named local `result` may have no memory
-location, and a caller may contain the calculation after `add_one` is inlined.
-Those optimization choices do not change the required result.
+Because both objects are read by `counts_total`, a typical `-O0` assembly file
+retains `zero_count` in a zero-initialized region such as `.bss` and
+`initial_count` in `.data`. At `-O2`, the compiler can prove that their sum is
+always seven in this translation unit; it may make `counts_total` return that
+constant and omit both private objects. Similarly, the named local `result` may
+have no memory location in optimized `add_one`.
+
+The portable observations are that `counts_total()` returns seven and, whenever
+the mathematical result is representable as an `int`, `add_one(value)` returns
+one more than `value`. Exact sections, symbols, registers, and instruction
+sequences are implementation evidence rather than C language guarantees.
 
 </details>
 
@@ -266,7 +301,7 @@ int main(void) {
 }
 ```
 
-#### Try it now — edit, compile, run (3 minutes)
+#### Try it now [Core live] — edit, compile, run (3 minutes)
 
 Change `courses_completed` to match your own experience and change the printed
 label without changing `%d`. Compile and run the program. Then remove one
@@ -298,22 +333,18 @@ fail; restoring it makes the translation unit syntactically valid again.
 
 ### 4. Types and expressions
 
-Common types for the first week are:
+The core scalar types for the first week are:
 
 ```c
 #include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 
 char grade = 'A';
 int count = 42;
 double average = 87.5;
 bool passed = true;
-size_t length = 10;
-int32_t exact_width = 1000;
 ```
 
-#### Try it now — choose a representation (2 minutes)
+#### Try it now [Core live] — choose a representation (2 minutes)
 
 Use the earlier first program as a scaffold. Add variables for a whole-number
 student count, a fractional temperature, and a letter grade. Choose the type
@@ -346,8 +377,21 @@ number, a fractional numeric value, and one character.
 </details>
 
 Use `sizeof value` to ask how many bytes an object occupies. Except for `char`,
-the exact size of basic types can depend on the implementation. Use the types
-from `<stdint.h>` when an exact width is part of the data format.
+the exact size of basic types can depend on the implementation.
+
+> **Supporting type names:** `size_t` is the unsigned type used for object sizes
+> and becomes important for arrays in Week 2. Exact-width types such as
+> `int32_t` belong in code whose external data contract requires exactly that
+> width; they are reference material rather than default replacements for
+> `int`.
+
+```c
+#include <stddef.h>
+#include <stdint.h>
+
+size_t length = 10;
+int32_t exact_width = 1000;
+```
 
 ### Basic operators and precedence
 
@@ -378,7 +422,7 @@ score += 5;                    /* score is now 15 */
 ++score;                       /* score is now 16 */
 ```
 
-#### Try it now — predict before printing (3 minutes)
+#### Try it now [Core live] — predict before printing (3 minutes)
 
 Put this fragment in `main`, then change the two divisions to `11 / 4` and
 `11 % 4`; change the precedence pair to `5 + 2 * 6` and `(5 + 2) * 6`; and
@@ -407,7 +451,7 @@ double wrong = 5 / 2;         /* 2.0: division happened as int */
 double right = (double)5 / 2; /* 2.5 */
 ```
 
-#### Try it now — move the conversion (2 minutes)
+#### Try it now [Core live] — move the conversion (2 minutes)
 
 Print both values with one digit after the decimal point. Then try the pairs
 `-5` and `2`, and `5` and `-2`, predicting each result before running. Finally,
@@ -439,7 +483,7 @@ bool has_id = true;
 bool eligible = age >= 18 && has_id;
 ```
 
-#### Try it now — test the boundary (2 minutes)
+#### Try it now [Core live] — test the boundary (2 minutes)
 
 Add an `if`/`else` that prints `eligible` or `not eligible`. Run the four
 combinations formed by ages 17 and 18 and ID values `false` and `true`. Identify
@@ -464,7 +508,13 @@ age 18 without an ID, the right operand is false.
 
 Do not confuse assignment (`=`) with comparison (`==`).
 
-### Integer ranges and signed/unsigned interactions
+### Supporting reference — integer ranges and signed/unsigned interactions
+
+For the first reading, remember that C integer types have finite ranges and
+that the types of both operands affect a calculation. The exact limit macros
+and mixed signed/unsigned conversion rules below are useful diagnostic
+references, but the extension exercises need not be completed during the core
+lecture path.
 
 Connect `sizeof` to the limits headers rather than assuming a fixed machine:
 
@@ -476,7 +526,7 @@ printf("int: %zu bytes, range %d through %d\n", sizeof(int), INT_MIN, INT_MAX);
 printf("unsigned int maximum: %u\n", UINT_MAX);
 ```
 
-#### Try it now — ask the implementation (2 minutes)
+#### Try it now [Extension] — ask the implementation (2 minutes)
 
 Place the calls inside `main`, then extend the program to print `long` size and
 range using `LONG_MIN` and `LONG_MAX`. Use `%zu` for the result of `sizeof` and
@@ -507,7 +557,7 @@ int index = -1;
 size_t count = 10;
 ```
 
-#### Try it now — expose the mixed-domain bug (3 minutes)
+#### Try it now [Extension] — expose the mixed-domain bug (3 minutes)
 
 Turn the commented comparison into a printed result and compile with the course
 warning flags. Predict the result first. Repair the comparison by choosing
@@ -540,6 +590,8 @@ unsigned size.
 
 </details>
 
+#### Supporting reference — integer literal suffixes
+
 An integer-literal suffix participates in the expression's type. The suffix
 `U` means “choose an unsigned integer type”; for the small literals `0U` and
 `1U`, that type is `unsigned int`. Therefore both operands in `0U - 1U` are
@@ -547,9 +599,9 @@ unsigned, and the subtraction wraps to `UINT_MAX`. Related suffixes include
 `L`, `LL`, and combinations such as `ULL`. Use a suffix when the required type
 is part of the contract, not merely to silence a conversion warning.
 
-Do not “fix” every warning with a cast. First decide which domain the program
-means. Loop indices for array sizes commonly use `size_t`; values that must
-represent `-1` need a signed type or a different absence representation.
+Do not “fix” every warning with a cast. First decide which domain the
+program means. Loop indices for array sizes commonly use `size_t`; values that
+must represent `-1` need a signed type or a different absence representation.
 
 ### 5. Formatted I/O
 
@@ -561,7 +613,7 @@ double ratio = 0.875;
 printf("score=%d ratio=%.2f\n", score, ratio);
 ```
 
-#### Try it now — control the presentation (1 minute)
+#### Try it now [Core live] — control the presentation (1 minute)
 
 Change the precision from two digits after the decimal point to four, then add
 a descriptive label before each value. Confirm that formatting changes the
@@ -591,7 +643,7 @@ if (scanf("%d %d", &a, &b) != 2) {
 printf("%d\n", a + b);
 ```
 
-#### Try it now — test the input contract (3 minutes)
+#### Try it now [Core live] — test the input contract (3 minutes)
 
 Place the fragment inside `main` in a program that includes `<stdio.h>`. Run it
 with `10 20`, then with `10 x`, and finally with only one integer followed by
@@ -621,8 +673,8 @@ would produce `EOF`, not a successful conversion count.
 </details>
 
 `scanf` needs the **addresses** of `a` and `b` so it can modify them. We will
-explain addresses in the Week 4 lecture notes. Until then, treat the format string and each
-corresponding argument as a checked pair.
+explain addresses in the Week 4 lecture notes. Until then, treat the format
+string and each corresponding argument as a checked pair.
 
 ### Format-contract reference
 
@@ -631,21 +683,29 @@ corresponding argument as a checked pair.
 | `int` | `%d` | `%d` with `&integer_variable` |
 | `unsigned int` | `%u` | `%u` with `&unsigned_variable` |
 | `long` | `%ld` | `%ld` with `&long_variable` |
+| `long long` | `%lld` | `%lld` with `&long_long_variable` |
+| `size_t` | `%zu` | `%zu` with `&size_variable` |
 | `double` | `%f` | `%lf` with `&double_variable` |
 | character | `%c` | `%c` with `&character_variable` |
+| `bool` | `%d` after integer promotion | No direct conversion; read and validate an `int` |
 
 For `printf`, a `float` argument is promoted to `double`, so `%f` is used. For
-`scanf`, `%f` requires the address of a `float`, while `%lf` requires the address
-of a `double`. This asymmetry is a common source of memory corruption. String
-and pointer formatting are introduced only after Week 2 establishes array
-representation and Week 4 establishes the pointer model.
+`scanf`, `%f` requires the address of a `float`, while `%lf` requires the
+address of a `double`. This asymmetry is a common source of memory corruption.
+String and pointer formatting are introduced only after Week 2 establishes
+array representation and Week 4 establishes the pointer model.
 
-#### Try it now — build a format checklist (2 minutes)
+When a `bool` is passed to `printf`, it is promoted to `int`, so `%d` prints
+zero or one. Do not pass a `bool*` to `scanf` with `%d`: `%d` requires an
+`int*`. Read into an `int`, validate the accepted values, and then assign the
+result to a `bool`.
 
-Declare one value of each numeric type in the table and write a single `printf`
-call that prints them. Add one `scanf` call for a `double`. Exchange the code
-with a partner and check every specifier against its corresponding argument
-before compiling.
+#### Try it now [Extension] — build a format checklist (2 minutes)
+
+Choose five rows from the table, including `size_t` and `bool`, and write a
+single `printf` call that prints them. Add one `scanf` call for a `double`.
+Exchange the code with a partner and check every specifier against its
+corresponding argument before compiling.
 
 <details>
 <summary>Reveal solution</summary>
@@ -653,17 +713,19 @@ before compiling.
 One possible checklist program is:
 
 ```c
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 
 int main(void) {
   int signed_value = -3;
   unsigned int unsigned_value = 3U;
-  long long_value = 3000L;
+  size_t item_count = 5;
   double real_value = 3.5;
-  char character = 'C';
+  bool ready = true;
 
-  printf("%d %u %ld %.1f %c\n", signed_value, unsigned_value, long_value,
-         real_value, character);
+  printf("%d %u %zu %.1f %d\n", signed_value, unsigned_value, item_count,
+         real_value, ready);
 
   double input_value;
   if (scanf("%lf", &input_value) != 1) {
@@ -679,7 +741,7 @@ type of the corresponding argument.
 
 </details>
 
-### Try it now — Hour 2 checkpoint (5 minutes)
+### Try it now [Core live] — Hour 2 checkpoint (5 minutes)
 
 Predict the type and value before compiling:
 
@@ -733,7 +795,7 @@ for (int value = 1; value <= limit; ++value) {
 }
 ```
 
-#### Try it now — change one rule (3 minutes)
+#### Try it now [Core live] — change one rule (3 minutes)
 
 Place the C fragment in a complete program with `limit = 10` and print the
 result. Then change it to sum values divisible by three instead of values
@@ -760,8 +822,9 @@ It prints 18 because the included values are 3, 6, and 9.
 
 </details>
 
-C also provides `while`, `do ... while`, and `switch`. Prefer braces even for a
-one-statement body; they prevent mistakes during later edits.
+C also provides `while` and `switch`; the next two examples give each construct
+a concrete purpose. Prefer braces even for a one-statement body because they
+prevent mistakes during later edits.
 
 ```c
 char command = 'h';
@@ -779,7 +842,7 @@ switch (command) {
 }
 ```
 
-#### Try it now — make fallthrough visible (3 minutes)
+#### Try it now [Extension] — make fallthrough visible (3 minutes)
 
 Place the fragment inside `main` in a program that includes `<stdio.h>`. Add an
 `r` command that prints `reset`. Temporarily omit its `break`, place it before
@@ -842,7 +905,7 @@ int main(void) {
 }
 ```
 
-#### Try it now — drive the loop from the shell (4 minutes)
+#### Try it now [Core live] — drive the loop from the shell (4 minutes)
 
 Compile the program, then test it with a valid sequence, an empty input, and a
 sequence containing `x` after two integers. For example, pipe text into the
@@ -869,11 +932,12 @@ the input contract and must not be silently treated as the same condition.
 `while (!feof(stdin))`: EOF is observed only after a read attempt fails, so that
 pattern commonly processes stale data once.
 
-### Try it now — Hour 3 guided translation (8 minutes)
+### Try it now [Core live] — Hour 3 guided translation (8 minutes)
 
-Translate the positive-square sum expressed by this Python program. For valid
-input, preserve the behavior of printing one answer while making C's input and
-range limits explicit:
+Translate the positive-square sum expressed by this Python program. The Python
+version reads one line; the C exercise intentionally generalizes that input to
+whitespace-separated integers continuing until end-of-file. Both versions
+print one answer for valid input:
 
 ```python
 values = [int(token) for token in input().split()]
@@ -882,14 +946,19 @@ print(answer)
 ```
 
 Process each integer as it is read, without storing an array. Accept at most 100
-inputs, reject a 101st value, and check every input conversion. Test:
+inputs, require every value to be in `[-30000, 30000]`, accumulate into a
+`long long`, and distinguish end-of-file from an invalid token. As with typical
+judge input using `%d`, assume that every numeric token is representable as an
+`int`; safe conversion of arbitrary-length text is introduced after character
+arrays and pointers. Test:
 
 - an empty line/end-of-file;
 - all negative values;
 - zero mixed with positives;
 - exactly 100 values;
+- a 101st value;
 - a noninteger token;
-- values whose square or total could overflow `int`.
+- values at both ends of the stated range.
 
 The final discussion should distinguish translation of the algorithm from the
 new representation and range decisions demanded by C.
@@ -897,12 +966,9 @@ new representation and range decisions demanded by C.
 <details>
 <summary>Reveal solution</summary>
 
-The following solution treats whitespace-separated `int` values up to
-end-of-file as the input and accumulates into `long long`. It rejects a 101st
-value, an invalid token, an unrepresentable square, or an unrepresentable sum:
+The following solution implements the explicitly revised stream contract:
 
 ```c
-#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -916,20 +982,15 @@ int main(void) {
       fprintf(stderr, "too many values\n");
       return 1;
     }
+    if (value < -30000 || value > 30000) {
+      fprintf(stderr, "value is outside the supported range\n");
+      return 1;
+    }
     ++count;
 
     if (value > 0) {
       long long wide_value = value;
-      if (wide_value > LLONG_MAX / wide_value) {
-        fprintf(stderr, "square is outside the long long range\n");
-        return 1;
-      }
-      long long square = wide_value * wide_value;
-      if (answer > LLONG_MAX - square) {
-        fprintf(stderr, "sum is outside the long long range\n");
-        return 1;
-      }
-      answer += square;
+      answer += wide_value * wide_value;
     }
   }
 
@@ -943,8 +1004,10 @@ int main(void) {
 ```
 
 No array is required because each value contributes once and is never needed
-again. The wider accumulator reduces the common overflow risk, while the two
-checks make its finite range explicit.
+again. At most 100 squares of 30000 sum to 90,000,000,000, which fits in the
+minimum range guaranteed for `long long`. The input bounds therefore establish
+arithmetic safety without interrupting the central loop with advanced overflow
+formulas.
 
 </details>
 
@@ -957,50 +1020,47 @@ Examples include:
 - reading an uninitialized automatic variable;
 - signed integer overflow;
 - dividing an integer by zero;
-- accessing outside an array;
+- accessing storage outside an object's valid bounds, developed with arrays in
+  Week 2;
 - using a mismatched `printf` format.
 
 The compiler is allowed to assume undefined behavior never occurs. “It worked
 once” is therefore not evidence that the program is correct.
 
-#### Try it now — repair before running (4 minutes)
+#### Try it now [Extension] — repair before running (4 minutes)
 
 Put the following fragment in `main`, but **do not run it yet**:
 
 ```c
-int values[3] = {10, 20, 30};
-int position = 3;
 int denominator = 0;
-printf("%d\n", values[position]);
+int uninitialized_value;
 printf("%d\n", 100 / denominator);
+printf("%d\n", uninitialized_value);
 ```
 
 Identify the two violated preconditions. Modify the inputs or guard the
-operations so that every evaluated array access and division is defined. Only
+operations so that every evaluated division and scalar read is defined. Only
 then compile and run the repaired version.
 
 <details>
 <summary>Reveal solution</summary>
 
-Valid array indices are 0, 1, and 2, so `position == 3` is outside the array.
-Integer division also requires a nonzero denominator. One guarded repair is:
+Integer division requires a nonzero denominator, and an automatic scalar must
+receive a value before it is read. One guarded repair is:
 
 ```c
-if (0 <= position && position < 3) {
-  printf("%d\n", values[position]);
-} else {
-  fprintf(stderr, "position is outside the array\n");
-}
+int initialized_value = 25;
 
 if (denominator != 0) {
   printf("%d\n", 100 / denominator);
 } else {
   fprintf(stderr, "denominator must not be zero\n");
 }
+printf("%d\n", initialized_value);
 ```
 
-The guards matter because they prevent the invalid operations from being
-evaluated; merely printing an error afterward would be too late.
+The initialization and guard matter because they prevent invalid operations
+from being evaluated; merely printing an error afterward would be too late.
 
 </details>
 
@@ -1038,7 +1098,7 @@ when `value` is negative? What special output does zero receive? This version
 uses only integer values and control flow. Week 2 introduces character arrays,
 and Week 4 explains pointer-valued references to strings.
 
-### Try it now — extend without duplicating (4 minutes)
+### Try it now [Extension] — extend without duplicating (4 minutes)
 
 Extend the program so it also reports whether the value is divisible by three.
 Reuse the same `value`; do not add another input operation. Predict and test the
@@ -1080,7 +1140,8 @@ Invalid input still returns before either classification is printed.
 3. What are the values of `7 / 3` and `(double)7 / 3`?
 4. Why must the argument for `%d` have the expected integer type?
 5. Translate a Python `while` loop that repeatedly reads until `0` into C.
-6. Why can the assembly produced at `-O2` omit a named local variable?
+6. **Extension:** Why can the assembly produced at `-O2` omit a named local
+   variable?
 
 ## Summary
 

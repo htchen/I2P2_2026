@@ -19,6 +19,6 @@ int main(void) {
     fputs("input contained a non-integer token\n", stderr);
     return 1;
   }
-  printf("positive even sum = %lld\n", sum);
+  printf("%lld\n", sum);
   return 0;
 }
