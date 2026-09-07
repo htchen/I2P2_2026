@@ -155,8 +155,19 @@ Search for the program's own function instead of reading from the beginning:
 grep -n "int twice" hello.i
 ```
 
-Here, `grep -n` prints matching text together with its line number. A small
-excerpt still resembles C:
+Here, `grep -n` prints matching text together with its line number. The start
+of `hello.i` commonly contains lines similar to these:
+
+```text
+# 1 "hello.c"
+# 1 "<built-in>" 1
+# 1 "/.../include/stdio.h" 1 3 4
+```
+
+Lines beginning with `#` are **line markers**. They let later diagnostics refer
+back to the appropriate source or header even though preprocessing combined
+many files. Paths and trailing marker numbers are implementation-specific.
+Farther down, a small excerpt still resembles the original C:
 
 ```c
 int twice(int value);
@@ -167,8 +178,12 @@ int main(void) {
 }
 ```
 
-The file also contains many implementation declarations and line markers.
-Their exact spelling is not course material; the portable observation is that
+The original `#include <stdio.h>` line is no longer an instruction to include a
+file: declarations from that header now appear in the translation unit. Macro
+uses have also been replaced by their expansions, and comments may have been
+removed. Function bodies, declarations, and expressions are still C—not
+assembly or machine code. The exact header declarations and line-marker
+spellings are not course material; the portable observation is that
 preprocessing produces another C translation unit.
 
 #### 2. Assembly text: `hello.s`
@@ -184,18 +199,40 @@ machine. Locate the function labels with:
 grep -n "twice" hello.s
 ```
 
-An illustrative excerpt may look like this:
+An illustrative ARM/macOS excerpt may contain:
 
 ```text
-_twice:
-        ... instructions that form value * 2 ...
+        .globl  _main
+_main:
+        ... prepare the argument 21 ...
+        bl      _twice
+        ... prepare the format string and result ...
+        bl      _printf
         ret
+
+        .globl  _twice
+_twice:
+        ... load value ...
+        lsl     w0, w8, #1
+        ret
+
+        .asciz  "%d\n"
 ```
 
-Some systems spell the label `twice` rather than `_twice`; instruction and
-register names differ between ARM and x86. At `-O0`, the named function should
-remain recognizable, but the exact instruction sequence is not a C-language
-guarantee.
+This output mixes instructions with assembler directives:
+
+- `.globl` makes a symbol visible to the linker;
+- `_main:` and `_twice:` are labels naming instruction locations;
+- `bl` calls another function and `ret` returns on this ARM target;
+- `lsl` shifts bits left and can implement multiplication by two; and
+- `.asciz` stores the format string followed by its terminating zero byte.
+
+An x86 compiler may instead use labels without leading underscores, `call` for
+a function call, and different registers or arithmetic instructions. Even at
+`-O0`, the compiler need not translate each C operator into an instruction with
+the same name: selecting a shift for multiplication by two preserves the C
+result. At this stage, identify function boundaries, calls, and constants; do
+not memorize one target's instruction spelling.
 
 #### 3. Relocatable object file: `hello.o`
 
@@ -219,12 +256,31 @@ hello.o: Mach-O 64-bit object arm64
 hello.o: ELF 64-bit LSB relocatable, x86-64, ...
 ```
 
-The `nm` command lists symbols known to the object file. In its output, `main`
-and `twice` normally appear as defined text symbols. A letter such as `U` beside
-`printf` means that this object uses the name but does not define it. The link
-step connects that reference to the implementation's standard library,
-sometimes through a dynamic library that is loaded with the program. Leading
-underscores and other symbol details depend on the platform.
+The important word is `relocatable`: code and data exist, but their final
+addresses are not yet fixed. The object is not a complete executable and still
+contains references for the linker to resolve.
+
+The `nm` command lists symbols known to the object file. A representative
+macOS result is:
+
+```text
+0000000000000000 T _main
+                 U _printf
+0000000000000048 T _twice
+0000000000000060 s l_.str
+```
+
+The left column contains offsets written in hexadecimal. In the middle column,
+`T` identifies a globally visible symbol defined in the code section, `U`
+means undefined in this object, and lowercase `s` commonly identifies a local
+section symbol. Thus `main` and `twice` have code here, whereas `printf` must be
+connected to the C library during linking. Linux commonly omits the leading
+underscores and may use somewhat different symbol letters. Symbol spelling and
+offsets are evidence from one toolchain, not source-level C rules.
+
+The link step combines and relocates the relevant pieces and connects external
+references to libraries. With dynamic linking, part of that connection is
+recorded for the loader to finish when the program starts.
 
 #### 4. Linked executable: `hello`
 
@@ -240,16 +296,40 @@ file hello
 ./hello
 ```
 
-The `file` description depends on the operating system and processor, but the
-program's required output is:
+Representative descriptions include:
 
 ```text
-42
+hello: Mach-O 64-bit executable arm64
+hello: ELF 64-bit LSB pie executable, x86-64, ...
 ```
 
-The progression is therefore readable C text (`hello.i`), readable
-machine-specific assembly text (`hello.s`), relocatable binary code
-(`hello.o`), and finally a runnable binary (`hello`).
+Unlike the relocatable object, this file contains the metadata required to
+start a process. It is usually larger than `hello.o` because it also contains
+headers, loader information, and other link-time metadata. File sizes vary and
+are not a measure of how many C statements were written.
+
+Running the program and then inspecting the shell's saved exit status gives:
+
+```text
+$ ./hello
+42
+$ echo $?
+0
+```
+
+The line `42` is ordinary program output written by `printf`; the newline in
+`"%d\n"` moves the terminal to the next line. The program does not print the
+final zero. The shell stores that status because `main` returned `0`, and
+`echo $?` displays it. A nonzero status conventionally reports failure.
+
+The complete progression is:
+
+| Artifact | Representation | Useful inspection | What is still missing? |
+|----------|----------------|-------------------|------------------------|
+| `hello.i` | preprocessed C text | editor, `grep` | C compilation |
+| `hello.s` | target assembly text | editor, `grep` | assembly into binary instructions |
+| `hello.o` | relocatable binary object | `file`, `nm` | final addresses and external definitions |
+| `hello` | linked executable binary | `file`, `./hello` | nothing before normal loading and execution |
 
 </details>
 
