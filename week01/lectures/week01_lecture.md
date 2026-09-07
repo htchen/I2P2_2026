@@ -57,7 +57,9 @@ is stated. Work in a small scratch source file and follow the same cycle:
 The exercises are deliberately small. Their purpose is immediate retrieval and
 feedback, not copying a complete solution from the note. Only the question is
 visible initially; expand **Reveal solution** after making and testing your own
-attempt.
+attempt. Each solution panel identifies the expected standard output, a
+representative diagnostic, or the reason that the example has no runtime
+output.
 
 - **Core live:** part of the planned in-class path.
 - **Extension:** remains beside the example for additional practice, but may be
@@ -351,6 +353,14 @@ The complete progression is:
 The compiler driver command that performs the complete build also produces the
 executable named by `-o`.
 
+**Expected terminal output:** the four successful `cc` commands normally print
+nothing; each writes the file named after `-o`. After linking, running the
+program produces:
+
+```text
+42
+```
+
 </details>
 
 A program that compiles with a warning is not necessarily safe. Read the first
@@ -412,6 +422,18 @@ int twice(int value) {
    optimized build may simplify or inline the call while preserving the result.
 5. `cc -c hello.c -o hello.o` produces `hello.o`, and
    `cc hello.o -o hello` produces the executable.
+
+**Representative diagnostics and output:** diagnostic wording depends on the
+compiler and linker, but the observations should have this form:
+
+| Experiment | Representative terminal evidence | Runtime output |
+|------------|----------------------------------|----------------|
+| Missing semicolon | `error: expected ';' after return statement` | None; compilation stops |
+| Missing definition | `undefined reference to 'twice'` or `Undefined symbols ... _twice` | None; linking stops |
+| Valid restored program | Successful build commands are silent | `42` |
+
+The `-E`, `-S`, and `-c` commands also normally print nothing when successful;
+their observable outputs are `hello.i`, `hello.s`, and `hello.o`.
 
 </details>
 
@@ -492,6 +514,11 @@ the mathematical result is representable as an `int`, `add_one(value)` returns
 one more than `value`. Exact sections, symbols, registers, and instruction
 sequences are implementation evidence rather than C language guarantees.
 
+**Runtime output:** none. This source intentionally has no `main` function and
+is translated only with `-S`. Its output is the assembly file. A typical `-O0`
+file contains storage or symbol evidence for both objects and instructions for
+both functions; an `-O2` file may contain only simplified function bodies.
+
 </details>
 
 ### 3. First program
@@ -525,6 +552,21 @@ printf("Previous programming courses: %d\n", courses_completed);
 Your number and wording may differ. `%d` remains correct because the matching
 argument is still an `int`. Removing a required semicolon makes compilation
 fail; restoring it makes the translation unit syntactically valid again.
+
+**Expected output for the shown edit:**
+
+```text
+Previous programming courses: 2
+```
+
+Before that edit, the original program prints:
+
+```text
+Programming courses completed: 1
+```
+
+With the semicolon removed, there is no runtime output because compilation
+stops with a syntax diagnostic.
 
 </details>
 
@@ -598,6 +640,15 @@ int main(void) {
 The exact values may differ. The types express the important promises: a whole
 number, a fractional numeric value, and one character.
 
+**Expected output for the shown complete program:**
+
+```text
+students=40 temperature=26.5 grade=A
+```
+
+The earlier declaration-only fragment does not print by itself; the output
+appears only after the solution passes those values to `printf`.
+
 </details>
 
 Use `sizeof value` to ask how many bytes an object occupies. Except for `char`,
@@ -616,6 +667,16 @@ the exact size of basic types can depend on the implementation.
 size_t length = 10;
 int32_t exact_width = 1000;
 ```
+
+<details>
+<summary>Output note — declarations alone do not print values</summary>
+
+**Runtime output:** none. These lines declare and initialize two objects, but
+they do not call an output function. If they are placed in a complete program,
+the program produces output only when later statements pass their values to an
+operation such as `printf`.
+
+</details>
 
 ### Basic operators and precedence
 
@@ -661,6 +722,13 @@ The modified values are `quotient == 2`, `remainder == 3`,
 expression, multiplication happens first. Parentheses make the addition happen
 first in the second expression.
 
+**One possible output line:** if the five values are printed in the order used
+above with spaces between them, the output is:
+
+```text
+2 3 17 42 12
+```
+
 </details>
 
 Prefix and postfix `++`/`--` differ when their value is used inside a larger
@@ -690,6 +758,15 @@ division in C truncates toward zero, so `-5 / 2` and `5 / -2` both produce `-2`
 before conversion to `double`; placing the cast before division produces
 `-2.5`. Casting either operand to `double` is sufficient, so
 `5 / (double)2` also produces `2.5`.
+
+**Expected output:** with `printf("%.1f %.1f\n", wrong, right)`, the three
+operand pairs produce:
+
+| Operands | Output |
+|----------|--------|
+| `5` and `2` | `2.0 2.5` |
+| `-5` and `2` | `-2.0 -2.5` |
+| `5` and `-2` | `-2.0 -2.5` |
 
 </details>
 
@@ -729,6 +806,15 @@ if (eligible) {
 Only age 18 with `has_id == true` is eligible. At age 17, the left operand of
 `&&` is false, so short-circuit evaluation does not need the right operand. At
 age 18 without an ID, the right operand is false.
+
+**Expected output:**
+
+| `age` | `has_id` | Output |
+|-------|----------|--------|
+| `17` | `false` | `not eligible` |
+| `17` | `true` | `not eligible` |
+| `18` | `false` | `not eligible` |
+| `18` | `true` | `eligible` |
 
 </details>
 
@@ -771,6 +857,19 @@ printf("long: %zu bytes, range %ld through %ld\n", sizeof(long), LONG_MIN,
 
 The numerical size and limits are implementation results. They must be read
 from the program's output rather than assumed from another machine.
+
+**Illustrative output on a common 64-bit Unix-like system:** including the two
+original calls and the added `long` call gives:
+
+```text
+int: 4 bytes, range -2147483648 through 2147483647
+unsigned int maximum: 4294967295
+long: 8 bytes, range -9223372036854775808 through 9223372036854775807
+```
+
+This exact line is not portable. A conforming implementation may give `long`
+a different size and range; the program's own output is the answer for the
+current environment.
 
 </details>
 
@@ -822,6 +921,22 @@ printf("%d\n", index < count);
 For a real container API, a separate success flag or another explicit absence
 representation is often clearer than mixing a negative sentinel with an
 unsigned size.
+
+**Representative output on the common implementations described above:** the
+original mixed-type program prints its values first and, after the comparison
+is uncommented, prints zero:
+
+```text
+index=-1 count=10
+0
+```
+
+After changing `count` to `int`, the repaired comparison is between two signed
+values and prints:
+
+```text
+1
+```
 
 </details>
 
@@ -877,6 +992,15 @@ printf("student score=%d success ratio=%.4f\n", score, ratio);
 The output becomes `student score=95 success ratio=0.8750`. The additional
 digits and labels affect presentation only; `ratio` remains the same `double`.
 
+**Expected output:**
+
+```text
+student score=95 success ratio=0.8750
+```
+
+Before the requested formatting change, the original call prints
+`score=95 ratio=0.88` under the ordinary round-to-nearest environment.
+
 </details>
 
 For simple judge input, check the result of `scanf`:
@@ -917,6 +1041,17 @@ Input `10 20` produces two conversions and allows the sum to be printed.
 `10 x` converts only the first integer, so the count is one. One integer
 followed by end-of-file also produces one conversion. An immediate end-of-file
 would produce `EOF`, not a successful conversion count.
+
+**Expected output by stream:** assume the original sum statement remains after
+the diagnostic fragment. The numeric value used for `EOF` is implementation-
+defined and is commonly `-1`.
+
+| Input | Standard output | Standard error | Exit status |
+|-------|-----------------|----------------|-------------|
+| `10 20` | `conversions=2` followed by `30` | None | `0` |
+| `10 x` | `conversions=1` | `expected two integers` | nonzero |
+| `10` then EOF | `conversions=1` | `expected two integers` | nonzero |
+| Immediate EOF | `conversions=<EOF value>` | `expected two integers` | nonzero |
 
 </details>
 
@@ -966,6 +1101,19 @@ means C specifies no required result; Section 7 develops that concept. An
 apparently plausible output would not make the call correct. Restore `%d`
 because the program intends to print the integer result of `twice(21)`.
 
+**Runtime output of the defective program:** none should be requested; do not
+run it. A representative compilation diagnostic is:
+
+```text
+warning: format specifies type 'double' but the argument has type 'int'
+```
+
+After `%d` is restored, the warning disappears and the program prints:
+
+```text
+42
+```
+
 </details>
 
 #### Try it now [Extension] — build a format checklist (2 minutes)
@@ -1007,6 +1155,13 @@ int main(void) {
 The important review is positional: each conversion specifier must match the
 type of the corresponding argument.
 
+**Expected output for input `2.5`:**
+
+```text
+-3 3 5 3.5 1
+input=2.5
+```
+
 </details>
 
 ### Try it now [Core live] — Hour 2 checkpoint (5 minutes)
@@ -1034,6 +1189,12 @@ A matching output statement is:
 
 ```c
 printf("a=%d b=%d x=%.1f y=%.1f\n", a, b, x, y);
+```
+
+**Expected output:**
+
+```text
+a=7 b=2 x=3.0 y=3.5
 ```
 
 </details>
@@ -1093,6 +1254,13 @@ printf("%d\n", total);
 
 It prints 18 because the included values are 3, 6, and 9.
 
+**Expected output:**
+
+| Version | Output |
+|---------|--------|
+| Original even-number rule | `30` |
+| Modified divisible-by-three rule | `18` |
+
 </details>
 
 C also provides `while` and `switch`; the next two examples give each construct
@@ -1140,6 +1308,25 @@ case 'h':
 ```
 
 With the `break` restored, command `r` prints only `reset`.
+
+**Expected output for the original example with `command == 'h'`:**
+
+```text
+help
+```
+
+**Expected output without the first `break`:**
+
+```text
+reset
+help
+```
+
+**Expected output after restoring the `break`:**
+
+```text
+reset
+```
 
 </details>
 
@@ -1226,6 +1413,17 @@ part of the input contract each rejected case violates.
 EOF is an ordinary end condition for this program. A noninteger token violates
 the input contract and must not be silently treated as the same condition.
 
+**Expected output by stream:**
+
+| Input | Standard output | Standard error | Exit status |
+|-------|-----------------|----------------|-------------|
+| `10 -2 5` | `count=3 total=13` | None | `0` |
+| Empty input | `count=0 total=0` | None | `0` |
+| `10 -2 x` | None | `invalid token after 2 integers` | nonzero |
+| `-30000 30000` | `count=2 total=0` | None | `0` |
+| `30001` | None | `integer is outside the supported range` | nonzero |
+| 101 copies of `1` | None | `too many integers` | nonzero |
+
 </details>
 
 With one requested conversion, `scanf` returns `1` after converting an integer,
@@ -1310,6 +1508,18 @@ minimum range guaranteed for `long long`. The input bounds therefore establish
 arithmetic safety without interrupting the central loop with advanced overflow
 formulas.
 
+**Expected output by stream:**
+
+| Input | Standard output | Standard error | Exit status |
+|-------|-----------------|----------------|-------------|
+| Empty input | `0` | None | `0` |
+| `-3 -1 0` | `0` | None | `0` |
+| `0 3 4` | `25` | None | `0` |
+| `-30000 30000` | `900000000` | None | `0` |
+| `30001` | None | `value is outside the supported range` | nonzero |
+| `1 x` | None | `invalid integer input` | nonzero |
+| 101 copies of `1` | None | `too many values` | nonzero |
+
 </details>
 
 ### 7. Undefined behavior is not an exception
@@ -1362,6 +1572,14 @@ printf("%d\n", initialized_value);
 
 The initialization and guard matter because they prevent invalid operations
 from being evaluated; merely printing an error afterward would be too late.
+
+**Expected output with the original `denominator == 0`:** the diagnostic and
+ordinary result are written to different streams.
+
+```text
+standard error: denominator must not be zero
+standard output: 25
+```
 
 </details>
 
@@ -1429,6 +1647,14 @@ if (value % 3 == 0) {
 }
 ```
 
+**Expected output before the extension:** the original classifier produces:
+
+```text
+-3 is negative and odd
+0 is zero and even
+4 is positive and even
+```
+
 The resulting descriptions are:
 
 - `-3 is negative and odd, divisible by three`
@@ -1436,6 +1662,17 @@ The resulting descriptions are:
 - `4 is positive and even, not divisible by three`
 
 Invalid input still returns before either classification is printed.
+
+**Expected standard output from three separate valid runs:**
+
+```text
+-3 is negative and odd, divisible by three
+0 is zero and even, divisible by three
+4 is positive and even, not divisible by three
+```
+
+For invalid input, standard output is empty and the program returns a nonzero
+status.
 
 </details>
 
