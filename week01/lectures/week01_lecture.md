@@ -130,6 +130,129 @@ The command-line pieces used this week mean:
 | `-O2` | enable a substantial, commonly used optimization level |
 | `./hello` | run the file named `hello` from the current directory |
 
+<details>
+<summary>Side note — what the four build artifacts look like</summary>
+
+Use the complete `hello.c` program in the live-build section below. The first
+two outputs are text files that can be read in an editor. The last two are
+binary files, so inspect them with development tools rather than printing their
+raw bytes in the terminal. On success, these four `cc` commands normally print
+nothing: the result is the file named after `-o`. The commands below make each
+result observable.
+
+#### 1. Preprocessed C: `hello.i`
+
+```sh
+cc -std=c17 -E hello.c -o hello.i
+```
+
+The preprocessor expands directives before ordinary C compilation. In
+particular, `#include <stdio.h>` is replaced by declarations provided by the
+implementation. The resulting file is usually much longer than `hello.c`.
+Search for the program's own function instead of reading from the beginning:
+
+```sh
+grep -n "int twice" hello.i
+```
+
+Here, `grep -n` prints matching text together with its line number. A small
+excerpt still resembles C:
+
+```c
+int twice(int value);
+
+int main(void) {
+  printf("%d\n", twice(21));
+  return 0;
+}
+```
+
+The file also contains many implementation declarations and line markers.
+Their exact spelling is not course material; the portable observation is that
+preprocessing produces another C translation unit.
+
+#### 2. Assembly text: `hello.s`
+
+```sh
+cc -std=c17 -O0 -S hello.c -o hello.s
+```
+
+The compiler translates the preprocessed C into assembly for the current
+machine. Locate the function labels with:
+
+```sh
+grep -n "twice" hello.s
+```
+
+An illustrative excerpt may look like this:
+
+```text
+_twice:
+        ... instructions that form value * 2 ...
+        ret
+```
+
+Some systems spell the label `twice` rather than `_twice`; instruction and
+register names differ between ARM and x86. At `-O0`, the named function should
+remain recognizable, but the exact instruction sequence is not a C-language
+guarantee.
+
+#### 3. Relocatable object file: `hello.o`
+
+```sh
+cc -std=c17 -c hello.c -o hello.o
+```
+
+`hello.o` contains encoded machine instructions, data, a symbol table, and
+information that the linker still needs. The `file` command describes the
+binary without dumping it:
+
+```sh
+file hello.o
+nm hello.o
+```
+
+Representative `file` descriptions include:
+
+```text
+hello.o: Mach-O 64-bit object arm64
+hello.o: ELF 64-bit LSB relocatable, x86-64, ...
+```
+
+The `nm` command lists symbols known to the object file. In its output, `main`
+and `twice` normally appear as defined text symbols. A letter such as `U` beside
+`printf` means that this object uses the name but does not define it. The link
+step connects that reference to the implementation's standard library,
+sometimes through a dynamic library that is loaded with the program. Leading
+underscores and other symbol details depend on the platform.
+
+#### 4. Linked executable: `hello`
+
+```sh
+cc hello.o -o hello
+```
+
+The linker resolves the remaining references and produces a file that the
+operating system can load. Inspect and then run it:
+
+```sh
+file hello
+./hello
+```
+
+The `file` description depends on the operating system and processor, but the
+program's required output is:
+
+```text
+42
+```
+
+The progression is therefore readable C text (`hello.i`), readable
+machine-specific assembly text (`hello.s`), relocatable binary code
+(`hello.o`), and finally a runnable binary (`hello`).
+
+</details>
+
 > **Try it now [Core live] — name the artifact (2 minutes):** without running
 > the commands, write the expected output filename after each line. Then run
 > them later with the complete `hello.c` program below and correct your
