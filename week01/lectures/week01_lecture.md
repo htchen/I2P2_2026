@@ -64,7 +64,7 @@ attempt.
   completed during a break, in the lab, or after class if time is short.
 
 The core-live exercises total about 17 minutes in Hour 1, 18 minutes in Hour 2,
-and 15 minutes in Hour 3. This leaves time for transitions, questions, and a
+and 16 minutes in Hour 3. This leaves time for transitions, questions, and a
 short break without removing the immediate practice opportunities.
 
 ## Hour 1 — Program translation and the C execution model
@@ -234,6 +234,14 @@ and section names depend on the target architecture, object format, compiler,
 options, and optimization level. On an x86 target, `-masm=intel` may request
 Intel syntax; it is not meaningful for every target.
 
+An object declared outside every function has **static storage duration**: it
+exists for the entire execution of the program and is initialized to zero when
+no initializer is written. An ordinary block-local object has **automatic
+storage duration**: it exists while execution is in that block and has no
+automatic initial value. At file scope, the keyword `static` also keeps the
+name private to this source file. These lifetime rules are the C concepts; the
+section names below are only common implementation evidence.
+
 Common object-file regions make C storage duration visible:
 
 | Common section | Typical contents |
@@ -335,6 +343,12 @@ fail; restoring it makes the translation unit syntactically valid again.
 
 The core scalar types for the first week are:
 
+- `char` stores one character-sized integer value;
+- `int` is the ordinary whole-number type;
+- `double` stores a floating-point approximation; and
+- `_Bool` stores zero or one. In C17, `<stdbool.h>` supplies the more readable
+  spellings `bool`, `false`, and `true` for `_Bool`, zero, and one.
+
 ```c
 #include <stdbool.h>
 
@@ -344,14 +358,27 @@ double average = 87.5;
 bool passed = true;
 ```
 
+To observe the `char`, `int`, and `double` values, use the `printf` function
+introduced in the first program. Its first argument is a format string; each
+conversion beginning with `%` describes the corresponding value that follows
+it:
+
+| C value type | First output conversion | Meaning |
+|--------------|-------------------------|---------|
+| `int` | `%d` | print a decimal integer |
+| `double` | `%.1f` | print one digit after the decimal point |
+| `char` | `%c` | print the character |
+
+The complete format-contract reference later in this hour covers input and
+additional types.
+
 #### Try it now [Core live] — choose a representation (2 minutes)
 
 Use the earlier first program as a scaffold. Add variables for a whole-number
 student count, a fractional temperature, and a letter grade. Choose the type
 before the initial value, then print them with `%d`, `%.1f`, and `%c`,
-respectively. These format spellings are a preview of the formatted-I/O section
-below. Compile and run; do not copy demonstration variables that your program
-does not use.
+respectively, following the table above. Compile and run; do not copy
+demonstration variables that your program does not use.
 
 <details>
 <summary>Reveal solution</summary>
@@ -475,7 +502,9 @@ conversion explicit when it is intentional.
 ### Truth values
 
 In a condition, zero is false and any nonzero scalar value is true. Relational
-and logical operators produce `0` or `1`.
+and logical operators produce `0` or `1`. An `if` statement evaluates the
+parenthesized condition and executes its first braced block when that condition
+is true. An optional `else` supplies the alternative block.
 
 ```c
 int age = 18;
@@ -494,9 +523,9 @@ which part of the expression rejects each unsuccessful case.
 
 ```c
 if (eligible) {
-  puts("eligible");
+  printf("eligible\n");
 } else {
-  puts("not eligible");
+  printf("not eligible\n");
 }
 ```
 
@@ -553,16 +582,25 @@ overflow is undefined behavior. Mixing signed and unsigned values can convert a
 negative number to a very large unsigned value:
 
 ```c
-int index = -1;
-size_t count = 10;
+#include <stddef.h>
+#include <stdio.h>
+
+int main(void) {
+  int index = -1;
+  size_t count = 10;
+
+  printf("index=%d count=%zu\n", index, count);
+  /* Uncomment only after predicting the result. */
+  /* printf("%d\n", index < count); */
+  return 0;
+}
 ```
 
 #### Try it now [Extension] — expose the mixed-domain bug (3 minutes)
 
-Turn the commented comparison into a printed result and compile with the course
-warning flags. Predict the result first. Repair the comparison by choosing
-types that represent the same intended domain; do not add a cast merely to
-silence the warning.
+Uncomment the comparison and compile with the course warning flags. Predict the
+result first. Repair the comparison by choosing types that represent the same
+intended domain; do not add a cast merely to silence the warning.
 
 <details>
 <summary>Reveal solution</summary>
@@ -573,10 +611,10 @@ printf("%d\n", index < count);
 
 On common current implementations, the comparison prints zero because `index`
 is converted to `size_t`; converting `-1` to that unsigned type produces its
-maximum value, which is not less than 10. The warning is the portable evidence
-that two different numeric domains are being mixed. If this small problem
-genuinely uses `-1` as a sentinel and all counts fit in `int`, one coherent
-repair is:
+maximum value, which is not less than 10. With the course warning flags, common
+compilers diagnose that two different numeric domains are being mixed. If this
+small problem genuinely uses `-1` as a sentinel and all counts fit in `int`,
+one coherent repair is:
 
 ```c
 int index = -1;
@@ -605,7 +643,20 @@ must represent `-1` need a signed type or a different absence representation.
 
 ### 5. Formatted I/O
 
-`printf` format specifiers must agree with the argument types.
+Every C program starts with three standard text streams:
+
+- `stdin` supplies ordinary input;
+- `stdout` receives ordinary output; and
+- `stderr` receives diagnostics separately from ordinary output.
+
+`scanf` reads from `stdin`, and `printf` writes to `stdout`. The related call
+`fprintf(stderr, ...)` uses the same style of format string as `printf` but
+sends the message to the diagnostic stream. This separation matters to an
+online judge because diagnostics must not become part of the required answer.
+In every formatted call, the conversion specifiers must agree with the
+corresponding argument types. Returning zero from `main` reports success;
+returning a nonzero value reports that the program could not complete its
+contract.
 
 ```c
 int score = 95;
@@ -750,25 +801,22 @@ int a = 7;
 int b = 2;
 double x = a / b;
 double y = (double)a / b;
-unsigned int z = 0U - 1U;
 ```
 
-Then compile a program that prints the results and the relevant limits. Explain
-every warning instead of stopping after the numerical answer.
+Then compile a program that prints the four values. Explain why the two
+floating-point results differ instead of stopping after the numerical answer.
 
 <details>
 <summary>Reveal solution</summary>
 
 `a` and `b` are `int`. Integer division therefore produces 3 before `x` stores
 that value as `3.0`. The cast makes one operand of the second division `double`,
-so `y` is `3.5`. Both operands of `0U - 1U` are `unsigned int`, so the result
-wraps to `UINT_MAX`; `z` has type `unsigned int`.
+so `y` is `3.5`.
 
 A matching output statement is:
 
 ```c
-printf("a=%d b=%d x=%.1f y=%.1f z=%u UINT_MAX=%u\n", a, b, x, y, z,
-       UINT_MAX);
+printf("a=%d b=%d x=%.1f y=%.1f\n", a, b, x, y);
 ```
 
 </details>
@@ -780,6 +828,7 @@ printf("a=%d b=%d x=%.1f y=%.1f z=%u UINT_MAX=%u\n", a, b, x, y, z,
 Python indentation becomes explicit braces:
 
 ```python
+limit = 10
 total = 0
 for value in range(1, limit + 1):
     if value % 2 == 0:
@@ -787,6 +836,7 @@ for value in range(1, limit + 1):
 ```
 
 ```c
+int limit = 10;
 int total = 0;
 for (int value = 1; value <= limit; ++value) {
   if (value % 2 == 0) {
@@ -794,6 +844,12 @@ for (int value = 1; value <= limit; ++value) {
   }
 }
 ```
+
+A C `for` loop has three control clauses separated by semicolons. Here,
+`int value = 1` runs once before the loop, `value <= limit` is checked before
+each iteration, and `++value` runs after each completed iteration. The `if`
+statement decides whether that iteration updates `total`. Because `value` is
+declared in the `for` statement, its name is available only in that loop.
 
 #### Try it now [Core live] — change one rule (3 minutes)
 
@@ -823,18 +879,20 @@ It prints 18 because the included values are 3, 6, and 9.
 </details>
 
 C also provides `while` and `switch`; the next two examples give each construct
-a concrete purpose. Prefer braces even for a one-statement body because they
-prevent mistakes during later edits.
+a concrete purpose. A `switch` evaluates its controlling expression once and
+jumps to the matching `case`. The `default` label handles every unmatched
+value, and `break` exits the `switch`. Prefer braces even for a one-statement
+body because they prevent mistakes during later edits.
 
 ```c
 char command = 'h';
 
 switch (command) {
   case 'q':
-    puts("quit");
+    printf("quit\n");
     break;
   case 'h':
-    puts("help");
+    printf("help\n");
     break;
   default:
     fprintf(stderr, "unknown command\n");
@@ -857,10 +915,10 @@ execution continues into the next case. The corrected case is:
 
 ```c
 case 'r':
-  puts("reset");
+  printf("reset\n");
   break;
 case 'h':
-  puts("help");
+  printf("help\n");
   break;
 ```
 
@@ -873,11 +931,28 @@ when it is deliberate and documented.
 
 ### Input-driven loops and EOF
 
-Judge data often contains an unknown number of records. In Python you might
-iterate over standard-input lines. In C, the conversion count controls the loop:
+Judge data sometimes contains an unknown number of records. A `while`
+statement checks its parenthesized condition before every iteration and
+continues only while that condition is true. In Python, iteration over an input
+stream ends naturally. In C, `scanf` reports how many requested conversions
+succeeded, so `scanf("%d", &value) == 1` means “one integer was read; process
+it.”
+
+For this first example, the input contract allows at most 100 numeric tokens,
+each representable as `int` and within `[-30000, 30000]`. The magnitude of the
+sum can therefore be at most `100 * 30000`, or 3,000,000, which fits in the
+minimum range guaranteed for `long long`. This proof keeps the example focused
+on input-loop behavior. Assume the course judge supplies a readable input
+stream; detecting a device-level I/O error is outside this exercise. Safe
+conversion of arbitrary-length numeric text is introduced after character
+arrays and pointers.
+
+After the loop, `feof(stdin)` is nonzero only if the failed read encountered
+end-of-file. If the next token was not an integer, the conversion count is zero
+and `feof(stdin)` remains zero. The program can therefore distinguish an
+ordinary end of input from an invalid token:
 
 ```c
-#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -887,9 +962,12 @@ int main(void) {
   size_t count = 0;
 
   while (scanf("%d", &value) == 1) {
-    if ((value > 0 && total > LLONG_MAX - value) ||
-        (value < 0 && total < LLONG_MIN - value)) {
-      fprintf(stderr, "sum is outside the long long range\n");
+    if (count == 100) {
+      fprintf(stderr, "too many integers\n");
+      return 1;
+    }
+    if (value < -30000 || value > 30000) {
+      fprintf(stderr, "integer is outside the supported range\n");
       return 1;
     }
     total += value;
@@ -905,12 +983,13 @@ int main(void) {
 }
 ```
 
-#### Try it now [Core live] — drive the loop from the shell (4 minutes)
+#### Try it now [Core live] — drive the loop from the shell (5 minutes)
 
 Compile the program, then test it with a valid sequence, an empty input, and a
 sequence containing `x` after two integers. For example, pipe text into the
-program with `printf '10 -2 5\n' | ./program`. Explain why the invalid-token
-case is different from ordinary end-of-file.
+program with `printf '10 -2 5\n' | ./program`. Also test a value at each numeric
+boundary, a value just outside a boundary, and a 101st integer. Explain which
+part of the input contract each rejected case violates.
 
 <details>
 <summary>Reveal solution</summary>
@@ -922,15 +1001,20 @@ case is different from ordinary end-of-file.
 - `10 -2 x` performs two conversions, then stops at `x`. Because the failure is
   not end-of-file, the program reports `invalid token after 2 integers` and
   returns failure.
+- Values `-30000` and `30000` satisfy the inclusive numeric boundary, while
+  either neighboring outside value is rejected.
+- The first 100 integers are processed; a successfully read 101st integer is
+  rejected before it is added to the total.
 
 EOF is an ordinary end condition for this program. A noninteger token violates
 the input contract and must not be silently treated as the same condition.
 
 </details>
 
-`scanf` can return `EOF` or a smaller conversion count. Never write
-`while (!feof(stdin))`: EOF is observed only after a read attempt fails, so that
-pattern commonly processes stale data once.
+With one requested conversion, `scanf` returns `1` after converting an integer,
+`0` when the next token does not match, or `EOF` when input ends before a
+conversion. Never write `while (!feof(stdin))`: EOF is observed only after a
+read attempt fails, so that pattern commonly processes stale data once.
 
 ### Try it now [Core live] — Hour 3 guided translation (8 minutes)
 
@@ -1065,6 +1149,11 @@ from being evaluated; merely printing an error afterward would be too late.
 </details>
 
 ## Worked example: classify an integer
+
+The `if`/`else` form from Hour 2 can be extended into an `else if` chain. Each
+condition is checked from top to bottom, and only the first true branch runs.
+This program uses the chain to distinguish negative, positive, and zero values,
+then uses a separate `if`/`else` to classify parity:
 
 ```c
 #include <stdio.h>

@@ -8,7 +8,7 @@ int main(void) {
   while (scanf("%d", &value) == 1) {
     if (value > 0 && value % 2 == 0) {
       if (sum > LLONG_MAX - value) {
-        fputs("sum is outside the long long range\n", stderr);
+        fprintf(stderr, "sum is outside the long long range\n");
         return 1;
       }
       sum += value;
@@ -16,7 +16,7 @@ int main(void) {
   }
 
   if (!feof(stdin)) {
-    fputs("input contained a non-integer token\n", stderr);
+    fprintf(stderr, "input contained a non-integer token\n");
     return 1;
   }
   printf("%lld\n", sum);

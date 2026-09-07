@@ -37,7 +37,7 @@ not listed as separate translations in this map.
 | Signed `index` versus unsigned `count` | No unsigned-conversion equivalent | The ordinary Python comparison remains signed |
 | Formatted score/ratio output | Direct | Use an f-string format specification |
 | Checked two-integer input | Same goal, different mechanism | Split, convert, validate arity, and catch `ValueError` |
-| Division/unsigned checkpoint | Partial | Division translates; unsigned wraparound has no ordinary Python counterpart |
+| Division checkpoint and unsigned supporting reference | Partial | Division translates; unsigned wraparound has no ordinary Python counterpart |
 | Python even-sum loop | Already Python | Retained as the reference behavior |
 | C even-sum loop | Direct | It maps back to the existing Python loop |
 | C `switch` | Same goal, different mechanism | Use `if`/`elif` or `match`; no fallthrough is needed here |
@@ -200,6 +200,8 @@ explicitly.
 ## Boolean expressions
 
 ```python
+age = 18
+has_id = True
 eligible = age >= 18 and has_id
 ```
 
@@ -254,20 +256,24 @@ def read_two_integers(line: str) -> tuple[int, int]:
 
 try:
     a, b = read_two_integers(input())
+except EOFError:
+    print("expected two integers")
 except ValueError as error:
     print(error)
 else:
     print(a + b)
 ```
 
-There are no destination addresses or format specifiers. `int` conversion may
-raise `ValueError`, and the resulting integer does not overflow at C `int`
-boundaries. A faithful test of the C program must additionally check the C
-range and format contract.
+There are no destination addresses or format specifiers. `input` raises
+`EOFError` when no line is available, while `int` may raise `ValueError` for a
+bad token. The resulting Python integer does not overflow at C `int` boundaries.
+A faithful test of the C program must additionally check the C range and format
+contract.
 
-The checkpoint's `a / b` distinction follows the division discussion. The `U`
-suffix in `0U - 1U` makes the C literals unsigned; Python has no corresponding
-literal suffix or automatic unsigned wraparound. The expression
+The core checkpoint's `a / b` distinction follows the division discussion. In
+the separate supporting reference, the `U` suffix in `0U - 1U` makes the C
+literals unsigned; Python has no corresponding literal suffix or automatic
+unsigned wraparound. The expression
 `(0 - 1) % (2**32)` can model one chosen 32-bit result, but the width is an
 explicit assumption rather than a property of Python's `int`.
 
@@ -277,6 +283,7 @@ The Python loop already present in the lecture note is the direct counterpart
 of the C `for` loop:
 
 ```python
+limit = 10
 total = 0
 for value in range(1, limit + 1):
     if value % 2 == 0:
@@ -286,6 +293,7 @@ for value in range(1, limit + 1):
 The command selection can be expressed without C's fallthrough behavior:
 
 ```python
+command = "h"
 if command == "q":
     print("quit")
 elif command == "h":
@@ -308,21 +316,30 @@ import sys
 
 total = 0
 count = 0
-try:
-    for line in sys.stdin:
-        for token in line.split():
-            total += int(token)
-            count += 1
-except ValueError:
-    print(f"invalid token after {count} integers", file=sys.stderr)
-    raise SystemExit(1)
+for line in sys.stdin:
+    for token in line.split():
+        try:
+            value = int(token)
+        except ValueError:
+            print(f"invalid token after {count} integers", file=sys.stderr)
+            raise SystemExit(1)
+        if count == 100:
+            print("too many integers", file=sys.stderr)
+            raise SystemExit(1)
+        if value < -30000 or value > 30000:
+            print("integer outside the supported range", file=sys.stderr)
+            raise SystemExit(1)
+        total += value
+        count += 1
 
 print(f"count={count} total={total}")
 ```
 
-Iteration naturally ends at EOF. Python still needs explicit handling for a
-bad conversion, but it has no stale destination object corresponding to the
-incorrect C pattern `while (!feof(stdin))`.
+Iteration naturally ends at EOF. This version mirrors the C example's count and
+numeric boundaries, although Python itself can represent much larger integers.
+Python still needs explicit handling for a bad conversion, but it has no stale
+destination object corresponding to the incorrect C pattern
+`while (!feof(stdin))`.
 
 ## Streaming the positive-square calculation
 
