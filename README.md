@@ -187,9 +187,8 @@ incorrect or unsuitable, and repaired.
 
 Each regular Tuesday lecture is a three-hour session. The 13 lecture notes are
 organized explicitly as Hour 1, Hour 2, and Hour 3 rather than as a loose topic
-list. A typical hour contains 45–50 minutes of explanation and live coding plus
-10–15 minutes of tracing, pair work, a design checkpoint, or a short judge-style
-implementation.
+list. Every note includes a **Three-hour plan** table that states each hour's
+main question and the concrete work students should produce during that hour.
 
 The three hours normally progress as follows:
 
@@ -200,9 +199,11 @@ The three hours normally progress as follows:
 3. **Integration and verification:** solve a larger example, exercise ownership
    and error paths, test with tools, and connect the topic to an exam or project.
 
-Short breaks may be placed between the hourly blocks. Every note includes an
-hour-by-hour plan and concrete in-class production so that material can be
-trimmed or extended without losing the conceptual sequence.
+Short breaks may be placed between the hourly blocks. The hour-by-hour plan and
+its stated in-class production allow material to be trimmed or extended without
+losing the conceptual sequence. How each hour divides between explanation and
+in-class work is left to the instructor; the Week 1 note additionally marks
+short **Try it now** activities in place, each with a suggested duration.
 
 ## Weekly Lab Pattern
 
