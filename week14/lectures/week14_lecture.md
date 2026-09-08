@@ -5,6 +5,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 14](week14_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** trace DFS on an adjacency list, implement geometric connected
@@ -20,6 +22,8 @@
 - **Python bridge:** use the companion when container syntax obscures the graph
   algorithm shared by both languages.
 
+---
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -34,6 +38,8 @@ By the end of this lecture, you should be able to:
 7. Use multi-source BFS to compute simultaneous arrival times and detect
    required cells that no source can reach.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -42,7 +48,17 @@ By the end of this lecture, you should be able to:
 | 2 | Why does BFS find shortest unweighted distances? | Trace single- and multi-source frontier layers and aggregate target times |
 | 3 | How does a puzzle become an implicit graph with explainable actions? | Implement and test a Water Jugs solver |
 
+---
+
 ## Hour 1 — Graph representation and depth-first exploration
+
+> **Hour 1 route:** [Graph vocabulary](#1-graph-vocabulary)
+> → [Adjacency-list representation](#2-adjacency-list-representation)
+> → [Depth-first search](#3-depth-first-search)
+> → [Geometric proximity defines an implicit graph](#4-geometric-proximity-defines-an-implicit-graph)
+> → [Squared distance and integer safety](#squared-distance-and-integer-safety)
+> → [Component sweep and size classification](#component-sweep-and-size-classification)
+> → [graph lab](#hour-1-graph-lab)
 
 > **Core implementation:** build the geometric connected-component DFS. The
 > explicit adjacency-list DFS below supplies the traversal skeleton; alternative
@@ -76,6 +92,8 @@ flowchart TD
 
 The extra `C-E` edge makes a cycle. A traversal must therefore distinguish an
 edge to an unseen vertex from an edge back to a vertex already discovered.
+
+---
 
 ### 2. Adjacency-list representation
 
@@ -115,6 +133,8 @@ list uses O(V + E) storage and iterates neighbors efficiently. Choose based on
 density and operations.
 
 Validate external vertex numbers before converting them to vector indices.
+
+---
 
 ### 3. Depth-first search
 
@@ -172,6 +192,8 @@ When the traversal sees an edge to an already visited vertex, such as `C-A` or
 `C-E`, it does not recurse again. The recursive calls shown above are exactly
 the active DFS stack; returns remove frames in reverse order.
 
+---
+
 ### 4. Geometric proximity defines an implicit graph
 
 Suppose monitoring stations have integer coordinates. Two stations can
@@ -189,6 +211,8 @@ Connectivity is transitive, while direct proximity is not. If `A` reaches `B`
 and `B` reaches `C`, all three are in one component even when `A` is farther
 than the radius from `C`. Draw edges first; do not classify groups by distance
 from one chosen representative.
+
+---
 
 ### Squared distance and integer safety
 
@@ -209,6 +233,8 @@ Unit-test the neighbor predicate independently with identical points, exactly
 on the boundary, just outside the boundary, negative coordinates, and the
 largest permitted coordinates. When the published bounds do not fit safely in
 64 bits, use checked arithmetic or a wider intermediate type.
+
+---
 
 ### Component sweep and size classification
 
@@ -233,6 +259,8 @@ neighbors. Marking later permits cycles to rediscover the same vertex and can
 cause repeated work or unbounded recursion. Recursive DFS may reach depth V on
 a chain, so an explicit stack is the robust choice when V can be large.
 
+---
+
 ### Hour 1 graph lab
 
 First read an explicit undirected graph, reject invalid endpoints, and compute
@@ -241,7 +269,16 @@ implicit edges, and classify singleton and multi-vertex components without
 materializing an adjacency matrix. Test isolated vertices, an exact-boundary
 edge, a transitive chain, duplicate coordinates, and an empty graph.
 
+---
+
 ## Hour 2 — Breadth-first layers and shortest paths
+
+> **Hour 2 route:** [Breadth-first search finds shortest unweighted paths](#5-breadth-first-search-finds-shortest-unweighted-paths)
+> → [Layer invariant](#layer-invariant)
+> → [Multi-source BFS: simultaneous starts](#multi-source-bfs-simultaneous-starts)
+> → [From distances to a completion result](#from-distances-to-a-completion-result)
+> → [Complexity](#6-complexity)
+> → [checkpoint](#hour-2-checkpoint)
 
 > **Core implementation:** implement multi-source grid BFS. Read the
 > single-source `ShortestPath` as a reference for the queue/visited invariant;
@@ -296,6 +333,8 @@ edges because `start == goal`.
 BFS processes vertices in nondecreasing distance from `start`. The first time a
 vertex is discovered, its parent therefore defines a shortest path.
 
+---
+
 ### Layer invariant
 
 When BFS begins processing distance `d`, every queued vertex has distance `d` or
@@ -347,6 +386,8 @@ The queue retains all earlier-layer work ahead of later-layer work. That FIFO
 ordering is the operational reason BFS cannot reach distance two before it has
 processed every queued vertex at distance one.
 
+---
+
 ### Multi-source BFS: simultaneous starts
 
 Suppose several rescue stations begin operating at time zero and each move to
@@ -396,6 +437,8 @@ for later validation or rendering. If a sparse problem genuinely needs more
 metadata in each queue item, prefer a small named `struct` when positional
 `tuple<int, int, int>` fields would obscure which integer means what.
 
+---
+
 ### From distances to a completion result
 
 After BFS, scan the required targets:
@@ -423,6 +466,8 @@ arrival-time objective. Competing agents with different speeds or effects need
 additional state or a different shortest-path algorithm; seeding one queue does
 not automatically model those rules.
 
+---
+
 ### 6. Complexity
 
 With adjacency lists, DFS and BFS both take O(V + E) time and O(V) auxiliary
@@ -437,6 +482,8 @@ BFS minimizes number of edges only when all edges have equal cost. Weighted
 nonnegative graphs require Dijkstra's algorithm; negative edges require other
 methods.
 
+---
+
 ### Hour 2 checkpoint
 
 Trace the multi-source implementation by queue layer and verify the final
@@ -444,7 +491,17 @@ distance matrix against direct shortest paths on a tiny grid. Explain why the
 maximum required-target distance is the completion time and why an unseen target
 must produce failure.
 
+---
+
 ## Hour 3 — Implicit state graphs and puzzle solving
+
+> **Hour 3 route:** [Puzzles are implicit graphs](#7-puzzles-are-implicit-graphs)
+> → [Record actions, not only parents](#record-actions-not-only-parents)
+> → [Water Jugs feasibility](#water-jugs-feasibility)
+> → [State invariants and duplicate control](#8-state-invariants-and-duplicate-control)
+> → [Search is an engineering boundary](#9-search-is-an-engineering-boundary)
+> → [Test strategy](#10-test-strategy)
+> → [integration studio](#hour-3-integration-studio)
 
 > **Core implementation:** complete one Water Jugs solver with successor,
 > goal, BFS, parent/action, and reconstruction boundaries. Other classic puzzles
@@ -521,6 +578,8 @@ The full solver combines:
 This separation also applies to missionaries-and-cannibals, bridge-and-torch,
 maze routing, and game AI.
 
+---
+
 ### Record actions, not only parents
 
 ```cpp
@@ -546,6 +605,8 @@ Following parents backward and then reversing the collected `SolutionStep`
 objects can explain “fill the 5-liter jug” rather than printing only coordinate
 pairs. Explainable paths help both demos and successor debugging.
 
+---
+
 ### Water Jugs feasibility
 
 > **Supporting mathematical shortcut:** BFS state modeling and duplicate
@@ -557,6 +618,8 @@ reachable only if it lies in `[0, max(cap_a, cap_b)]` and is divisible by
 `gcd(cap_a, cap_b)`. Use this as a fast rejection and a property check against
 exhaustive BFS on small capacities. BFS remains necessary when the output
 requires a shortest action sequence.
+
+---
 
 ### 8. State invariants and duplicate control
 
@@ -582,6 +645,8 @@ std::queue<State> frontier;
 For larger state spaces, `unordered_map` can improve average lookup if `State`
 has a correct equality operation and hash function.
 
+---
+
 ### 9. Search is an engineering boundary
 
 Keep I/O and visualization outside the solver. A solver that receives a model
@@ -601,6 +666,8 @@ AI-generated search code often looks plausible while it:
 
 Use tiny hand-drawn state graphs and properties to audit generated code.
 
+---
+
 ### 10. Test strategy
 
 - start equals goal;
@@ -618,11 +685,15 @@ Use tiny hand-drawn state graphs and properties to audit generated code.
 For BFS, verify not only that a path works but that no shorter path exists on
 small exhaustively enumerable cases.
 
+---
+
 ### Hour 3 integration studio
 
 Implement Water Jugs with `State`, `Successors`, `goal`, BFS, parent/action
 records, and formatted output. Assert invariants for every successor. Compare
 with hand solutions and exhaustive small cases.
+
+---
 
 ## Final project handoff — Test logic without the window
 
@@ -639,6 +710,8 @@ define every relevant state/event pair; a target selector must state its tie
 rule. Thursday's deliverable combines automated logic tests with a repeatable
 manual integration plan.
 
+---
+
 ## Check yourself
 
 1. Why does a graph traversal need visited state while a tree traversal may not?
@@ -653,6 +726,8 @@ manual integration plan.
    unseen target mean?
 8. List all successors of jug state `(0, 0)` for capacities `(3, 5)`.
 9. Change the search objective from fewest moves to least total pouring cost.
+
+---
 
 ## Summary
 
@@ -669,6 +744,8 @@ manual integration plan.
 - Parent links turn reachability into an explainable path.
 - State-space search treats puzzles as implicit graphs.
 - Clean separation of model, successors, goal, and policy makes search testable.
+
+---
 
 ## Optional enrichment
 
@@ -689,6 +766,8 @@ neighbor insertion order matters to tests. For proximity graphs, compare an
 O(V²) matrix, materialized lists, an on-demand predicate, and spatial buckets;
 do not claim O(V+E) unless neighbor generation actually enumerates only edges.
 
+---
+
 ### Search-policy comparison
 
 - BFS: FIFO queue and unit edge cost.
@@ -699,6 +778,8 @@ do not claim O(V+E) unless neighbor generation actually enumerates only edges.
 Construct a weighted graph where BFS uses fewer edges but higher total cost.
 Changing the worklist alone is insufficient if visited/finalization logic still
 assumes BFS.
+
+---
 
 ### Additional classic state spaces
 
@@ -712,6 +793,8 @@ assumes BFS.
 Bridge and Torch has weighted actions, so shortest move count and minimum time
 are different objectives. As a final extension, change Water Jugs from fewest
 moves to least total poured volume and explain why ordinary BFS is insufficient.
+
+---
 
 ## References and source materials
 

@@ -5,6 +5,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 5](week05_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** draw node ownership, use a `Node**` link-location cursor for head and
@@ -18,6 +20,8 @@
 - **Python bridge:** use the companion to compare references and mutation, while
   keeping C allocation and ownership explicit.
 
+---
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -30,6 +34,8 @@ By the end of this lecture, you should be able to:
 6. Specify and test indexed insertion, removal, filtering, and subrange reversal
    without losing nodes or dereferencing freed storage.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -38,7 +44,18 @@ By the end of this lecture, you should be able to:
 | 2 | How can one algorithm update the head or an interior link? | Implement insertion, removal, and reversal with pointer-to-pointer reasoning |
 | 3 | When is a circular linked representation justified? | Solve and compare Josephus implementations, then run memory tests |
 
+---
+
 ## Hour 1 — Representation, construction, and ownership
+
+> **Hour 1 route:** [Why link nodes?](#1-why-link-nodes)
+> → [Representation and invariants](#2-representation-and-invariants)
+> → [Two interfaces used this week](#two-interfaces-used-this-week)
+> → [Allocate one node safely](#3-allocate-one-node-safely)
+> → [Separate payload from structure](#separate-payload-from-structure)
+> → [Insert at the front](#4-insert-at-the-front)
+> → [Validate the invariant during development](#validate-the-invariant-during-development)
+> → [construction trace](#hour-1-construction-trace)
 
 ### 1. Why link nodes?
 
@@ -56,6 +73,8 @@ head
 
 This permits insertion without shifting later elements, but costs one pointer
 per node, non-contiguous memory access, and linear-time indexing.
+
+---
 
 ### 2. Representation and invariants
 
@@ -79,6 +98,8 @@ Our representation invariant is:
 - following `next` reaches exactly `size` nodes and then `NULL`;
 - every reachable node is owned by this list;
 - no node is reachable twice (the list has no cycle).
+
+---
 
 ### Two interfaces used this week
 
@@ -107,6 +128,8 @@ void list_init(struct List* list) {
 }
 ```
 
+---
+
 ### 3. Allocate one node safely
 
 ```c
@@ -123,6 +146,8 @@ static struct Node* node_create(int value, struct Node* next) {
 
 The function returns ownership of a new node or reports failure with `NULL`.
 Because it is `static`, it is a private implementation detail of `list.c`.
+
+---
 
 ### Separate payload from structure
 
@@ -143,6 +168,8 @@ If `owned_text` is owned, node creation must duplicate the string and node
 destruction must free it before freeing the node. If it is borrowed, the source
 string must outlive the list. Never leave this decision implicit.
 
+---
+
 ### 4. Insert at the front
 
 ```c
@@ -157,6 +184,8 @@ int list_push_front(struct List* list, int value) {
 
 Order matters: allocate first, connect the new node to the old head, and only
 then replace `head`. If allocation fails, the original list is unchanged.
+
+---
 
 ### Validate the invariant during development
 
@@ -177,13 +206,27 @@ This finite check detects many, but not every, malformed representation. Call it
 with `assert` at public-operation boundaries while developing. Later compare it
 with Floyd's tortoise-and-hare cycle detector, which does not rely on `size`.
 
+---
+
 ### Hour 1 construction trace
 
 Starting from an empty list, push `30`, `20`, then `10`. Draw every allocation
 before and after the head update. Repeat with a forced allocation failure on the
 third push and prove that the original two-node list remains valid and owned.
 
+---
+
 ## Hour 2 — Link-location algorithms
+
+> **Hour 2 route:** [A link is a modifiable location](#5-a-link-is-a-modifiable-location)
+> → [Insert in sorted order](#6-insert-in-sorted-order)
+> → [Reverse in place](#reverse-in-place)
+> → [Remove all matching nodes](#remove-all-matching-nodes)
+> → [Optional supplementary practice](#optional-supplementary-practice)
+> → [Sequence-editor case study: specify before rewiring](#sequence-editor-case-study-specify-before-rewiring)
+> → [Design invariants for the four operations](#design-invariants-for-the-four-operations)
+> → [Edge-case matrix](#edge-case-matrix)
+> → [Sequence-editor checkpoint](#sequence-editor-checkpoint)
 
 ### 5. A link is a modifiable location
 
@@ -273,6 +316,8 @@ head field itself. “Good taste” here means choosing a representation that ma
 the invariant and exceptional cases disappear; it is not a rule that additional
 indirection is always preferable.
 
+---
+
 ### 6. Insert in sorted order
 
 ```c
@@ -292,6 +337,8 @@ int list_insert_sorted(struct List* list, int value) {
 
 The loop invariant is: every node before `*link` has value less than `value`,
 and `link` is the exact location that must be updated for insertion.
+
+---
 
 ### Reverse in place
 
@@ -313,6 +360,8 @@ void list_reverse(struct List* list) {
 Loop invariant: `reversed` owns the already processed prefix in reverse order;
 `remaining` owns the untouched suffix; together they contain exactly the
 original nodes, with no node reachable from both.
+
+---
 
 ### Remove all matching nodes
 
@@ -340,6 +389,8 @@ size_t list_remove_all(struct List* list, int target) {
 After removal, do not advance `link`: it already designates the next link to
 inspect. This is the key case when adjacent nodes match.
 
+---
+
 ### Optional supplementary practice
 
 Implement and test:
@@ -351,6 +402,8 @@ Implement and test:
 
 Define behavior when the position does not belong to the list. Decide whether
 the API can detect that efficiently or must state it as a precondition.
+
+---
 
 ### Sequence-editor case study: specify before rewiring
 
@@ -368,6 +421,8 @@ uses a real head pointer or a dummy/sentinel node. A sentinel is never playlist
 data; it can simplify front mutations, but size, traversal, and destruction
 must consistently exclude it. Mixing the two representations is a common cause
 of null dereferences and accidental sentinel deletion.
+
+---
 
 ### Design invariants for the four operations
 
@@ -391,6 +446,8 @@ Every original node must remain reachable from exactly one region until the
 regions are reconnected. Save any needed successor before changing or freeing
 the current node.
 
+---
+
 ### Edge-case matrix
 
 Before writing pseudocode, predict behavior for:
@@ -406,6 +463,8 @@ Draw the links before and after each accepted case. For rejected cases, require
 that the list is unchanged. Then write function contracts or pseudocode—but not
 a complete implementation—and use the drawings as an oracle for later tests.
 
+---
+
 ### Sequence-editor checkpoint
 
 Starting with `11 → 22 → 33 → 44 → 55`, draw the result of one insertion, one
@@ -414,7 +473,18 @@ step, state the list size, the incoming link that changed, and which object owns
 each remaining node. Repeat the reversal on `[0, size)` and explain how the head
 connection changes.
 
+---
+
 ## Hour 3 — Traversal variants, circular lists, and Josephus
+
+> **Hour 3 route:** [Traversal and read-only borrowing](#7-traversal-and-read-only-borrowing)
+> → [Destroy the entire list](#8-destroy-the-entire-list)
+> → [Complexity and representation choice](#9-complexity-and-representation-choice)
+> → [Circular lists and Josephus](#10-circular-lists-and-josephus)
+> → [The Josephus problem, stated precisely](#the-josephus-problem-stated-precisely)
+> → [Circular-list representation](#circular-list-representation)
+> → [Josephus comparison](#josephus-comparison)
+> → [verification](#hour-3-verification)
 
 ### 7. Traversal and read-only borrowing
 
@@ -430,6 +500,8 @@ void list_print(const struct List* list, FILE* stream) {
 
 The function borrows the list and does not mutate it. The local traversal
 pointer is non-owning; it must never be passed to `free`.
+
+---
 
 ### 8. Destroy the entire list
 
@@ -449,6 +521,8 @@ void list_clear(struct List* list) {
 Save `next` **before** freeing the node. Reading `node->next` after `free(node)`
 would be a use-after-free.
 
+---
+
 ### 9. Complexity and representation choice
 
 | Operation | Dynamic array | Singly linked list |
@@ -462,6 +536,8 @@ would be a use-after-free.
 
 Big-O does not say the list is automatically faster. For many workloads,
 contiguous arrays win because allocation and memory locality matter.
+
+---
 
 ### 10. Circular lists and Josephus
 
@@ -477,6 +553,8 @@ node or a count, and destruction must deliberately break or walk the cycle.
 Use a circular list because the problem is circular, not merely because it is an
 interesting structure. The Josephus problem also has array and mathematical
 solutions with different tradeoffs.
+
+---
 
 ### The Josephus problem, stated precisely
 
@@ -501,6 +579,8 @@ The removal order is `3, 6, 2, 7, 5, 1`; participant `4` survives. This hand
 trace fixes three common ambiguities: whether counting includes the current
 participant, where counting resumes, and whether labels change after removal.
 
+---
+
 ### Circular-list representation
 
 A useful representation stores a `tail` whose `next` is the head:
@@ -518,6 +598,8 @@ struct CircularList {
 Insertion after the tail is O(1), as is access to the head. Destruction must use
 the stored size or first break the cycle; a `while (node != NULL)` loop never
 terminates.
+
+---
 
 ### Josephus comparison
 
@@ -561,12 +643,16 @@ order because that information is not part of its state.
 The structure-simulation version is still valuable when the complete
 elimination order is required. Algorithm selection follows the requested output.
 
+---
+
 ### Hour 3 verification
 
 Run empty, singleton, adjacent-removal, head/tail, and full-destruction cases
 under AddressSanitizer. For the circular version, additionally test `k = 1`,
 `k > n`, and repeated wraparound. Compare the elimination order with a simple
 array reference implementation on small `n`.
+
+---
 
 ## Midterm project connection — Tokens are a representation boundary
 
@@ -581,6 +667,8 @@ a precise expected token sequence or expected rejection. Do not ask it to fill
 the graded parser TODOs. Thursday's evidence is a hand trace and test table that
 will be reused in Week 7.
 
+---
+
 ## Check yourself
 
 1. Draw `link`, `*link`, and `**link` during removal of the second node.
@@ -592,6 +680,8 @@ will be reused in Week 7.
 6. Which invariant detects an accidental cycle?
 7. Run insertion and removal tests under AddressSanitizer.
 
+---
+
 ## Summary
 
 - A linked list is a chain of separately allocated nodes.
@@ -602,6 +692,8 @@ will be reused in Week 7.
 - Mutation should preserve invariants even when allocation fails.
 - Choose a representation using access patterns and real costs, not Big-O alone.
 
+---
+
 ## Optional enrichment — Doubly linked lists
 
 A doubly linked node adds `previous`. Every mutation must update two directions;
@@ -609,6 +701,8 @@ the invariant requires `node->next->previous == node` and
 `node->previous->next == node` where neighbors exist. It enables O(1) removal
 from a known node without searching for its predecessor but adds memory and more
 ways to corrupt links.
+
+---
 
 ## References and source materials
 

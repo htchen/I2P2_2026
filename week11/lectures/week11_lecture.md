@@ -5,6 +5,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 11](week11_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** instantiate one function template, use a `vector` iterator range,
@@ -17,6 +19,8 @@
   guarantee a problem requires.
 - **Python bridge:** use the companion to compare generic algorithms, while
   remembering that C++ iterator validity is an explicit program obligation.
+
+---
 
 ## Learning objectives
 
@@ -31,6 +35,8 @@ By the end of this lecture, you should be able to:
 7. Use `lower_bound`, `upper_bound`, and `equal_range` with a consistent
    ordering and interpret their iterator results.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -39,7 +45,15 @@ By the end of this lecture, you should be able to:
 | 2 | Which container and iterator guarantees fit a workload? | Select representations and trace invalidation |
 | 3 | How do algorithms, maps, and optional results form a solution? | Implement and benchmark a frequency/ranking pipeline |
 
+---
+
 ## Hour 1 — Compile-time genericity and template requirements
+
+> **Hour 1 route:** [Templates describe families of code](#1-templates-describe-families-of-code)
+> → [A small class template](#2-a-small-class-template)
+> → [Requirements before C++20 concepts](#requirements-before-c20-concepts)
+> → [Function objects and generic lambdas](#function-objects-and-generic-lambdas)
+> → [template studio](#hour-1-template-studio)
 
 Earlier lectures used `vector<int>` as a library client. Now that classes are
 established, we can explain the template mechanism behind the angle brackets
@@ -69,6 +83,8 @@ std::string largest_word = Maximum(std::string{"ant"}, std::string{"bee"});
 Templates are compile-time polymorphism. Unlike a virtual call, the concrete
 operation is normally known during compilation and can be inlined.
 
+---
+
 ### 2. A small class template
 
 ```cpp
@@ -93,6 +109,8 @@ the definition when instantiating a concrete type.
 Avoid making a template merely to avoid naming the actual abstraction. Generic
 code is valuable when multiple types share the same meaningful operation.
 
+---
+
 ### Requirements before C++20 concepts
 
 > **Supporting terminology:** in this C++17 course, state the operations a
@@ -107,6 +125,8 @@ expression involving your type, not only the final diagnostic line.
 Create three types: one with a valid `<`, one with equality only, and one whose
 comparison returns an unsuitable type. Instantiate `Maximum` and classify the
 errors. Then state the requirement in a comment beside the template.
+
+---
 
 ### Function objects and generic lambdas
 
@@ -166,13 +186,25 @@ stores an alias, so the lambda must not outlive `threshold`. Avoid broad `[=]`
 and `[&]` captures in teaching code: naming each captured value makes lifetime
 and mutation visible.
 
+---
+
 ### Hour 1 template studio
 
 Generalize `contains`, `print_range`, and `count_if` from `vector<int>` to
 iterator pairs. For each, list the minimum iterator and element operations. Use
 the exercise to make standard-algorithm contracts explicit.
 
+---
+
 ## Hour 2 — Containers, iterators, complexity, and invalidation
+
+> **Hour 2 route:** [Choose containers by required operations](#3-choose-containers-by-required-operations)
+> → [Container-selection scenarios](#container-selection-scenarios)
+> → [Iterators represent positions and ranges](#4-iterators-represent-positions-and-ranges)
+> → [Iterator invalidation](#5-iterator-invalidation)
+> → [Invalidation trace](#invalidation-trace)
+> → [Complexity belongs to the interface](#6-complexity-belongs-to-the-interface)
+> → [container-and-handle checkpoint](#hour-2-container-and-handle-checkpoint)
 
 ### 3. Choose containers by required operations
 
@@ -218,12 +250,16 @@ Default to `vector` unless another container's semantics or complexity solves a
 specific need. Do not choose `list` merely because insertions look O(1): finding
 the position is still a cost, and locality often dominates.
 
+---
+
 ### Container-selection scenarios
 
 Choose and defend a representation for an ordered leaderboard, FIFO event queue,
 entity table by numeric ID, unique visited puzzle states, stable splice-heavy
 sequence, and dense objects updated every frame. Include iteration order,
 lookup/insertion complexity, locality, reference stability, and duplicates.
+
+---
 
 ### 4. Iterators represent positions and ranges
 
@@ -242,6 +278,8 @@ adjacent ranges can share a boundary.
 Iterator categories expose supported movement. A vector iterator supports
 random access; a list iterator does not. Generic algorithms express the weakest
 category they require.
+
+---
 
 ### 5. Iterator invalidation
 
@@ -287,12 +325,16 @@ ownership claim just as a valid C pointer is. Use indices when a vector mutation
 may relocate storage and the index remains meaningful, or reacquire the iterator
 after mutation.
 
+---
+
 ### Invalidation trace
 
 For a vector with size 3 and capacity 4, take iterators to all elements, then
 push a fourth element, insert at index 1 without reallocation, push a fifth
 element with reallocation, and erase index 2. Mark valid handles after each
 operation. Repeat for `list` and `map` and compare their guarantees.
+
+---
 
 ### 6. Complexity belongs to the interface
 
@@ -304,13 +346,27 @@ build frequency, query frequency, ordering requirements, and memory overhead.
 The standard library specifies both semantics and complexity. Use those
 guarantees instead of assuming an internal implementation.
 
+---
+
 ### Hour 2 container-and-handle checkpoint
 
 Choose a container for a supplied workload, then mark every iterator, pointer,
 and reference that survives each proposed mutation. State both the operation's
 complexity and its invalidation rule before running the program.
 
+---
+
 ## Hour 3 — Algorithms, associative containers, and solution pipelines
+
+> **Hour 3 route:** [Algorithms separate traversal from intent](#7-algorithms-separate-traversal-from-intent)
+> → [Algorithm requirements are compile-time contracts](#algorithm-requirements-are-compile-time-contracts)
+> → [Boundary algorithms on partitioned ranges](#8-boundary-algorithms-on-partitioned-ranges)
+> → [Comparator and search-key exercise](#comparator-and-search-key-exercise)
+> → [The erase-remove pattern](#9-the-erase-remove-pattern)
+> → [Maps: lookup versus insertion](#10-maps-lookup-versus-insertion)
+> → [Frequency-to-ranking pipeline](#frequency-to-ranking-pipeline)
+> → [`optional` makes expected absence explicit](#11-optional-makes-expected-absence-explicit)
+> → [integration task](#hour-3-integration-task)
 
 ### 7. Algorithms separate traversal from intent
 
@@ -343,6 +399,8 @@ Common algorithms include:
 An algorithm name states intent and centralizes boundary handling. A loop is
 still correct when the operation does not fit an algorithm cleanly.
 
+---
+
 ### Algorithm requirements are compile-time contracts
 
 `std::sort` requires **random-access iterators** because it must jump through a
@@ -370,6 +428,8 @@ an algorithm to rearrange its keys. When a different order is required—such as
 ranking map entries by frequency—copy the records into a sequence with
 random-access iterators and sort that sequence. The frequency-to-ranking
 pipeline below does exactly this.
+
+---
 
 ### 8. Boundary algorithms on partitioned ranges
 
@@ -402,6 +462,8 @@ O(n) iterator increments. This is why calling `std::lower_bound` on a linked
 list does not create random access; an ordered associative container's member
 `lower_bound` can follow its tree structure in O(log n).
 
+---
+
 ### Comparator and search-key exercise
 
 Sort a vector of records by `(category, identifier)`. Specify, without writing
@@ -410,6 +472,8 @@ half-open block for one category. Explain why a comparator using `<=`, or one
 that orders during sort by identifier alone, breaks the boundary precondition.
 Test an empty vector, absent key, one match, repeated matches at both ends, and
 a key outside the stored range.
+
+---
 
 ### 9. The erase-remove pattern
 
@@ -424,6 +488,8 @@ values.erase(std::remove_if(values.begin(), values.end(),
 
 C++20 adds `std::erase_if(values, predicate)` for supported containers, but the
 older form remains important when reading C++17 projects.
+
+---
 
 ### 10. Maps: lookup versus insertion
 
@@ -445,6 +511,8 @@ if (found != frequency.end()) {
 
 Or use `.at(query)` when absence should produce an exception. Do not accidentally
 mutate a map while asking whether a key exists.
+
+---
 
 ### Frequency-to-ranking pipeline
 
@@ -469,6 +537,8 @@ with every algorithm.
 Prove the comparator is strict for equal pairs.
 Then check asymmetry and transitivity, including records with equal frequencies;
 checking only `compare(x, x) == false` is necessary but not sufficient.
+
+---
 
 ### 11. `optional` makes expected absence explicit
 
@@ -501,6 +571,8 @@ operation cannot fulfill its contract, and a richer result type when callers
 need distinct failure reasons. The graph lecture will use this distinction for
 “no path exists.”
 
+---
+
 ### Hour 3 integration task
 
 Read words, normalize case, count with a map/unordered map, remove stop words,
@@ -508,6 +580,8 @@ rank by frequency then spelling, and print the top `k`. Test empty input, ties,
 repeated punctuation policy, and very large counts. Benchmark ordered versus
 unordered counting on supplied data and explain results without overgeneralizing
 from one machine.
+
+---
 
 ## Final project connection — Container mutation is a lifetime event
 
@@ -524,6 +598,8 @@ the Midterm 2 scope, students must be able to state the ordering, range,
 complexity, and invalidation rules without AI. AI may review additional tests
 only after the student records an independent prediction.
 
+---
+
 ## Check yourself
 
 1. What operation does the `Maximum` template require from `T`?
@@ -535,6 +611,8 @@ only after the student records an independent prediction.
 7. When should a search return `optional<T>` rather than throw an exception?
 8. Identify invalid iterators after a vector insertion in the middle.
 
+---
+
 ## Summary
 
 - Templates express type-safe compile-time generality.
@@ -545,6 +623,8 @@ only after the student records an independent prediction.
   iterators delimiting an equal block.
 - `optional<T>` distinguishes an expected missing result from a stored value.
 - Mutation can invalidate iterators; complexity and lifetime remain correctness concerns.
+
+---
 
 ## References and source materials
 

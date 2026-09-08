@@ -6,6 +6,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 4](week04_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** draw what a pointer designates, distinguish lifetime from scope,
@@ -18,6 +20,8 @@
 - **Python bridge:** use the companion for conceptual comparison; Python object
   references are not C pointers.
 
+---
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -28,6 +32,8 @@ By the end of this lecture, you should be able to:
 4. Identify leaks, dangling pointers, null dereferences, and invalid access.
 5. Express ownership and mutation through a function contract.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -36,7 +42,18 @@ By the end of this lecture, you should be able to:
 | 2 | How is dynamic lifetime created and changed? | Implement a failure-aware dynamic integer buffer |
 | 3 | How are generic callbacks and multi-level pointers used safely? | Sort records, audit ownership, and repair sanitizer findings |
 
+---
+
 ## Hour 1 — Addresses, indirection, arrays, and `const`
+
+> **Hour 1 route:** [A pointer stores an address](#1-a-pointer-stores-an-address)
+> → [Initialize structure objects explicitly](#initialize-structure-objects-explicitly)
+> → [Pass an address to modify a caller's object](#2-pass-an-address-to-modify-a-callers-object)
+> → [Use `const` to prevent accidental writes](#use-const-to-prevent-accidental-writes)
+> → [Arrays and pointers are related, not identical](#3-arrays-and-pointers-are-related-not-identical)
+> → [Read declarations from the identifier outward](#read-declarations-from-the-identifier-outward)
+> → [Pointer/array trace](#pointerarray-trace)
+> → [Supporting syntax checkpoint](#supporting-syntax-checkpoint)
 
 ### 1. A pointer stores an address
 
@@ -90,6 +107,8 @@ int* first;
 int count;
 ```
 
+---
+
 ### Initialize structure objects explicitly
 
 Week 3 introduced structures. In C17, a member declaration describes layout;
@@ -112,6 +131,8 @@ initialization happens after allocation and before another function observes
 the node. Week 5 centralizes this work in a node-creation function so every new
 node begins with the same valid invariant.
 
+---
+
 ### 2. Pass an address to modify a caller's object
 
 ```c
@@ -131,6 +152,8 @@ int main(void) {
 C still passes arguments by value: `left` receives a copy of `&a`. Both the
 original address and its copy designate the same integer, so dereferencing the
 copy modifies `a`.
+
+---
 
 ### Use `const` to prevent accidental writes
 
@@ -179,6 +202,8 @@ whole fragment with a constant, leaving no visible pointer operation.
 
 </details>
 
+---
+
 ### 3. Arrays and pointers are related, not identical
 
 The subscript operation is defined through pointer arithmetic:
@@ -203,6 +228,8 @@ Pointer arithmetic is defined only within one array object (plus its one-past
 position). You may form the one-past pointer for loop comparison, but not
 dereference it.
 
+---
+
 ### Read declarations from the identifier outward
 
 > **Supporting syntax:** pointer-to-data and pointer-to-const declarations are
@@ -220,6 +247,8 @@ int (*operation)(int, int); /* pointer to function */
 `const` applies to the item immediately to its left, or to its right when there
 is no type on the left. Use typedefs sparingly when they clarify a complicated
 callback, but do not use them to avoid learning the underlying type.
+
+---
 
 ### Pointer/array trace
 
@@ -244,6 +273,8 @@ used in many programming exercises, an `int` index is often practical; use
 pointer positions, including the one-past pointer, and mark which four may be
 dereferenced.
 
+---
+
 ### Supporting syntax checkpoint
 
 For each expression, state whether it changes the pointer, the pointed-to value,
@@ -252,7 +283,15 @@ make the parse explicit. Do this after the basic dereference and array-boundary
 trace; these compact forms test precedence but are not preferred introductory
 style. Do not run the code until the prediction is written.
 
+---
+
 ## Hour 2 — Lifetime and dynamic storage
+
+> **Hour 2 route:** [Lifetime is different from scope](#4-lifetime-is-different-from-scope)
+> → [Dynamic allocation](#5-dynamic-allocation)
+> → [Build a dynamic buffer incrementally](#build-a-dynamic-buffer-incrementally)
+> → [`calloc` and `realloc`](#calloc-and-realloc)
+> → [Lifetime timeline exercise](#lifetime-timeline-exercise)
 
 ### 4. Lifetime is different from scope
 
@@ -266,6 +305,8 @@ int* bad_address(void) {
 The returned pointer dangles. The variable name is out of scope, and more
 importantly the object no longer exists. A valid pointer must designate a live
 object (or be a permitted one-past pointer that is never dereferenced).
+
+---
 
 ### 5. Dynamic allocation
 
@@ -312,6 +353,8 @@ values = NULL;
 Writing `sizeof(*values)` keeps the allocation correct if the pointed-to type is
 changed. Check multiplication before allocation when sizes may be untrusted.
 
+---
+
 ### Build a dynamic buffer incrementally
 
 ```c
@@ -344,6 +387,8 @@ failure, size, capacity, data, and existing elements remain unchanged.
 Finish `buffer_init`, `buffer_clear`, and `buffer_destroy`. Test growth across
 the 0→8 and 8→16 boundaries and verify the object can be destroyed after any
 failed `push`.
+
+---
 
 ### `calloc` and `realloc`
 
@@ -378,6 +423,8 @@ if (new_count == 0) {
 Handling zero separately avoids the implementation-defined corner cases of
 `realloc(pointer, 0)` in C17.
 
+---
+
 ### Lifetime timeline exercise
 
 Draw a timeline for this sequence: declare a buffer, allocate eight elements,
@@ -386,7 +433,14 @@ free the buffer. Mark the exact events that may invalidate the borrowed pointer.
 `realloc` may move storage even when it succeeds, so every interior pointer must
 be considered invalid after a successful resize.
 
+---
+
 ## Hour 3 — Ownership APIs, callbacks, and memory-error diagnosis
+
+> **Hour 3 route:** [Ownership contracts](#6-ownership-contracts)
+> → [Function pointers and `qsort`](#function-pointers-and-qsort)
+> → [Sanitizer triage studio](#sanitizer-triage-studio)
+> → [Failure patterns](#7-failure-patterns)
 
 ### 6. Ownership contracts
 
@@ -430,6 +484,8 @@ void values_destroy(int** owned) {
 }
 ```
 
+---
+
 ### Function pointers and `qsort`
 
 > **Supporting extension:** first secure allocation, ownership, and ordinary
@@ -471,6 +527,8 @@ creates undefined behavior that the generic C API cannot detect.
 This comparator assumes every grade is finite; a design that permits NaN must
 define and implement an explicit total ordering for it.
 
+---
+
 ### Sanitizer triage studio
 
 Run a seeded program containing one each of these actual memory errors:
@@ -491,6 +549,8 @@ owner to `NULL`, and the second call reaches `free(NULL)`, which is defined to d
 nothing. Confirm that the sanitizer emits no report. Contrast this behavior with
 a destroy function that frees the allocation but leaves the caller's pointer
 dangling.
+
+---
 
 ### 7. Failure patterns
 
@@ -513,6 +573,8 @@ cc -std=c17 -Wall -Wextra -Wpedantic -g \
 Sanitizers do not prove correctness, but they turn many silent errors into a
 report close to the failing operation.
 
+---
+
 ## Midterm project connection — Ownership is part of correctness
 
 Create an ownership table for the compiler scaffold. Include the token list,
@@ -526,6 +588,8 @@ from a partial snippet. Check call sites and cleanup code, run a small case unde
 AddressSanitizer, and reject any suggested repair that merely suppresses a
 report without restoring the ownership rule.
 
+---
+
 ## Check yourself
 
 1. Draw the objects and arrows after `int x = 3; int* p = &x;`.
@@ -534,6 +598,8 @@ report without restoring the ownership rule.
 4. Write the ownership contract for `read_values`.
 5. Explain why `values = realloc(values, bytes)` can leak memory.
 
+---
+
 ## Summary
 
 - A pointer is a typed address; dereferencing designates the pointed-to object.
@@ -541,6 +607,8 @@ report without restoring the ownership rule.
 - Dynamic allocation makes lifetime explicit and therefore makes ownership vital.
 - Every successful allocation needs one eventual release on every path.
 - Pointer contracts should state nullability, size, mutability, and ownership.
+
+---
 
 ## References and source materials
 

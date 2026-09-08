@@ -5,6 +5,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 12](week12_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** trace one raw owning array through destruction, copy, assignment,
@@ -18,6 +20,8 @@
 - **Python bridge:** use the companion to contrast Python name binding with C++
   copy and move operations.
 
+---
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -30,6 +34,8 @@ By the end of this lecture, you should be able to:
 6. Choose between a uniquely owned tree and a deliberately shared immutable
    object graph when composite operations reuse substructure.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -38,7 +44,15 @@ By the end of this lecture, you should be able to:
 | 2 | What are the exact semantics of copy, assignment, and move? | Implement/test special members including failure paths |
 | 3 | How should production code express ownership with Rule of Zero and smart pointers? | Refactor IntVec and map recursive/final-project lifetimes |
 
+---
+
 ## Hour 1 — Owning representations and deterministic destruction
+
+> **Hour 1 route:** [From C allocation to a C++ owning class](#1-from-c-allocation-to-a-c-owning-class)
+> → [Ownership must survive value operations](#2-ownership-must-survive-value-operations)
+> → [Shallow-copy failure experiment](#shallow-copy-failure-experiment)
+> → [Size, capacity, and growth invariant](#size-capacity-and-growth-invariant)
+> → [lifetime trace](#hour-1-lifetime-trace)
 
 ### 1. From C allocation to a C++ owning class
 
@@ -63,6 +77,8 @@ or another RAII owner. The purpose of `IntVec` is to understand why those
 owners require coordinated lifetime operations, not to replace them.
 The snippet assumes `count` is a validated nonnegative element count supported
 by the implementation; `{}` value-initializes each integer before it is read.
+
+---
 
 ### 2. Ownership must survive value operations
 
@@ -96,6 +112,8 @@ But the compiler-generated copy constructor copies the pointer value, not the
 array. Two objects would then believe they own the same allocation and both
 destructors would call `delete[]` on it.
 
+---
+
 ### Shallow-copy failure experiment
 
 Before implementing any copy operation, instrument the object and owned pointer
@@ -111,6 +129,8 @@ running it. Classify the report as an ownership failure rather than merely a bad
 `delete[]`, and state the three legitimate policy choices: deep-copy the
 resource, transfer unique ownership, or disable copying. This experiment gives
 Hour 1 a concrete failure whose repair motivates Hour 2.
+
+---
 
 ### Size, capacity, and growth invariant
 
@@ -138,6 +158,8 @@ void IntVec::reserve(std::size_t requested) {
 For a generic element type, use an RAII temporary so an exception during copying
 cannot leak. The `int` specialization is a teaching step toward `std::vector<T>`.
 
+---
+
 ### Hour 1 lifetime trace
 
 Instrument every constructor and destructor with object address, data address,
@@ -145,7 +167,16 @@ size, and capacity. Trace default construction, growth, nested scope exit, and
 return-by-value. Separate guaranteed language behavior from optional copy
 elision; log count is not the abstraction's contract.
 
+---
+
 ## Hour 2 — Copy, move, assignment, and exception guarantees
+
+> **Hour 2 route:** [The special member functions](#3-the-special-member-functions)
+> → [Deep copying](#4-deep-copying)
+> → [Construction versus assignment](#construction-versus-assignment)
+> → [Moving transfers ownership](#5-moving-transfers-ownership)
+> → [Exception-safety levels](#exception-safety-levels)
+> → [Aliasing and self-assignment lab](#aliasing-and-self-assignment-lab)
 
 ### 3. The special member functions
 
@@ -175,6 +206,8 @@ IntVec c = std::move(a);  // move construction; a remains valid but unspecified
 
 `std::move` does not move by itself. It permits overload resolution to select an
 rvalue-reference operation that may transfer resources.
+
+---
 
 ### 4. Deep copying
 
@@ -214,6 +247,8 @@ IntVec& IntVec::operator=(const IntVec& other) {
 If copying throws, the original object is unchanged. On success, `copy` later
 destroys the old allocation.
 
+---
+
 ### Construction versus assignment
 
 | Operation | Destination already owns a resource? | Required behavior |
@@ -225,6 +260,8 @@ destroys the old allocation.
 
 Construction creates lifetime; assignment operates within an existing lifetime.
 This distinction is why one implementation cannot blindly serve every case.
+
+---
 
 ### 5. Moving transfers ownership
 
@@ -256,6 +293,8 @@ usually unspecified unless the class documents something stronger.
 Mark resource-transfer moves `noexcept` when true. Standard containers can then
 move elements during reallocation without risking loss of the original data.
 
+---
+
 ### Exception-safety levels
 
 > **Supporting robustness model:** know that operations must preserve invariants
@@ -272,6 +311,8 @@ Copy-and-swap commonly provides the strong guarantee. A direct assignment that
 deletes old storage before allocating new storage loses the original value when
 allocation throws.
 
+---
+
 ### Aliasing and self-assignment lab
 
 Test `value = value`, `value = std::move(value)`, assignment between empty and
@@ -279,7 +320,16 @@ nonempty vectors, and copying when capacity exceeds size. Use distinct values to
 detect copying uninitialized capacity instead of logical elements. Force an
 allocation failure through a teaching hook and verify the promised guarantee.
 
+---
+
 ## Hour 3 — Rule of Zero, smart pointers, and project ownership
+
+> **Hour 3 route:** [Rule of Three, Five, and Zero](#6-rule-of-three-five-and-zero)
+> → [Smart pointers encode ownership](#7-smart-pointers-encode-ownership)
+> → [Unique ownership in a tree](#unique-ownership-in-a-tree)
+> → [Explicitly disable unsupported operations](#8-explicitly-disable-unsupported-operations)
+> → [Ownership in the final project](#9-ownership-in-the-final-project)
+> → [final-project audit](#hour-3-final-project-audit)
 
 ### 6. Rule of Three, Five, and Zero
 
@@ -306,6 +356,8 @@ Now generated copy, move, assignment, and destruction have the correct meaning.
 We implement a raw owning class once to understand the mechanism, then prefer
 the Rule of Zero.
 
+---
+
 ### 7. Smart pointers encode ownership
 
 > **Ownership priority:** use `unique_ptr` for the central one-owner model.
@@ -329,6 +381,8 @@ run-time overhead and cycles of shared owners leak unless broken with `weak_ptr`
 Borrow with `T&`, `const T&`, or a non-owning `T*` according to nullability.
 Ownership and access are different questions.
 
+---
+
 ### Unique ownership in a tree
 
 ```cpp
@@ -347,6 +401,8 @@ Recursive destruction is automatic. The type is movable but not copyable unless
 deep copy is explicitly implemented. Search functions can return `Node*` or
 `const Node*` as borrowers while the tree retains ownership.
 
+---
+
 ### 8. Explicitly disable unsupported operations
 
 Some resources cannot sensibly be copied:
@@ -363,6 +419,8 @@ class Connection {
 
 Compile-time rejection is better than an accidental shallow copy.
 
+---
+
 ### 9. Ownership in the final project
 
 For each game object, answer:
@@ -375,6 +433,8 @@ For each game object, answer:
 
 The demo may ask you to trace one object's creation, registration, use, removal,
 and destruction through the multi-file codebase.
+
+---
 
 ### Hour 3 final-project audit
 
@@ -390,6 +450,8 @@ verification without attempting a repository-wide pointer rewrite. This Week
 12 material is included in the Midterm 2 scope; Week 13 material is
 excluded because it is first presented two days before the exam.
 
+---
+
 ## Check yourself
 
 1. Why does memberwise copying fail for an owning raw pointer?
@@ -400,6 +462,8 @@ excluded because it is first presented two days before the exam.
 6. (Optional) When is immutable subtree sharing preferable to deep cloning?
 7. Refactor a raw owning member to satisfy the Rule of Zero.
 
+---
+
 ## Summary
 
 - Destruction alone is insufficient when an owning object can be copied.
@@ -409,6 +473,8 @@ excluded because it is first presented two days before the exam.
 - Smart pointers express ownership; references and raw pointers commonly borrow.
 - Recursive structures need an explicit ownership model before transformations
   are implemented.
+
+---
 
 ## Optional enrichment — Shared graphs and composite construction
 
@@ -430,6 +496,8 @@ destruction, copying, and transformations force an ownership decision:
 Do not combine owning raw child pointers with ad hoc subtree reuse. A raw pointer
 is appropriate only after ownership is established elsewhere.
 
+---
+
 ### Exception-safe construction and private factories
 
 Build children into RAII owners before publishing a parent. If later allocation
@@ -440,6 +508,8 @@ in a class factory. Prefer the smallest design that preserves the invariant: a
 public constructor, named free factory, controlled construction token, concrete
 value return, or a carefully implemented class factory.
 
+---
+
 ### Ownership design exercise and cycles
 
 For a scoring-rule tree with literal, input, unary, and binary nodes, draw both
@@ -447,6 +517,8 @@ the unique-tree and shared-immutable representations. Mark which subtrees a
 non-mutating transformation must clone, may share, or may only borrow. Then add
 one parent observer and decide whether it must be a `weak_ptr`; a cycle of
 `shared_ptr` owners prevents reference counts from reaching zero.
+
+---
 
 ## References and source materials
 

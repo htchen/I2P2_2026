@@ -5,6 +5,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 9](week09_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** establish a class invariant in its constructor, distinguish observer
@@ -16,6 +18,8 @@
   same class boundary after the normalized value type works.
 - **Python bridge:** use the companion to compare class syntax while retaining
   C++ value, reference, and `const` semantics.
+
+---
 
 ## Learning objectives
 
@@ -29,6 +33,8 @@ By the end of this lecture, you should be able to:
 6. Use a named factory when creation needs validation, alternate construction
    modes, or a deliberate ownership contract.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -37,7 +43,14 @@ By the end of this lecture, you should be able to:
 | 2 | How do member functions and operators form a coherent value interface? | Implement arithmetic, comparison, and stream output |
 | 3 | Which construction policies belong in a multi-file design? | Refactor, add a named factory, and test a complete value class |
 
+---
+
 ## Hour 1 — Class boundaries and construction
+
+> **Hour 1 route:** [A class protects a valid state](#1-a-class-protects-a-valid-state)
+> → [Constructors establish the invariant](#2-constructors-establish-the-invariant)
+> → [Initialization order](#initialization-order)
+> → [design studio](#hour-1-design-studio)
 
 ### 1. A class protects a valid state
 
@@ -74,6 +87,8 @@ The invariant is:
 Data is private so every public operation can preserve the invariant. Privacy
 is a design tool, not a demand to write trivial setters for every field.
 
+---
+
 ### 2. Constructors establish the invariant
 
 ```cpp
@@ -108,6 +123,8 @@ for references, `const` members, and members without a default constructor.
 The teaching representation rejects `INT_MIN`, whose magnitude cannot be stored
 in an `int`; a production numeric class needs a deliberate wider or checked model.
 
+---
+
 ### Initialization order
 
 Members are initialized in declaration order, not the textual order in the
@@ -125,6 +142,8 @@ class Interval {
 };
 ```
 
+---
+
 ### Hour 1 design studio
 
 Design a `BoundedCounter` whose value always lies in `[minimum, maximum]`.
@@ -132,7 +151,15 @@ Specify construction failure, increment-at-maximum behavior, observation, and
 whether assignment from a plain integer should be allowed. Compare a class with
 private fields against a public `struct` plus free functions.
 
+---
+
 ## Hour 2 — Member functions, `this`, and value operators
+
+> **Hour 2 route:** [`const` member functions](#3-const-member-functions)
+> → [The implicit object and `this`](#4-the-implicit-object-and-this)
+> → [Nonmember binary operators](#5-nonmember-binary-operators)
+> → [Equality and ordering](#equality-and-ordering)
+> → [implementation task](#hour-2-implementation-task)
 
 ### 3. `const` member functions
 
@@ -154,6 +181,8 @@ void Print(const Rational& value) {
 Make observer functions `const` by default. This is different from returning a
 `const` scalar, which generally adds no useful guarantee.
 
+---
+
 ### 4. The implicit object and `this`
 
 Within a non-static member function, `this` points to the current object.
@@ -174,6 +203,8 @@ Rational& Rational::operator+=(const Rational& other) {
 
 Returning `*this` by reference supports conventional chaining such as
 `a += b += c`. The operator mutates the left operand and preserves its invariant.
+
+---
 
 ### 5. Nonmember binary operators
 
@@ -207,6 +238,8 @@ std::ostream& operator<<(std::ostream& stream, const Rational& value) {
 Overload operators only when their meaning matches normal expectations. Do not
 turn `+` into an unrelated command merely because the syntax is available.
 
+---
+
 ### Equality and ordering
 
 Once values are normalized, equality is simple:
@@ -232,6 +265,8 @@ Ordering via cross multiplication may overflow `int`. A correct interface must
 either use a checked/wider intermediate representation or document a restricted
 input range. Algebraic correctness alone is not machine-level correctness.
 
+---
+
 ### Hour 2 implementation task
 
 In the starter, complete normalization, `operator+=`, `operator-=`, unary minus,
@@ -240,7 +275,17 @@ the compound operators; the supplied C++17 `operator!=` delegates to `==`; and
 stream output delegates to the public accessors. Test all three delegations and
 prove that a nonmember binary operator does not mutate either operand.
 
+---
+
 ## Hour 3 — Multi-file class design, creation policies, and verification
+
+> **Hour 3 route:** [Declaration and definition](#6-declaration-and-definition)
+> → [`class` versus `struct`](#7-class-versus-struct)
+> → [Named factories and private construction](#8-named-factories-and-private-construction)
+> → [Factory design checkpoint](#factory-design-checkpoint)
+> → [Header-dependency exercise](#header-dependency-exercise)
+> → [Test the abstraction, not the fields](#9-test-the-abstraction-not-the-fields)
+> → [invariant audit](#hour-3-invariant-audit)
 
 ### 6. Declaration and definition
 
@@ -264,6 +309,8 @@ c++ rational.o main.o -o rational_demo
 Headers should be self-contained and protected with `#pragma once` or consistent
 include guards.
 
+---
+
 ### 7. `class` versus `struct`
 
 The language difference is only the default access:
@@ -277,6 +324,8 @@ Course convention:
 - use `class` when operations protect an invariant or hide representation.
 
 This is a design convention, not a rule enforced by the compiler.
+
+---
 
 ### 8. Named factories and private construction
 
@@ -325,6 +374,8 @@ receives an independent object with automatic lifetime. Week 12 extends this
 decision to factories that transfer ownership of dynamically allocated
 resources.
 
+---
+
 ### Factory design checkpoint
 
 For a class that can be created from seconds, milliseconds, or a configuration
@@ -333,12 +384,16 @@ forms throw, which preserve the original object on failure, and which return a
 value. Do not implement all factories; first make the creation table
 unambiguous.
 
+---
+
 ### Header-dependency exercise
 
 Split Rational into `rational.hpp`, `rational.cpp`, and `rational_test.cpp`.
 Forward declare where a complete type is unnecessary, include what the header
 itself uses, and keep implementation-only headers out of the public interface.
 Then change the private representation and list which files must recompile.
+
+---
 
 ### 9. Test the abstraction, not the fields
 
@@ -367,6 +422,8 @@ representation can overflow during intermediate multiplication even when the
 mathematical result is small; that limitation belongs in the contract or a
 stronger representation.
 
+---
+
 ### Hour 3 invariant audit
 
 For every public operation, fill a table with valid input, possible failure,
@@ -377,6 +434,8 @@ have greatest common divisor one. This is an **invariant-based repeated test**:
 it checks a rule that must hold for many inputs rather than comparing only one
 precomputed output. Once it exposes the bug, add the smallest failing input as
 a permanent regression case.
+
+---
 
 ## Final project connection — A class must enter the system safely
 
@@ -394,6 +453,8 @@ that transfer dynamic ownership are postponed until Week 12. An AI-generated
 class skeleton is only a draft until its includes, ownership, and integration
 sites have been checked against the repository.
 
+---
+
 ## Check yourself
 
 1. Which operations can create or change a `Rational`?
@@ -405,6 +466,8 @@ sites have been checked against the repository.
    to local objects?
 7. Design an invariant and public interface for a `TimeOfDay` class.
 
+---
+
 ## Summary
 
 - A class is valuable when it protects a meaningful invariant.
@@ -413,6 +476,8 @@ sites have been checked against the repository.
 - `const` member functions expose safe observation.
 - Public interfaces should be smaller and more stable than representations.
 - Operator overloads should preserve invariants and conventional meaning.
+
+---
 
 ## Optional enrichment — Additional class syntax
 
@@ -439,6 +504,8 @@ conversions such as passing an `int` where a `Rational` is expected. Remove
 `explicit`, compile examples such as `Rational r = 3`, and discuss when numeric
 conversion is desirable.
 
+---
+
 ### Overloading and default arguments
 
 Member functions may be overloaded by parameter types/count and by trailing
@@ -448,6 +515,8 @@ call site and should appear in one declaration, normally the header.
 Avoid pairs of overloads whose conversions make a call ambiguous. Use a small
 test call matrix to confirm which overload accepts `int`, `double`, `const
 Rational`, and temporary arguments.
+
+---
 
 ### Class state and fluent lifetime
 
@@ -466,6 +535,8 @@ Rational& BadFactory() {
 
 Factories should return values. A read-only query should return a value or a
 carefully justified borrowed reference.
+
+---
 
 ## References and source materials
 

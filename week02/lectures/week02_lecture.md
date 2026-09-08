@@ -5,6 +5,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 2](week02_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** write typed functions, traverse an array with an explicit length,
@@ -18,6 +20,8 @@
   choices; first make the ordinary loop or query correct on the stated inputs.
 - **Python bridge:** use the companion for sequence comparisons rather than
   reading it as a second required lecture.
+
+---
 
 ## Learning objectives
 
@@ -33,6 +37,8 @@ By the end of this lecture, you should be able to:
 7. Explain the null-terminated representation of a C string.
 8. Design interfaces that pass an array together with its length or capacity.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -41,7 +47,16 @@ By the end of this lecture, you should be able to:
 | 2 | How can preprocessing replace repeated query work? | Trace prefix and sorted-boundary queries |
 | 3 | How do null-terminated strings remain inside their buffers? | Build and test bounded string utilities |
 
+---
+
 ## Hour 1 — Function contracts and decomposition
+
+> **Hour 1 route:** [Functions are typed contracts](#1-functions-are-typed-contracts)
+> → [C passes arguments by value](#2-c-passes-arguments-by-value)
+> → [Address-passing bridge](#address-passing-bridge)
+> → [Decompose before coding](#decompose-before-coding)
+> → [Scope, storage duration, and `static` locals](#scope-storage-duration-and-static-locals)
+> → [checkpoint](#hour-1-checkpoint)
 
 ### 1. Functions are typed contracts
 
@@ -89,6 +104,8 @@ the input a checked range or use a checked wider integer representation.
 Keep the declaration and definition identical. A prototype placed in a header
 allows multiple source files to share the same contract.
 
+---
+
 ### 2. C passes arguments by value
 
 Each parameter starts as a copy of the corresponding argument.
@@ -112,6 +129,8 @@ int absolute_value(int value) {
 
 Precondition: `value != INT_MIN`, because `-INT_MIN` may overflow. Interfaces
 should make important preconditions visible in names, documentation, or checks.
+
+---
 
 ### Address-passing bridge
 
@@ -149,6 +168,8 @@ call. The Week 4 lecture notes develop the complete model: pointer arithmetic, n
 array relationships, lifetime, dynamic allocation, and ownership. Until then,
 do not infer that every address may be dereferenced or retained.
 
+---
+
 ### Decompose before coding
 
 The previous function notes built a program in stages. For a judge problem that
@@ -173,6 +194,8 @@ For each function, state:
 This is C's explicit replacement for many run-time assumptions hidden inside a
 short Python expression.
 
+---
+
 ### Scope, storage duration, and `static` locals
 
 > **Supporting C feature:** local variables normally exist only during one
@@ -194,6 +217,8 @@ This hidden state can be useful but makes tests order-dependent and is not
 automatically safe for concurrency. Prefer explicit state passed through a
 structure when the state is part of the abstraction.
 
+---
+
 ### Hour 1 checkpoint
 
 Write a prototype and five-line contract for a function that finds a target in
@@ -201,7 +226,20 @@ an integer array. Compare three result designs: return an index with a sentinel,
 return success plus an output parameter, or return a pointer to the element.
 The third design will be analyzed fully after the Week 4 lecture notes.
 
+---
+
 ## Hour 2 — Array layout, prefix queries, and boundary algorithms
+
+> **Hour 2 route:** [Arrays are contiguous fixed-size storage](#3-arrays-are-contiguous-fixed-size-storage)
+> → [Boundary reasoning](#4-boundary-reasoning)
+> → [Prefix tables: preprocess repeated range queries](#5-prefix-tables-preprocess-repeated-range-queries)
+> → [Build/query contracts before implementation](#buildquery-contracts-before-implementation)
+> → [Prefixes of derived contributions](#prefixes-of-derived-contributions)
+> → [Prefix-table checkpoint](#prefix-table-checkpoint)
+> → [Lower and upper boundaries in sorted data](#6-lower-and-upper-boundaries-in-sorted-data)
+> → [A monotone-predicate view of binary search](#a-monotone-predicate-view-of-binary-search)
+> → [Sorting is a precondition, not part of the search](#sorting-is-a-precondition-not-part-of-the-search)
+> → [Boundary-search checkpoint](#boundary-search-checkpoint)
 
 > **Algorithm applications:** prefix tables and boundary search develop array
 > invariants and indexing discipline. They are problem-solving techniques, not
@@ -233,6 +271,8 @@ int maximum(const int values[], size_t count, int* result);
 The return value can report whether a maximum exists; `result` can hold the
 answer. We introduce this output-parameter style fully with pointers.
 
+---
+
 ### 4. Boundary reasoning
 
 For `count` valid elements, the canonical traversal is:
@@ -251,6 +291,8 @@ Ask three questions about every loop:
 
 Accessing `values[count]` is undefined behavior. C has no automatic bounds
 check and no `IndexError`.
+
+---
 
 ### 5. Prefix tables: preprocess repeated range queries
 
@@ -304,6 +346,8 @@ prefix[right] - prefix[left]
 For the table above, `[1, 4)` totals `8 - 3 = 5`. This matches C's usual loop
 boundary: start at `left` and continue while `i < right`.
 
+---
+
 ### Build/query contracts before implementation
 
 Design two interfaces rather than hiding preprocessing inside `main`:
@@ -329,6 +373,8 @@ O(n + q), compared with O(nq) in the worst case when each query scans its
 range. The tradeoff is O(n) additional storage and the need to rebuild or
 update the table if an input value changes.
 
+---
+
 ### Prefixes of derived contributions
 
 The accumulated value need not be the original element. A program can first
@@ -337,12 +383,16 @@ define a contribution—for example, `1` when a reading satisfies a condition an
 in any range. Keep the transformation and range convention explicit; changing
 either changes the meaning of every query.
 
+---
+
 ### Prefix-table checkpoint
 
 For `values = {5, -2, 0, 7, -3}`, build the six boundary totals by hand. Answer
 `[0, 0)`, `[0, 3)`, `[2, 5)`, and `[4, 5)`. Then specify expected rejection for
 three invalid boundary pairs. Only after the table and expectations are fixed,
 write the two function bodies and compare their results with a direct loop.
+
+---
 
 ### 6. Lower and upper boundaries in sorted data
 
@@ -365,6 +415,8 @@ partitioned as:
 Therefore `lower == upper` means the target is absent, and `upper - lower` is
 the size of its equal block. The same boundaries also identify where a value
 could be inserted while preserving order.
+
+---
 
 ### A monotone-predicate view of binary search
 
@@ -389,6 +441,8 @@ every value, and duplicates at both ends. A conventional equality-returning
 binary search is insufficient because it may find any duplicate rather than a
 specified boundary.
 
+---
+
 ### Sorting is a precondition, not part of the search
 
 Boundary search requires an ascending sorted range. The search function should
@@ -403,6 +457,8 @@ Scanning the unsorted array for each query costs O(nq), but preserves original
 order and needs no sorting. Choose from the complete workload and data contract,
 not from the query operation alone.
 
+---
+
 ### Boundary-search checkpoint
 
 For `{-3, -1, -1, -1, 2, 5, 5}`, fill a table of lower and upper positions for
@@ -410,7 +466,16 @@ targets `-4`, `-1`, `0`, `5`, and `8`. For each comparison, record `[low, high)`
 and the truth value of the relevant predicate. Then write function contracts
 for the two searches without writing their bodies.
 
+---
+
 ## Hour 3 — String representation, bounded input, and parsing
+
+> **Hour 3 route:** [Strings are character arrays with a sentinel](#7-strings-are-character-arrays-with-a-sentinel)
+> → [Capacity versus length](#capacity-versus-length)
+> → [Reading a line safely](#8-reading-a-line-safely)
+> → [Implement library ideas once](#implement-library-ideas-once)
+> → [Validate the line representation before processing it](#validate-the-line-representation-before-processing-it)
+> → [studio](#hour-3-studio)
 
 ### 7. Strings are character arrays with a sentinel
 
@@ -431,6 +496,8 @@ size_t length = strlen(language); /* 3, not 4 */
 
 `strlen` is linear time; it does not know the array capacity.
 
+---
+
 ### Capacity versus length
 
 ```c
@@ -445,6 +512,8 @@ char name[32] = "Ada";
 Capacity and logical length are different properties in every sequence
 representation. Keeping them separate here prepares us to reason about dynamic
 arrays and other containers later without depending on any one language API.
+
+---
 
 ### 8. Reading a line safely
 
@@ -473,6 +542,8 @@ code must detect whether the newline was read and decide whether to reject,
 discard, or continue the line.
 
 Avoid unbounded `%s` input. It cannot know the destination capacity.
+
+---
 
 ### Implement library ideas once
 
@@ -505,6 +576,8 @@ deliberately explores a different, truncating contract so that the two policies
 can be compared. Discuss why calling either function on a nonterminated array
 violates its precondition.
 
+---
+
 ### Validate the line representation before processing it
 
 A successful `fgets` call does not guarantee that the whole logical line fit in
@@ -523,6 +596,8 @@ the converted value and where conversion stopped. That interface is deferred
 until Week 4, when pointer-valued positions and their lifetime rules have been
 introduced fully.
 
+---
+
 ### Hour 3 studio
 
 Write `count_words` for a null-terminated character array. A word is one or more
@@ -530,6 +605,8 @@ non-whitespace characters, and any run of whitespace separates words. Trace a
 Boolean state such as `inside_word` across an empty string, leading/trailing
 spaces, and repeated separators. The important technique is recognizing a
 transition from “outside” to “inside,” not memorizing a library function.
+
+---
 
 ## Worked example: one-pass minimum
 
@@ -557,6 +634,8 @@ structures that can combine status and data, and Week 4 develops output-pointer
 interfaces. This week's version keeps the focus on array bounds, function
 preconditions, and the traversal proof.
 
+---
+
 ## Check yourself
 
 1. Why does `sizeof parameter / sizeof parameter[0]` fail in a function?
@@ -570,6 +649,8 @@ preconditions, and the traversal proof.
 8. Find the off-by-one error in `for (i = 0; i <= count; ++i)`.
 9. What should a string-building function know besides the current length?
 
+---
+
 ## Summary
 
 - Prototypes make function contracts available to the compiler.
@@ -579,6 +660,8 @@ preconditions, and the traversal proof.
 - Lower and upper bounds locate the edges of an equal block in sorted data.
 - A C string is an array convention: characters followed by `\0`.
 - Pair every array with its length and every output buffer with its capacity.
+
+---
 
 ## Optional enrichment and lab extensions
 
@@ -615,6 +698,8 @@ The conceptual byte offset of `matrix[r][c]` is
 `(r * columns + c) * sizeof(int)`. Draw a `2 x 3` matrix as six consecutive
 cells and explain why the column count is part of the interface contract.
 
+---
+
 ### Implementing a simple sort
 
 ```c
@@ -633,6 +718,8 @@ void insertion_sort(int values[], size_t count) {
 
 Before iteration `i`, `[0, i)` is sorted and contains the original prefix's
 values. Trace `{4, 2, 2, 1}` and identify what makes equal elements stable.
+
+---
 
 ## References and source materials
 

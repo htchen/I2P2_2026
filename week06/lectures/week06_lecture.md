@@ -6,6 +6,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 6](week06_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** identify a base case and decreasing measure, trace stack frames,
@@ -17,6 +19,8 @@
   analysis reinforce the recursion model; first master the small tree trace.
 - **Python bridge:** use the companion when manual allocation obscures the
   recursive algorithm shared by both languages.
+
+---
 
 ## Learning objectives
 
@@ -31,6 +35,8 @@ By the end of this lecture, you should be able to:
    interpretations must be validated or counted.
 7. Structure a small exhaustive search as choose, recurse, validate, and undo.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -39,7 +45,20 @@ By the end of this lecture, you should be able to:
 | 2 | How does tree shape determine traversal order? | Draw trees and derive traversal/query functions |
 | 3 | What can traversal sequences prove about a tree? | Reconstruct, validate, and compare possible interpretations |
 
+---
+
 ## Hour 1 — Recursive reasoning and the call stack
+
+> **Hour 1 route:** [A recursive proof becomes a recursive program](#1-a-recursive-proof-becomes-a-recursive-program)
+> → [Stack frames](#2-stack-frames)
+> → [Euclid's algorithm](#euclids-algorithm)
+> → [Fast exponentiation](#fast-exponentiation)
+> → [Recursion versus iteration](#recursion-versus-iteration)
+> → [Quick comparison](#quick-comparison)
+> → [Classic divide-and-recombine example: Towers of Hanoi](#classic-divide-and-recombine-example-towers-of-hanoi)
+> → [Backtracking: choose, recurse, undo](#backtracking-choose-recurse-undo)
+> → [Classic backtracking example: N queens](#classic-backtracking-example-n-queens)
+> → [checkpoint](#hour-1-checkpoint)
 
 ### 1. A recursive proof becomes a recursive program
 
@@ -59,6 +78,8 @@ unsigned long long factorial(unsigned int n) {
 
 The measure `n` decreases. This function is structurally correct but its result
 still overflows quickly; recursion does not remove numeric limits.
+
+---
 
 ### 2. Stack frames
 
@@ -127,6 +148,8 @@ being replaced with iteration.
 <details>
 <summary>Optional contrast examples: Euclid's algorithm and fast exponentiation</summary>
 
+---
+
 ### Euclid's algorithm
 
 ```c
@@ -140,6 +163,8 @@ Contract: for supported inputs, return the nonnegative greatest common divisor.
 The absolute value of the second argument decreases after reduction. Discuss
 the `INT_MIN` limitation and decide whether the production interface should use
 a wider type or reject that case.
+
+---
 
 ### Fast exponentiation
 
@@ -160,6 +185,8 @@ unwinding path.
 
 </details>
 
+---
+
 ### Recursion versus iteration
 
 Use recursion when it exposes the structure of the proof or data. Use iteration
@@ -167,11 +194,15 @@ when the state transition is simpler and deep recursion risks the stack. Tail
 calls are not guaranteed to be optimized by C, so rewriting a linear recursive
 loop may be necessary for unbounded input.
 
+---
+
 ### Quick comparison
 
 For Fibonacci, binary search, and linked-list length, identify the problem
 measure, number of recursive calls, maximum depth, and overlapping subproblems.
 Explain why naive Fibonacci is exponential while the other two need not be.
+
+---
 
 ### Classic divide-and-recombine example: Towers of Hanoi
 
@@ -199,6 +230,8 @@ The measure `n` decreases, but each non-base call creates two recursive calls.
 The number of moves satisfies `T(n) = 2T(n - 1) + 1 = 2^n - 1`. Trace `n = 3`
 before running it and check that no larger disk is ever placed on a smaller one.
 
+---
+
 ### Backtracking: choose, recurse, undo
 
 > **Supporting algorithmic pattern:** backtracking extends recursive reasoning.
@@ -210,6 +243,8 @@ A backtracking function maintains a partial answer, chooses one permitted next
 step, recurses, and then **undoes** that step before trying another choice. The
 undo step restores the caller's invariant; omitting it silently removes valid
 branches.
+
+---
 
 ### Classic backtracking example: N queens
 
@@ -243,13 +278,23 @@ positions, occupied-line sets, and result accumulator as parameters or group
 them in a context structure. Hidden mutable `static` work buffers make repeated
 calls and tests harder to reason about.
 
+---
+
 ### Hour 1 checkpoint
 
 For factorial, Towers of Hanoi, and N queens, state the contract, base case,
 decreasing measure, maximum depth, and number of recursive calls per non-base
 case. Then explain which one uses “undo” and why the other two do not.
 
+---
+
 ## Hour 2 — Recursive data and traversal design
+
+> **Hour 2 route:** [Recursion follows recursive data](#3-recursion-follows-recursive-data)
+> → [Traversal orders](#traversal-orders)
+> → [Aggregate queries](#4-aggregate-queries)
+> → [Derive, do not memorize, traversal order](#derive-do-not-memorize-traversal-order)
+> → [board exercise](#hour-2-board-exercise)
 
 ### 3. Recursion follows recursive data
 
@@ -263,6 +308,8 @@ struct TreeNode {
 
 A tree is either empty (`NULL`) or a node with two smaller trees. The data
 definition suggests the program structure.
+
+---
 
 ### Traversal orders
 
@@ -321,6 +368,8 @@ For the pictured tree:
 Point to the line containing `printf` in each function: its position relative
 to the two recursive calls exactly matches the order's definition.
 
+---
+
 ### 4. Aggregate queries
 
 ```c
@@ -342,6 +391,8 @@ int tree_height(const struct TreeNode* node) {
 Define conventions explicitly. Some books call an empty tree height `0` and a
 leaf height `1`; this note measures edges, so they are `-1` and `0`.
 
+---
+
 ### Derive, do not memorize, traversal order
 
 Choose the moment to process the root:
@@ -355,6 +406,8 @@ Week 7 applies the same idea to expression trees. Moving evaluation there lets
 us first establish traversal on ordinary binary trees, then add operator-node
 invariants when the compiler pipeline is introduced.
 
+---
+
 ### Hour 2 board exercise
 
 For a seven-node tree, derive preorder, inorder, and postorder sequences. Then
@@ -362,7 +415,20 @@ work backward: given preorder and inorder with unique labels, circle the root,
 partition both sequences, and repeat on each subtree. Include an empty subtree
 and a one-child node rather than using only a perfect tree.
 
+---
+
 ## Hour 3 — BST construction, reconstruction, and ownership
+
+> **Hour 3 route:** [Build a binary search tree](#5-build-a-binary-search-tree)
+> → [Destruction is postorder](#6-destruction-is-postorder)
+> → [Reconstructing from traversals](#7-reconstructing-from-traversals)
+> → [Which traversal pairs are sufficient?](#which-traversal-pairs-are-sufficient)
+> → [Validate before reconstructing or counting](#validate-before-reconstructing-or-counting)
+> → [Shape determines cost](#8-shape-determines-cost)
+> → [Search and extrema](#search-and-extrema)
+> → [Reconstruction implementation plan](#reconstruction-implementation-plan)
+> → [integration test](#hour-3-integration-test)
+> → [Tree testing strategy](#9-tree-testing-strategy)
 
 ### 5. Build a binary search tree
 
@@ -397,6 +463,8 @@ This iterative version reuses the pointer-to-pointer technique from linked
 lists. A recursive insertion is also natural; both must preserve the BST
 invariant and handle allocation failure.
 
+---
+
 ### 6. Destruction is postorder
 
 ```c
@@ -417,6 +485,8 @@ At the owning call site:
 tree_destroy(root);
 root = NULL;
 ```
+
+---
 
 ### 7. Reconstructing from traversals
 
@@ -447,6 +517,8 @@ sizes split the preceding postorder range. Recursively repeat the same rule.
 This is the same structural argument, with the root read from the opposite end
 of the second traversal.
 
+---
+
 ### Which traversal pairs are sufficient?
 
 With distinct labels:
@@ -470,6 +542,8 @@ guarantees a full binary tree—every internal node has two children—distinct
 preorder and postorder labels are sufficient; without that structural promise,
 ambiguity is part of the problem rather than an input error.
 
+---
+
 ### Validate before reconstructing or counting
 
 For any traversal-consistency task, check the contract before exploring tree
@@ -485,6 +559,8 @@ shapes:
 The final item matters in C: write the bounds test on the left side of `&&` so
 short-circuit evaluation proves the array access is valid.
 
+---
+
 ### 8. Shape determines cost
 
 Every full traversal visits `n` nodes: O(n) time. Its additional stack use is
@@ -495,6 +571,8 @@ O(h), where `h` is tree height.
 
 BST search and insertion are O(h), not automatically O(log n). A plain BST can
 degrade into a linked list when values arrive in sorted order.
+
+---
 
 ### Search and extrema
 
@@ -521,6 +599,8 @@ const struct TreeNode* bst_minimum(const struct TreeNode* node) {
 Both return borrowed pointers. They do not transfer ownership, and a later tree
 mutation or destruction may invalidate them.
 
+---
+
 ### Reconstruction implementation plan
 
 Use half-open ranges in the traversal arrays. A helper receives an inorder range,
@@ -530,12 +610,16 @@ the root only after validating that it appears in the inorder range. If either
 subtree fails, destroy any partial children and the root before returning
 failure.
 
+---
+
 ### Hour 3 integration test
 
 Insert a sequence, verify inorder ordering and recorded size, search present and
 absent values, reconstruct one tree from two traversals, and destroy both trees.
 Run the insertion sequence for balanced and sorted orders; compare observed
 height and maximum recursion depth.
+
+---
 
 ### 9. Tree testing strategy
 
@@ -553,6 +637,8 @@ Include at least:
 Useful properties include “inorder output of a BST is strictly increasing” and
 “size after inserting a new distinct value increases by exactly one.”
 
+---
+
 ## Midterm project connection — AST checkpoint
 
 An abstract syntax tree uses the same recursive ownership model as the trees in
@@ -566,6 +652,8 @@ The full lab supplies tree-ownership practice before Week 7 parsing. Week 6
 material is included in the Midterm 1 scope; Week 7 material is
 excluded because it is first presented two days before the exam.
 
+---
+
 ## Check yourself
 
 1. Identify the base case and decreasing measure in `tree_size`.
@@ -578,6 +666,8 @@ excluded because it is first presented two days before the exam.
    candidate?
 8. (Optional) List the checks required before counting traversal interpretations.
 
+---
+
 ## Summary
 
 - Recursive code should follow a contract, base case, and decreasing measure.
@@ -589,6 +679,8 @@ excluded because it is first presented two days before the exam.
   factorial search bound are explicit.
 - Ownership determines destruction order.
 - Complexity depends on tree height as well as node count.
+
+---
 
 ## Optional enrichment
 
@@ -621,6 +713,8 @@ For distinct labels, preorder plus a candidate inorder determines at most one
 tree. For preorder `A B C` and postorder `C B A`, identify all consistent inorder
 sequences by hand and compare examined arrangements with valid interpretations.
 
+---
+
 ### BST deletion cases
 
 BST removal separates three cases:
@@ -632,6 +726,8 @@ BST removal separates three cases:
 
 Implement deletion with a pointer-to-pointer to the root link. Draw ownership
 before coding and test leaf, one-child, and two-child roots under a sanitizer.
+
+---
 
 ## References and source materials
 

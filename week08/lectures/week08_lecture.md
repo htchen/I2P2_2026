@@ -5,6 +5,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 8](week08_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** use streams, `std::string`, `std::vector`, references, and `const`,
@@ -16,6 +18,8 @@
   standard-library values rather than custom ownership-taking interfaces.
 - **Python bridge:** consult the companion for a familiar baseline, not as a
   substitute for C++ lifetime reasoning.
+
+---
 
 ## Learning objectives
 
@@ -30,6 +34,8 @@ By the end of this lecture, you should be able to:
    lifetimes.
 6. Refactor a manual C resource into a standard-library value.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -38,7 +44,15 @@ By the end of this lecture, you should be able to:
 | 2 | How do references, `const`, and range loops express borrowing and mutation? | Annotate and implement parameter contracts |
 | 3 | How do exceptions and RAII make failure paths safe? | Trace unwinding, resource lifetimes, and a file-processing pipeline |
 
+---
+
 ## Hour 1 — C++ compilation, I/O, strings, and vectors
+
+> **Hour 1 route:** [Compile C++ as C++](#1-compile-c-as-c)
+> → [Prefer library values over manual buffers](#2-prefer-library-values-over-manual-buffers)
+> → [Stream state and robust input](#stream-state-and-robust-input)
+> → [Initialization forms](#initialization-forms)
+> → [refactoring studio](#hour-1-refactoring-studio)
 
 ### 1. Compile C++ as C++
 
@@ -99,6 +113,8 @@ std;` imports many names at once, which can create collisions and hides where a
 facility came from. It is common in short contest solutions, but explicit
 qualification is clearer while learning the library.
 
+---
+
 ### 2. Prefer library values over manual buffers
 
 ```cpp
@@ -131,6 +147,8 @@ A vector combines a dynamic array with ownership and size information.
 Use `.at(i)` when checked access is useful and `operator[]` when bounds have
 already been established.
 
+---
+
 ### Stream state and robust input
 
 ```cpp
@@ -153,6 +171,8 @@ When mixing `operator>>` with `getline`, remember that formatted extraction
 usually leaves the newline in the stream. Consume the remainder deliberately or
 use line-oriented input consistently.
 
+---
+
 ### Initialization forms
 
 ```cpp
@@ -166,6 +186,8 @@ Brace initialization rejects many narrowing conversions, but constructor syntax
 can differ when an initializer-list overload exists. Predict `size()` for both
 vectors before compiling.
 
+---
+
 ### Hour 1 refactoring studio
 
 Take the Week 2 C program that reads a bounded character array and a fixed score
@@ -173,7 +195,14 @@ array. Replace ownership and capacity management with `std::string` and
 `std::vector<int>`, while preserving validation and output. List which C failure
 modes disappear and which domain errors remain.
 
+---
+
 ## Hour 2 — References, `const`, and range-based traversal
+
+> **Hour 2 route:** [References are aliases](#3-references-are-aliases)
+> → [`const` makes interfaces readable](#4-const-makes-interfaces-readable)
+> → [A range loop is still an ownership decision](#5-a-range-loop-is-still-an-ownership-decision)
+> → [Parameter and traversal audit](#parameter-and-traversal-audit)
 
 ### 3. References are aliases
 
@@ -256,6 +285,8 @@ std::vector<int> Doubled(std::vector<int> values); /* local copy/value */
 Use a pointer when null is meaningful or pointer arithmetic/low-level interop is
 required. Use a reference for a required borrowed object.
 
+---
+
 ### 4. `const` makes interfaces readable
 
 ```cpp
@@ -299,6 +330,8 @@ for (const auto& word : words) {
 Use `auto` when the initializer makes the type clear; spell the type when it
 communicates an important unit, conversion, or ownership decision.
 
+---
+
 ### 5. A range loop is still an ownership decision
 
 A range-based loop expresses “visit every element,” but the loop variable still
@@ -327,6 +360,8 @@ can invalidate the current reference and the loop's internal position.
 This is not merely shorter loop syntax. It is another place to state the same
 copy/borrow/mutate contract used by function parameters.
 
+---
+
 ### Parameter and traversal audit
 
 For each operation, choose `T`, `T&`, `const T&`, or `T*` and explain why:
@@ -343,7 +378,15 @@ a copy, a read-only borrow, or a mutable borrow, and explain what container
 changes would invalidate that borrow. Week 11 introduces iterators, algorithms,
 and lambdas after classes and callable objects have a proper foundation.
 
+---
+
 ## Hour 3 — Deterministic lifetime and value-oriented design
+
+> **Hour 3 route:** [Exceptions transfer control to a handler](#6-exceptions-transfer-control-to-a-handler)
+> → [RAII: lifetime controls resources](#7-raii-lifetime-controls-resources)
+> → [Values first](#8-values-first)
+> → [Nested RAII lifetimes](#nested-raii-lifetimes)
+> → [integration task](#hour-3-integration-task)
 
 ### 6. Exceptions transfer control to a handler
 
@@ -387,6 +430,8 @@ an error code, so throwing is a conventional way to report construction failure.
 Later lectures build on this model when constructors validate invariants and
 copy operations promise exception-safety guarantees.
 
+---
+
 ### 7. RAII: lifetime controls resources
 
 RAII means **Resource Acquisition Is Initialization**. An object establishes
@@ -409,6 +454,8 @@ void WriteReport(const std::string& path) {
 The same principle manages vectors, strings, locks, sockets, and smart pointers.
 RAII turns every control-flow path—normal return, early return, or exception—
 into deterministic cleanup.
+
+---
 
 ### 8. Values first
 
@@ -441,6 +488,8 @@ resource-transfer operations that support this model. The interface should
 express the simple ownership result now without exposing those implementation
 mechanisms prematurely.
 
+---
+
 ### Nested RAII lifetimes
 
 ```cpp
@@ -461,6 +510,8 @@ Trace construction and destruction for `input`, each loop-local `word`, the
 vector, its elements, and the returned value on normal return and on each throw.
 No explicit cleanup appears because every owner has a destructor.
 
+---
+
 ### Hour 3 integration task
 
 Build a program that reads words from an `ifstream` into a `vector<string>` and
@@ -469,6 +520,8 @@ avoid global state, and return collected results by value. Compare its cleanup
 proof with a C version that uses `FILE *`, allocated strings, and multiple error
 labels. Sorting, iterators, and custom comparison behavior are developed in
 Week 11.
+
+---
 
 ## Final project connection — Event loop and resource lifetime
 
@@ -485,6 +538,8 @@ boundary: first document the actual lifetime, then consider a small RAII wrapper
 rather than rewriting the resource subsystem. Thursday's evidence is an event
 trace and resource-lifecycle table.
 
+---
+
 ## Check yourself
 
 1. When should a parameter be `const T&`, `T&`, or `T`?
@@ -493,6 +548,8 @@ trace and resource-lifecycle table.
 4. Which objects are destroyed when an exception leaves two nested scopes?
 5. What resource does a vector's destructor release?
 6. Refactor a `malloc`/`free` integer array into `std::vector<int>`.
+
+---
 
 ## Summary
 
@@ -503,6 +560,8 @@ trace and resource-lifecycle table.
   remains clear.
 - Exceptions transfer control while stack unwinding destroys automatic objects.
 - RAII binds resource cleanup to deterministic object lifetime.
+
+---
 
 ## References and source materials
 

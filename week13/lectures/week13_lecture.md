@@ -5,6 +5,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 13](week13_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** call an override through a base reference, preserve safe destruction
@@ -17,6 +19,8 @@
   alternatives or extensions; they are not required by the core exercise.
 - **Python bridge:** use the companion to compare dynamic dispatch while keeping
   C++ ownership and destruction explicit.
+
+---
 
 ## Learning objectives
 
@@ -31,6 +35,8 @@ By the end of this lecture, you should be able to:
 6. Design a recursive polymorphic Composite with explicit construction,
    evaluation, transformation, and ownership contracts.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -39,7 +45,16 @@ By the end of this lecture, you should be able to:
 | 2 | How do dispatch, destruction, and ownership interact? | Trace polymorphic calls and study one recursive Composite in depth |
 | 3 | When should a design use inheritance or composition? | Compare alternatives and refactor one final-project hierarchy |
 
+---
+
 ## Hour 1 — Abstract interfaces and substitutable overrides
+
+> **Hour 1 route:** [Why introduce an abstraction?](#1-why-introduce-an-abstraction)
+> → [Public inheritance means “can be used as”](#2-public-inheritance-means-can-be-used-as)
+> → [Override the contract](#3-override-the-contract)
+> → [A derived class must keep the base promise](#a-derived-class-must-keep-the-base-promise)
+> → [Non-virtual interface pattern](#non-virtual-interface-pattern)
+> → [studio](#hour-1-studio)
 
 ### 1. Why introduce an abstraction?
 
@@ -71,6 +86,8 @@ implementation. This is useful only when the common promise is genuine; an
 interface created merely to avoid a few repeated lines can make a design harder
 to understand.
 
+---
+
 ### 2. Public inheritance means “can be used as”
 
 Use public inheritance when every derived object can be used wherever the base
@@ -95,6 +112,8 @@ class Shape {
 
 A pure virtual function (`= 0`) makes `Shape` abstract. It describes an
 interface; `Shape shape;` is ill-formed because no complete base behavior exists.
+
+---
 
 ### 3. Override the contract
 
@@ -186,6 +205,8 @@ class remains abstract or a call through the base interface cannot reach the
 intended function. Treat `override` as a compile-time safety check, not only as
 documentation.
 
+---
+
 ### A derived class must keep the base promise
 
 If `Shape::translate` accepts every finite offset, `Circle::translate` cannot
@@ -195,6 +216,8 @@ result but must not demand more from callers using the base contract.
 Create contract tests that run against a `Shape&` and reuse them for every
 derived type. This catches behavioral incompatibility that `override` syntax
 alone cannot detect.
+
+---
 
 ### Non-virtual interface pattern
 
@@ -241,6 +264,8 @@ This pattern separates two questions: the base class controls **when** the
 steps run, while the derived class supplies **what** happens in the designated
 step.
 
+---
+
 ### Hour 1 studio
 
 Run the same center/translate/area contract tests against the supplied `Circle`
@@ -249,7 +274,16 @@ by omitting `const` or changing a parameter type, observe the compiler error, an
 repair it. Do not add `CompositeShape` yet: Hour 2 introduces polymorphic
 ownership before constructing a branch that owns child shapes.
 
+---
+
 ## Hour 2 — Dynamic dispatch, ownership, and destruction
+
+> **Hour 2 route:** [Dynamic dispatch requires indirection](#4-dynamic-dispatch-requires-indirection)
+> → [Polymorphic ownership](#5-polymorphic-ownership)
+> → [What virtual dispatch stores conceptually](#what-virtual-dispatch-stores-conceptually)
+> → [Destruction trace](#destruction-trace)
+> → [Access control](#6-access-control)
+> → [Recursive Composite case study](#recursive-composite-case-study)
 
 ### 4. Dynamic dispatch requires indirection
 
@@ -278,6 +312,8 @@ void Wrong(Shape value); /* abstract Shape makes this impossible here */
 For a nonabstract base, copying a derived value into a base object discards the
 derived part. Polymorphic APIs use references or pointers.
 
+---
+
 ### 5. Polymorphic ownership
 
 ```cpp
@@ -300,6 +336,8 @@ void PrintExampleAreas() {
 may vary. Destroying through the base pointer calls the correct derived
 destructor only because `Shape::~Shape` is virtual.
 
+---
+
 ### What virtual dispatch stores conceptually
 
 Typical implementations give a polymorphic object a hidden pointer to a table
@@ -311,6 +349,8 @@ Virtual dispatch usually adds one indirection and may limit inlining. That cost
 is often negligible next to game rendering or allocation, but measure when it
 matters instead of eliminating abstraction speculatively.
 
+---
+
 ### Destruction trace
 
 Create a derived class with an owned vector/resource and instrument base and
@@ -321,6 +361,8 @@ fail to do without executing that undefined behavior.
 Rule: if a class has any virtual function and objects may be deleted through a
 base pointer, give it a public virtual destructor (or deliberately prevent such
 deletion with a protected nonvirtual destructor in advanced designs).
+
+---
 
 ### 6. Access control
 
@@ -334,6 +376,8 @@ extension point.
 
 Public inheritance normally preserves the public interface. Private inheritance
 is closer to an implementation technique; composition is usually clearer.
+
+---
 
 ### Recursive Composite case study
 
@@ -363,7 +407,15 @@ consistently; falling out of a non-void override or silently accepting an unknow
 operation is not a valid default. Store operation choices with `enum class`
 rather than loosely interpreted characters when the set is closed.
 
+---
+
 ## Hour 3 — Composition and existing-project architecture
+
+> **Hour 3 route:** [Composition before inheritance](#7-composition-before-inheritance)
+> → [Strategy through composition](#strategy-through-composition)
+> → [Final-project reading strategy](#8-final-project-reading-strategy)
+> → [architecture review](#hour-3-architecture-review)
+> → [Final-project handoff — Design a thin vertical slice](#final-project-handoff--design-a-thin-vertical-slice)
 
 ### 7. Composition before inheritance
 
@@ -396,6 +448,8 @@ justify inheritance. Ask:
 Inheritance solely to reuse a few lines often creates tighter coupling than a
 composed helper.
 
+---
+
 ### Strategy through composition
 
 ```cpp
@@ -427,6 +481,8 @@ Monster type and movement policy now vary independently. The monster uniquely
 owns its strategy; a shared immutable strategy could instead be borrowed or
 shared under an explicit lifetime design.
 
+---
+
 ### 8. Final-project reading strategy
 
 For an existing game hierarchy:
@@ -438,12 +494,16 @@ For an existing game hierarchy:
 5. Check whether destruction is virtual.
 6. Identify where a composition or strategy would reduce subclass duplication.
 
+---
+
 ### Hour 3 architecture review
 
 Choose one repeated type-switch or `dynamic_cast` chain in the project template.
 Propose two alternatives: add a virtual operation or introduce a composed
 strategy. Evaluate the required substitution, ownership, testability, number of
 affected files, and migration risk before choosing.
+
+---
 
 ### Final-project handoff — Design a thin vertical slice
 
@@ -459,6 +519,8 @@ LLM may compare designs or review affected files, but the student must reject
 suggestions that invent interfaces or bypass the template's actual control
 flow.
 
+---
+
 ## Check yourself
 
 1. Why is `override` more than documentation?
@@ -471,6 +533,8 @@ flow.
    return type say about lifetime?
 7. (Optional) When would `variant` be preferable to a virtual hierarchy?
 
+---
+
 ## Summary
 
 - Public inheritance models substitutable interfaces.
@@ -479,6 +543,8 @@ flow.
 - `override`, private state, and ownership-aware containers prevent common bugs.
 - Composite treats leaves and branches uniformly through one interface.
 - Prefer composition unless run-time substitutability provides real value.
+
+---
 
 ## Optional enrichment — Alternative dispatch and composite transformations
 
@@ -529,6 +595,8 @@ the new alternative, so the compiler exposes incomplete operations. Contrast
 this with adding a virtual derived class, which leaves existing virtual-call
 consumers unchanged but must implement every pure virtual operation.
 
+---
+
 ### Evaluation and transformation are different operations
 
 Evaluation returns a number for one context. A transformation returns a new
@@ -539,6 +607,8 @@ reuse immutable subtrees; arena-owned results cannot outlive their arena.
 A virtual `clone` operation expresses deep copying for a unique tree but must be
 implemented by every concrete type. Sharing avoids some cloning while adding a
 stronger immutability and cycle contract.
+
+---
 
 ### Factory and operation-axis tradeoffs
 
@@ -551,6 +621,8 @@ A virtual hierarchy makes adding a concrete node comparatively local, while a
 new virtual operation affects every derived type. A closed `variant` reverses
 that axis: adding a visitor is local, while adding an alternative affects every
 visitor.
+
+---
 
 ### Composite verification matrix
 
@@ -565,6 +637,8 @@ visitor.
 
 For normalization, idempotence and preservation of evaluation test the public
 contract without exposing a particular recursive implementation.
+
+---
 
 ## References and source materials
 

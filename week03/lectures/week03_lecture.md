@@ -5,6 +5,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 3](week03_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** state a `struct` invariant, separate declarations from definitions,
@@ -16,6 +18,8 @@
 - **Python bridge:** use the companion when fixed-layout records or separate
   compilation have no direct Python analogue.
 
+---
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -26,6 +30,8 @@ By the end of this lecture, you should be able to:
 4. Build and debug a multi-file C program.
 5. State and check representation invariants.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -34,7 +40,16 @@ By the end of this lecture, you should be able to:
 | 2 | How do source files become one program? | Build a three-file module and diagnose link failures |
 | 3 | How do tests and tools turn failure into evidence? | Debug a seeded multi-file defect and add a regression test |
 
+---
+
 ## Hour 1 — Records, tagged data, and invariants
+
+> **Hour 1 route:** [Structures group related values](#1-structures-group-related-values)
+> → [Tagged alternatives with `enum`](#2-tagged-alternatives-with-enum)
+> → [Invariants turn records into abstractions](#3-invariants-turn-records-into-abstractions)
+> → [Designated initializers and partial initialization](#designated-initializers-and-partial-initialization)
+> → [Tagged unions](#tagged-unions)
+> → [design exercise](#hour-1-design-exercise)
 
 ### 1. Structures group related values
 
@@ -62,6 +77,8 @@ An array member is copied as part of the structure even though a standalone
 array cannot be assigned. Passing a structure by value also copies it; pass a
 pointer to avoid copying a large record or to allow modification.
 
+---
+
 ### 2. Tagged alternatives with `enum`
 
 ```c
@@ -84,6 +101,8 @@ typedef struct Token Token;
 
 Both `struct Token` and `Token` are reasonable course styles; be consistent.
 
+---
+
 ### 3. Invariants turn records into abstractions
 
 A representation invariant is a property that must hold whenever clients can
@@ -105,6 +124,8 @@ int rational_make(int numerator, int denominator, struct Rational* out);
 The constructor-like function can reject zero and normalize the representation.
 Do not make every caller rediscover these rules.
 
+---
+
 ### Designated initializers and partial initialization
 
 > **Supporting C syntax:** designated initializers improve clarity for records,
@@ -120,6 +141,8 @@ struct Student student = {.id = 1001, .name = "Ada", .grade = 92.5};
 
 Unspecified members are initialized to zero. This differs from an uninitialized
 automatic structure, whose members have indeterminate values.
+
+---
 
 ### Tagged unions
 
@@ -150,6 +173,8 @@ for representing “exactly one of these cases.” Every function that reads the
 payload must first inspect the tag, and every function that changes the case
 must update the tag and payload together.
 
+---
+
 ### Hour 1 design exercise
 
 Design a `struct Date` and functions `date_make`, `date_next`, and `date_print`.
@@ -159,7 +184,16 @@ transitions, and invalid construction. After Week 4, revisit whether hiding the
 representation behind an opaque pointer would improve the interface enough to
 justify its ownership costs.
 
+---
+
 ## Hour 2 — Headers, the preprocessor, and the build graph
+
+> **Hour 2 route:** [Interfaces live in headers](#4-interfaces-live-in-headers)
+> → [Separate compilation and linking](#5-separate-compilation-and-linking)
+> → [Encapsulation before opaque ownership](#encapsulation-before-opaque-ownership)
+> → [Preprocessor discipline](#preprocessor-discipline)
+> → [A minimal Makefile](#a-minimal-makefile)
+> → [failure lab](#hour-2-failure-lab)
 
 ### 4. Interfaces live in headers
 
@@ -231,6 +265,8 @@ This teaching representation rejects `INT_MIN` because negating it is not
 representable as `int`; a production numeric type should document or redesign
 that range limitation explicitly.
 
+---
+
 ### 5. Separate compilation and linking
 
 ```sh
@@ -247,6 +283,8 @@ cc rational.o main.o -o rational_demo
 
 Include your own header first in its implementation file. If the header is not
 self-contained, the mistake is found close to its source.
+
+---
 
 ### Encapsulation before opaque ownership
 
@@ -280,6 +318,8 @@ pointer, lifetime, and ownership model before presenting that interface. The
 ordering matters: hiding representation is useful only when we can also state
 who creates, owns, and destroys the hidden object.
 
+---
+
 ### Preprocessor discipline
 
 > **Supporting C tooling:** recognize header guards and simple macros, but
@@ -301,6 +341,8 @@ Function-like macros can evaluate arguments more than once:
 Prefer `enum` constants, `const` objects, and functions when they express the
 same intent. Use conditional compilation for genuine platform or build choices,
 not to hide multiple unrelated implementations in one file.
+
+---
 
 ### A minimal Makefile
 
@@ -324,6 +366,8 @@ rational.o: rational.c rational.h
 The dependency edges explain what must be rebuilt after a header changes. Make
 is not the compiler; it decides which compiler/linker commands are out of date.
 
+---
+
 ### Hour 2 failure lab
 
 Seed and classify these defects in a three-file program:
@@ -336,7 +380,14 @@ Seed and classify these defects in a three-file program:
 
 For each, identify the first stage capable of detecting the defect.
 
+---
+
 ## Hour 3 — Assertions, file boundaries, tests, and debugging
+
+> **Hour 3 route:** [Assertions, tests, and debugger evidence](#6-assertions-tests-and-debugger-evidence)
+> → [File I/O is another contract boundary](#file-io-is-another-contract-boundary)
+> → [Debugging studio: invariant first](#debugging-studio-invariant-first)
+> → [Style as a correctness tool](#7-style-as-a-correctness-tool)
 
 ### 6. Assertions, tests, and debugger evidence
 
@@ -375,6 +426,8 @@ A practical debugging loop is:
 Typical debugger commands are `break`, `run`, `next`, `step`, `print`, and
 `backtrace`. Learn the concepts; the exact command spelling varies by debugger.
 
+---
+
 ### File I/O is another contract boundary
 
 > **Supporting interface technique:** stream parameters make code testable, but
@@ -406,6 +459,8 @@ int students_read(FILE* input, struct Student students[], size_t capacity,
 Receiving `FILE *` makes the parser testable with redirected files or temporary
 streams. It also separates “where bytes come from” from “how records are parsed.”
 
+---
+
 ### Debugging studio: invariant first
 
 Given a rational module that occasionally prints `2/-4`, work in this order:
@@ -421,6 +476,8 @@ Given a rational module that occasionally prints `2/-4`, work in this order:
 The assertion is not the repair. It converts a distant wrong output into a
 failure at the boundary where the invariant first becomes observable.
 
+---
+
 ### 7. Style as a correctness tool
 
 - Give each function one clear responsibility.
@@ -429,6 +486,8 @@ failure at the boundary where the invariant first becomes observable.
 - Keep declarations near first use.
 - Use `const` for data a function must not modify.
 - Document why a surprising choice is correct, not what obvious syntax does.
+
+---
 
 ## Midterm project connection — Map before modifying
 
@@ -450,6 +509,8 @@ help explain a function, but students must verify every claim against the
 actual declarations and one executed trace. Thursday's deliverable is a build
 record and pipeline map, not project implementation.
 
+---
+
 ## Check yourself
 
 1. Which declarations belong in a public header, and which should remain private?
@@ -458,6 +519,8 @@ record and pipeline map, not project implementation.
 4. Classify a missing prototype versus a missing function body.
 5. Design three tests for `rational_make`, including one invalid input.
 
+---
+
 ## Summary
 
 - Structures give a fixed layout to related fields.
@@ -465,6 +528,8 @@ record and pipeline map, not project implementation.
 - Headers declare contracts; source files define behavior.
 - Compilation checks each translation unit; linking connects them.
 - Invariants, assertions, focused tests, and debuggers turn failures into evidence.
+
+---
 
 ## References and source materials
 

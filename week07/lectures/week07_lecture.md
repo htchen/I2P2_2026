@@ -6,6 +6,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 7](week07_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** trace characters to tokens to an AST, use the grammar to explain
@@ -18,6 +20,8 @@
 - **Python bridge:** use the companion when parser structure is clearer without
   C ownership details, then return to the C lifetime contracts.
 
+---
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -28,6 +32,8 @@ By the end of this lecture, you should be able to:
 4. Evaluate and release an AST safely.
 5. Connect AST structure to stack-machine code generation.
 
+---
+
 ## Three-hour plan
 
 | Hour | Main question | In-class production |
@@ -36,7 +42,14 @@ By the end of this lecture, you should be able to:
 | 2 | How does grammar become an owning syntax tree? | Trace one precedence level and audit its failure cleanup |
 | 3 | How does tree meaning become checked instructions? | Add semantic checks, generate code, and test end to end |
 
+---
+
 ## Hour 1 — Compiler stages and lexical analysis
+
+> **Hour 1 route:** [A small compiler is a pipeline](#1-a-small-compiler-is-a-pipeline)
+> → [Tokens](#2-tokens)
+> → [A lexer skeleton](#a-lexer-skeleton)
+> → [lexer lab](#hour-1-lexer-lab)
 
 > **Project application:** a compiler is not a fundamental C-language feature.
 > This week deliberately integrates strings, tagged data, pointers, recursion,
@@ -61,6 +74,8 @@ Each stage gives a simpler contract to the next:
 
 Do not make every function inspect raw input. Good intermediate representations
 localize errors and make stages testable independently.
+
+---
 
 ### 2. Tokens
 
@@ -93,6 +108,8 @@ position makes later diagnostics precise.
 The complete teaching example intentionally parses numeric expressions only.
 The project adds identifiers and more operators using the same pipeline. Keeping
 the teaching language small lets us see every ownership and error path.
+
+---
 
 ### A lexer skeleton
 
@@ -144,6 +161,8 @@ exercise answer. Lecture fragments below focus on one idea at a time; use the
 complete example when you need a second compilable reference rather than
 guessing an omitted helper.
 
+---
+
 ### Hour 1 lexer lab
 
 For input `" 12 + 3*(4 - 1)"`, write every token with `[start,end)`, kind, and
@@ -153,7 +172,17 @@ end. In this teaching grammar, `x` is an invalid token rather than an identifier
 identifier support is introduced below as a project extension. The parser should
 never need to inspect raw characters or repeat overflow logic.
 
+---
+
 ## Hour 2 — Precedence grammar, recursive descent, and AST ownership
+
+> **Hour 2 route:** [Grammar encodes precedence](#3-grammar-encodes-precedence)
+> → [AST representation](#4-ast-representation)
+> → [Parser state and errors](#5-parser-state-and-errors)
+> → [Recursive descent](#6-recursive-descent)
+> → [Precedence trace](#precedence-trace)
+> → [AST constructors centralize invariants](#ast-constructors-centralize-invariants)
+> → [guided trace and controlled modification](#hour-2-guided-trace-and-controlled-modification)
 
 ### 3. Grammar encodes precedence
 
@@ -193,6 +222,8 @@ tree is `2 * 3`. For `8 - 3 - 2`, the repetition builds `(8 - 3) - 2`.
 Grammar is executable design: one parser function corresponds to each
 nonterminal.
 
+---
+
 ### 4. AST representation
 
 ```c
@@ -222,6 +253,8 @@ Representation rules:
 An AST omits punctuation that was required only to parse. Parentheses affect
 shape but do not need their own nodes.
 
+---
+
 ### 5. Parser state and errors
 
 ```c
@@ -243,6 +276,8 @@ Every parser function follows a useful contract:
 
 The top-level parse succeeds only if an expression is followed by `TOKEN_END`.
 Accepting a valid prefix while ignoring trailing garbage is a parser bug.
+
+---
 
 ### 6. Recursive descent
 
@@ -280,6 +315,8 @@ static struct Ast* parse_expression(struct Parser* parser) {
 Updating `left` after each operator creates left association. Notice the
 failure paths: every successfully constructed subtree has exactly one owner.
 
+---
+
 ### Precedence trace
 
 Trace `-2 * (3 + 4) - 5` as a table:
@@ -293,6 +330,8 @@ Trace `-2 * (3 + 4) - 5` as a table:
 
 Students should fill the omitted intermediate calls and draw the owned tree.
 This makes it visible that unary minus is syntax, not part of the integer token.
+
+---
 
 ### AST constructors centralize invariants
 
@@ -352,6 +391,8 @@ static struct Ast* parse_primary(struct Parser* parser) {
 }
 ```
 
+---
+
 ### Hour 2 guided trace and controlled modification
 
 The starter supplies a complete `parse_unary` implementation. Do not rewrite it
@@ -368,7 +409,16 @@ cleanup paths: `1 +`, `2 * )`, `(3 + 4`, and an incomplete `-`. The exercise
 guide specifies expected AST shapes, values, rejection cases, and the final test
 summary, so correctness does not depend on guessing an implicit output contract.
 
+---
+
 ## Hour 3 — Semantics, evaluation, and code generation
+
+> **Hour 3 route:** [Evaluation is postorder](#7-evaluation-is-postorder)
+> → [Semantic checks are not parsing](#semantic-checks-are-not-parsing)
+> → [From tree to instructions](#8-from-tree-to-instructions)
+> → [Register pressure and evaluation order](#register-pressure-and-evaluation-order)
+> → [Differential testing and demo rehearsal](#differential-testing-and-demo-rehearsal)
+> → [Test stages independently](#9-test-stages-independently)
 
 ### 7. Evaluation is postorder
 
@@ -430,6 +480,8 @@ This evaluator fragment covers the lecture's numeric trees. When the project
 adds identifier nodes, evaluation requires an environment that maps each
 identifier to its current value.
 
+---
+
 ### Semantic checks are not parsing
 
 The grammar can accept forms whose meaning is invalid. In the project compiler,
@@ -443,6 +495,8 @@ expression.
 An AST retains enough structure to report “left operand is not modifiable” at
 the operator position. Do not twist the grammar until it rejects every
 context-sensitive rule.
+
+---
 
 ### 8. From tree to instructions
 
@@ -489,6 +543,8 @@ problem: which temporary register holds each intermediate result? The midterm
 project's hidden tests check language behavior, but the demo checks whether you
 can connect emitted instructions back to AST structure.
 
+---
+
 ### Register pressure and evaluation order
 
 > **Optional compiler extension:** first generate correct instructions for the
@@ -505,6 +561,8 @@ For each instruction, maintain an invariant describing where the subexpression
 value resides. Optimization must preserve that invariant and observable side
 effects; fewer cycles are irrelevant if evaluation order becomes incorrect.
 
+---
+
 ### Differential testing and demo rehearsal
 
 > **Supporting testing technique:** the required skill is comparing two
@@ -520,6 +578,8 @@ For rehearsal, a student should tokenize one expression, draw its AST, identify
 owned allocations, explain semantic acceptance, predict instructions, make one
 small live change, and add a test that fails without the change.
 
+---
+
 ### 9. Test stages independently
 
 - Lexer: whitespace, multi-digit integers, each operator, invalid characters.
@@ -534,6 +594,8 @@ small live change, and add a test that fails without the change.
 
 Property idea: pretty-print an AST with sufficient parentheses, parse it again,
 and compare evaluation results.
+
+---
 
 ## Midterm project handoff — Integrate against the real contracts
 
@@ -565,6 +627,8 @@ lab. Week 7 material is excluded from the exam. Complete the remaining parser,
 semantic, code-generation, and verification gates incrementally before the
 Week 10 demo.
 
+---
+
 ## Check yourself
 
 1. Draw the AST for `-1 + 2 * (3 - 4)`.
@@ -573,6 +637,8 @@ Week 10 demo.
 4. Why must the top-level parser require `TOKEN_END`?
 5. Emit stack-machine instructions for `(8 - 3) / 5`.
 
+---
+
 ## Summary
 
 - A compiler pipeline replaces one complicated task with testable stages.
@@ -580,6 +646,8 @@ Week 10 demo.
 - Recursive-descent functions mirror grammar nonterminals.
 - AST edges express ownership as well as syntax.
 - Evaluation, destruction, and simple code generation are tree traversals.
+
+---
 
 ## References and source materials
 
