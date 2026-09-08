@@ -6,6 +6,8 @@
 
 > Python bridge: [Python Contrast Companion for Week 1](week01_python_companion.md)
 
+---
+
 ## Student route
 
 - **Core:** follow one program from source to executable, classify compile/link/
@@ -19,6 +21,8 @@
 - **Python bridge:** consult the companion only when a C behavior is hard to
   connect to prior Python knowledge.
 
+---
+
 ## Learning objectives
 
 By the end of this lecture, you should be able to:
@@ -29,6 +33,8 @@ By the end of this lecture, you should be able to:
 3. Use formatted input/output and C control flow safely.
 4. Distinguish a compile-time error, a link-time error, and a run-time fault.
 5. Compile with warnings and treat diagnostics as useful evidence.
+
+---
 
 ## Three-hour plan
 
@@ -69,7 +75,15 @@ The core-live exercises total about 15 minutes in Hour 1, 18 minutes in Hour 2,
 and 16 minutes in Hour 3. This leaves time for transitions, questions, and a
 short break without removing the immediate practice opportunities.
 
+---
+
 ## Hour 1 — Program translation and the C execution model
+
+> **Hour 1 route:** [machine model](#1-same-algorithms-different-machine-model)
+> → [translation pipeline](#2-the-translation-pipeline)
+> → [live diagnostic build](#hour-1-live-build-classify-the-diagnostic)
+> → [assembly as evidence](#assembly-is-an-observation-window)
+> → [first complete program](#3-first-program)
 
 ### 1. Same algorithms, different machine model
 
@@ -86,6 +100,8 @@ you to make more of the representation explicit.
 
 The important question changes from only “what value does this expression
 produce?” to “what value, of what type, stored where, for how long?”
+
+---
 
 ### 2. The translation pipeline
 
@@ -374,6 +390,8 @@ stated contract is wrong.
 > instructions yet. Use the commands above to observe the stages and return to
 > their lower-level details after writing the first C program.
 
+---
+
 ### Hour 1 live build: classify the diagnostic
 
 Start from the first program below and introduce one defect at a time:
@@ -439,6 +457,8 @@ their observable outputs are `hello.i`, `hello.s`, and `hello.o`.
 
 Students should record the stage, diagnostic evidence, and smallest repair. The
 goal is not to memorize messages but to locate responsibility in the pipeline.
+
+---
 
 ### Assembly is an observation window
 
@@ -521,6 +541,8 @@ both functions; an `-O2` file may contain only simplified function bodies.
 
 </details>
 
+---
+
 ### 3. First program
 
 ```c
@@ -576,7 +598,18 @@ stops with a syntax diagnostic.
 - `int courses_completed` declares storage and its interpretation.
 - Returning zero conventionally reports success to the operating system.
 
+---
+
 ## Hour 2 — Types, representation, conversion, and formatted I/O
+
+> **Hour 2 route:** [types and expressions](#4-types-and-expressions)
+> → [operators](#basic-operators-and-precedence)
+> → [division and conversion](#integer-division-and-conversion)
+> → [truth values](#truth-values)
+> → [integer ranges](#supporting-reference--integer-ranges-and-signedunsigned-interactions)
+> → [formatted I/O](#5-formatted-io)
+> → [format contracts](#format-contract-reference)
+> → [checkpoint](#try-it-now-core-live--hour-2-checkpoint-5-minutes)
 
 ### 4. Types and expressions
 
@@ -678,6 +711,8 @@ operation such as `printf`.
 
 </details>
 
+---
+
 ### Basic operators and precedence
 
 The underlying operations are familiar from Python, but several spellings and
@@ -736,6 +771,8 @@ expression. That distinction is rarely worth the reduced readability in an
 introductory program: prefer a separate `++index;` or `--count;` statement and
 do not modify the same object multiple times in one expression.
 
+---
+
 ### Integer division and conversion
 
 ```c
@@ -772,6 +809,8 @@ operand pairs produce:
 
 Conversions in C can discard information. Compile with warnings and make a
 conversion explicit when it is intentional.
+
+---
 
 ### Truth values
 
@@ -819,6 +858,8 @@ age 18 without an ID, the right operand is false.
 </details>
 
 Do not confuse assignment (`=`) with comparison (`==`).
+
+---
 
 ### Supporting reference — integer ranges and signed/unsigned interactions
 
@@ -953,6 +994,8 @@ Do not “fix” every warning with a cast. First decide which domain the
 program means. Loop indices for array sizes commonly use `size_t`; values that
 must represent `-1` need a signed type or a different absence representation.
 
+---
+
 ### 5. Formatted I/O
 
 Every C program starts with three standard text streams:
@@ -1059,6 +1102,8 @@ defined and is commonly `-1`.
 explain addresses in the Week 4 lecture notes. Until then, treat the format
 string and each corresponding argument as a checked pair.
 
+---
+
 ### Format-contract reference
 
 | Value type | `printf` | `scanf` |
@@ -1164,6 +1209,8 @@ input=2.5
 
 </details>
 
+---
+
 ### Try it now [Core live] — Hour 2 checkpoint (5 minutes)
 
 Predict the type and value before compiling:
@@ -1199,7 +1246,14 @@ a=7 b=2 x=3.0 y=3.5
 
 </details>
 
+---
+
 ## Hour 3 — Selection, iteration, EOF, and judge-style translation
+
+> **Hour 3 route:** [selection and iteration](#6-selection-and-iteration)
+> → [input-driven loops](#input-driven-loops-and-eof)
+> → [guided translation](#try-it-now-core-live--hour-3-guided-translation-8-minutes)
+> → [undefined behavior](#7-undefined-behavior-is-not-an-exception)
 
 ### 6. Selection and iteration
 
@@ -1333,6 +1387,8 @@ reset
 Without `break`, execution continues into the next `case`. Use fallthrough only
 when it is deliberate and documented.
 
+---
+
 ### Input-driven loops and EOF
 
 Judge data sometimes contains an unknown number of records. A `while`
@@ -1431,6 +1487,8 @@ With one requested conversion, `scanf` returns `1` after converting an integer,
 conversion. Never write `while (!feof(stdin))`: EOF is observed only after a
 read attempt fails, so that pattern commonly processes stale data once.
 
+---
+
 ### Try it now [Core live] — Hour 3 guided translation (8 minutes)
 
 Translate the positive-square sum expressed by this Python program. The Python
@@ -1522,6 +1580,8 @@ formulas.
 
 </details>
 
+---
+
 ### 7. Undefined behavior is not an exception
 
 Python normally stops and reports errors such as an out-of-range list access.
@@ -1582,6 +1642,8 @@ standard output: 25
 ```
 
 </details>
+
+---
 
 ## Worked example: classify an integer
 
@@ -1676,6 +1738,8 @@ status.
 
 </details>
 
+---
+
 ## Check yourself
 
 1. Where does an “undefined reference” diagnostic occur in the pipeline?
@@ -1686,6 +1750,8 @@ status.
 6. **Extension:** Why can the assembly produced at `-O2` omit a named local
    variable?
 
+---
+
 ## Summary
 
 - Your programming knowledge transfers; C exposes types, storage, and failures.
@@ -1695,6 +1761,8 @@ status.
 - Declarations, format strings, and conversions are contracts.
 - Warnings, exit status, and tests are part of normal development.
 - Avoiding undefined behavior is a correctness requirement.
+
+---
 
 ## References and source materials
 
