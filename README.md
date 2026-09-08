@@ -80,27 +80,6 @@ elsewhere. Use the week's `examples` file when a standalone compilable program
 is needed. Sections titled **Optional enrichment** are not part of that week's
 minimum learning path unless an instructor assigns them separately.
 
-### Course vocabulary
-
-These recurring words describe program reasoning rather than special C/C++
-syntax:
-
-| Term | Meaning in these notes |
-|------|------------------------|
-| Contract | The behavior an interface promises and requires |
-| Precondition | What must be true before an operation begins |
-| Postcondition | What a successful operation guarantees afterward |
-| Invariant | A fact that remains true at a stated program point or for every valid object |
-| Owner | The object or variable responsible for eventually releasing a resource |
-| Borrow | Temporary access that does not transfer release responsibility |
-| Publish | Make a fully initialized value or resource reachable by its intended user |
-| Sentinel | A distinguished value or position representing a boundary or absence |
-| One-past | A permitted boundary pointer/iterator that may be compared but not dereferenced |
-
-When one of these words appears in a lecture, identify the corresponding C/C++
-objects and operations rather than searching for a language keyword with the
-same name.
-
 ## Learning Outcomes
 
 By the end of the course, students should be able to:
@@ -437,11 +416,18 @@ demos are in [`project_templates/`](project_templates/).
 Each week contains a `README.md` overview and a `labs/` directory. Regular
 lecture weeks additionally contain:
 
-- `lectures/` — lecture note and examples
+- `lectures/` — lecture note, examples, and Python contrast companion
 - `lectures/lecture_exercises/` — in-lecture exercises and starter code
 
-No-lecture weeks may retain empty `lectures/` directories to keep navigation
-predictable, but they do not contain a lecture note.
+No-lecture weeks keep both `lectures/` directories as placeholders so that
+navigation stays predictable, but they hold no lecture note, examples, or
+exercises.
+
+The repository root also contains:
+
+- `assets/` — shared reference material used across weeks
+- `quizzes/` — quiz material for the two in-person computer-lab quizzes
+- `project_templates/` — reusable submission forms for the two projects
 
 Each project-related lab contains an AI-free readiness exercise, a guided
 project milestone, verification requirements, and a concrete submission
