@@ -722,7 +722,7 @@ type rules differ. Start with these groups:
 |---------|-------------|----------------|
 | Arithmetic | `+`, `-`, `*`, `/`, `%` | `/` uses the operand types; `%` requires integer operands |
 | Comparison | `<`, `<=`, `>`, `>=`, `==`, `!=` | the result is `0` or `1` |
-| Logic | `&&`, `||`, `!` | `&&` and `||` short-circuit from left to right |
+| Logic | `&&`, `\|\|`, `!` | `&&` and `\|\|` short-circuit from left to right |
 | Assignment | `=`, `+=`, `-=`, `*=`, `/=`, `%=` | a compound assignment reads, computes, and stores |
 | Change by one | `++`, `--` | these modify an object; initially use them as separate statements |
 
