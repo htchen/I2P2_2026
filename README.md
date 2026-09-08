@@ -290,6 +290,10 @@ bounded asynchronous checkpoint before the Week 10 demonstration.
 
 ### Midterm project rubric — 20% of course grade
 
+> **Tentative.** The weights below indicate the intended emphasis of each
+> component. They are not final; the exact percentages will be announced with
+> the project assignment.
+
 - **30%** Judge-system correctness
 - **15%** Staged milestone evidence
 - **10%** Student-designed tests
@@ -327,6 +331,10 @@ belong primarily in the labs; Tuesday notes retain transferable C++ concepts
 and include short project connections.
 
 ### Final project rubric — 25% of course grade
+
+> **Tentative.** The weights below indicate the intended emphasis of each
+> component. They are not final; the exact percentages will be announced with
+> the project assignment.
 
 - **15%** Correctness and completeness
 - **10%** Staged milestone evidence
@@ -441,6 +449,7 @@ demo.
 
 ## Items to Finalize
 
+- Exact component weights within each project rubric
 - Project team sizes and individual-grade adjustment policy
 - Late submission and attendance policies
 - Official compiler versions
