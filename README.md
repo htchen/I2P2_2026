@@ -65,9 +65,14 @@ week's required ideas from supporting details and optional enrichment.
 4. Use the Python companion when the C/C++ representation is unclear. It is an
    on-demand bridge from prior knowledge, not a second required lecture and not
    a source of examinable Python syntax.
-5. Return to sections labelled **robustness note** after the core mechanism
-   works. These sections explain failure handling and production concerns but
-   should not hide the central algorithm on a first reading.
+5. Return to the week's supporting material after the core mechanism works.
+   Two markers identify it. The third **Student route** bullet — usually
+   **Supporting ideas**, and named for the week's subject where that is clearer
+   — lists what the week defers. Within the note, an indented callout beginning
+   **Supporting** (for example, **Supporting robustness model** or **Supporting
+   generic technique**) marks a passage to revisit. These passages cover failure
+   handling, terminology, alternative syntax, and production concerns; they
+   should not hide the central mechanism on a first reading.
 
 Unless a lecture explicitly says **complete program**, a fenced source-code
 block is a focused fragment that may depend on declarations or headers shown
