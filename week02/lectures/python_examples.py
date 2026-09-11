@@ -2,7 +2,16 @@
 
 from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Sequence
-from typing import Optional
+from io import StringIO
+from typing import Optional, TextIO
+
+
+def clamp_value(value: int, low: int, high: int) -> int:
+    if value < low:
+        return low
+    if value > high:
+        return high
+    return value
 
 
 def mean(values: Sequence[int]) -> float:
@@ -65,6 +74,23 @@ def require_name_capacity(name: str, capacity: int = 32) -> str:
     return name
 
 
+def first_bounded_token(line: str, maximum: int = 31) -> str:
+    fields = line.split()
+    if not fields:
+        raise ValueError("expected a word")
+    return fields[0][:maximum]
+
+
+def read_line(input_file: TextIO, capacity: int = 128) -> str:
+    line = input_file.readline()
+    if line == "":
+        raise EOFError("no line")
+    text = line.removesuffix("\n")
+    if len(text) >= capacity:
+        raise ValueError("line does not fit the C buffer")
+    return text
+
+
 def string_length(text: str) -> int:
     length = 0
     for _ in text:
@@ -102,6 +128,9 @@ def insertion_sort(values: list[int]) -> None:
 
 
 def main() -> None:
+    assert clamp_value(-3, 0, 10) == 0
+    assert clamp_value(7, 0, 10) == 7
+    assert clamp_value(20, 0, 10) == 10
     assert mean([2, 4, 6]) == 4.0
     assert absolute_value(-7) == 7
     assert swapped(1, 2) == (2, 1)
@@ -114,6 +143,8 @@ def main() -> None:
     assert query_total(prefix, 1, 3) == 3
     assert count_sorted([1, 2, 2, 2, 5], 2) == 3
     assert require_name_capacity("Ada") == "Ada"
+    assert first_bounded_token("Ada Lovelace") == "Ada"
+    assert read_line(StringIO("Ada Lovelace\n")) == "Ada Lovelace"
     assert string_length("C17") == 3
     assert minimum([3, -1, 4]) == -1
     assert sum_matrix([[1, 2], [3, 4]]) == 10

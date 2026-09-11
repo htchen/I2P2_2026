@@ -18,11 +18,13 @@ address-based output contracts that Python collections do not reproduce.
 
 ## Coverage map
 
-Every fenced example in the Week 2 note is accounted for below.
+The core teaching examples in the Week 2 note are accounted for below. The
+collapsible practice solutions deliberately reuse those same concepts and are
+not listed as separate translations in this map.
 
 | Source example | Relationship | Companion treatment |
 |---|---|---|
-| `mean` declaration | Same goal, different contract | A typed Python definition documents a sequence without a separate declaration |
+| `clamp_value` declaration and definition | Direct algorithm, different declaration model | One typed Python definition supplies both interface and implementation |
 | `mean` implementation | Direct algorithm | Sum a sequence and preserve the empty-input policy |
 | Ineffective value swap | Direct observation | Rebinding integer parameters does not change caller names |
 | `absolute_value` | Direct | Use the same branch or `abs` |
@@ -42,11 +44,12 @@ Every fenced example in the Week 2 note is accounted for below.
 | `char language[] = "C17"` | No character-array equivalent | Use `str` and explain the missing null sentinel |
 | `strlen(language)` | Direct length goal | Use `len(language)`; no terminator is counted or stored |
 | `char name[32]` | No fixed-capacity string equivalent | Use a string plus explicit length validation |
-| `fgets` line input | Same goal, different mechanism | Use `readline`, distinguish EOF, and remove one newline |
+| Bounded `scanf("%31s", ...)` | Same goal, different mechanism | Split a token without pretending Python has a destination array or format-width contract |
+| `fgets` and bounded-line validation | Same goal, different mechanism | Use `readline`, distinguish EOF, and apply an explicit maximum-length policy |
 | Manual length/copy | Direct algorithms, different representation | Count characters and return a validated copy rather than fill a destination array |
 | One-pass minimum | Direct algorithm | Preserve the nonempty precondition |
-| `matrix[3][4]` | Same shape, different layout | Build independent nested lists; no row-major guarantee follows |
-| Variable-size matrix sum | Direct traversal | Validate rectangular shape and sum nested rows |
+| `matrix[3][COLUMN_COUNT]` | Same shape, different layout | Build independent nested lists; no row-major guarantee follows |
+| Fixed-column matrix sum | Direct traversal | Validate rectangular shape and sum nested rows |
 | Insertion sort | Direct algorithm | Mutate a list with the same shifting invariant |
 
 ## Functions and value parameters
@@ -57,6 +60,14 @@ Python needs no declaration separate from the definition:
 from collections.abc import Sequence
 
 
+def clamp_value(value: int, low: int, high: int) -> int:
+    if value < low:
+        return low
+    if value > high:
+        return high
+    return value
+
+
 def mean(values: Sequence[int]) -> float:
     total = 0.0
     for value in values:
@@ -64,9 +75,10 @@ def mean(values: Sequence[int]) -> float:
     return 0.0 if not values else total / len(values)
 ```
 
-`Sequence[int]` records the operations and intended element type, but normal
-Python execution does not enforce C's element representation, address, or
-explicit count parameter.
+The C prototype has no separate Python counterpart; the definition and type
+hints carry the visible interface. `Sequence[int]` records the operations and
+intended element type, but normal Python execution does not enforce C's element
+representation, address, or explicit count parameter.
 
 The ineffective swap behaves similarly because Python integer parameters are
 local bindings:
@@ -258,18 +270,36 @@ This models the chosen character-count rule, not UTF-8 byte capacity. A C
 buffer's capacity is measured in `char` objects/bytes and reserves one position
 for the sentinel.
 
-Line input can preserve EOF and newline handling:
+The closest value-level model of the bounded `%s` example is:
 
 ```python
-def read_line(input_file) -> str:
+def first_bounded_token(line: str, maximum: int = 31) -> str:
+    fields = line.split()
+    if not fields:
+        raise ValueError("expected a word")
+    return fields[0][:maximum]
+```
+
+This produces the same stored prefix for ordinary text, but it does not model a
+C destination array, byte capacity, or the unread suffix remaining in `stdin`.
+
+Python can read a complete line first and then apply the C capacity policy:
+
+```python
+def read_line(input_file, capacity: int = 128) -> str:
     line = input_file.readline()
     if line == "":
         raise EOFError("no line")
-    return line.removesuffix("\n")
+    text = line.removesuffix("\n")
+    if len(text) >= capacity:
+        raise ValueError("line does not fit the C buffer")
+    return text
 ```
 
-`readline` manages storage rather than receiving a fixed array. A Windows-style
-line ending or an imposed maximum length needs an explicit policy if it matters.
+`readline` manages storage rather than filling a fixed array, so Python can
+validate after seeing the whole line. The C helper must instead detect whether
+its bounded read was complete. This comparison counts Python characters, not
+encoded bytes; a byte-oriented input contract needs an explicit encoding.
 
 The manual C algorithms have these closest rewrites:
 
@@ -326,8 +356,9 @@ def sum_matrix(matrix: Sequence[Sequence[int]]) -> int:
 ```
 
 This Python model accepts an empty matrix and a zero-column rectangular matrix.
-The C VLA parameter instead requires a positive column bound, so that boundary
-is a deliberate representation difference rather than an algorithmic one.
+The C example instead fixes the column count in its array type so the compiler
+can calculate each row stride. That representation difference does not change
+the nested-traversal algorithm.
 
 Insertion sort preserves the C shifting invariant:
 
