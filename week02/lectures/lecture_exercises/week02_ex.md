@@ -17,6 +17,9 @@ The starter names these operations `build_positive_prefix` and `query_total` and
 provides their storage parameters. A table for `size` input values contains
 `size + 1` entries, beginning with zero. This is the same boundary convention as
 the lecture's general prefix table; only the per-element contribution changes.
+Each positive input contributes its value, while zero and negative inputs
+contribute zero. The table stores a running sum, not the number of positive
+elements.
 
 ## Hour 3 — Bounded strings
 
@@ -43,6 +46,11 @@ After all TODOs are correct, the final line is:
 ```text
 all Week 2 starter checks passed
 ```
+
+The temporary `(void)parameter;` statements in the incomplete functions
+explicitly discard otherwise-unused parameters so the starter remains
+warning-clean. Remove each statement when your implementation begins using
+that parameter.
 
 Attempt the starter first. Use [`../examples.c`](../examples.c) afterward for
 complete neighboring examples of array traversal, boundary search, and bounded

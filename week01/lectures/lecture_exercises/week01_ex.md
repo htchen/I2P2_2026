@@ -30,6 +30,11 @@ token. Arrays and reusable array functions begin in Week 2, so this exercise
 deliberately uses only the selection and iteration model introduced this week.
 Compile with all course warnings enabled.
 
+The incomplete starter contains `(void)value;`. This explicit conversion to
+`void` discards the value and tells the compiler that it is intentionally
+unused while the TODO remains incomplete. Remove that statement once your loop
+uses `value`.
+
 ## Compile and verify
 
 From the repository root:

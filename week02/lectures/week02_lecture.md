@@ -159,6 +159,9 @@ the function's name, parameter types, and result type.
 ### 2. C passes arguments by value
 
 Each parameter starts as a copy of the corresponding argument.
+The return type `void` means that a function reports no result value. In a
+parameter list, as in `main(void)`, `void` means that the function accepts
+no arguments. These are two roles for the same keyword.
 
 ```c
 void ineffective_swap(int a, int b) {
@@ -173,14 +176,17 @@ their addresses when mutation is required. For now, prefer returning the result:
 
 ```c
 int absolute_value(int value) {
-  return value < 0 ? -value : value;
+  if (value < 0) {
+    return -value;
+  }
+  return value;
 }
 ```
 
 Precondition: `value != INT_MIN`, because `-INT_MIN` may overflow. Interfaces
 should make important preconditions visible in names, documentation, or checks.
 
-#### Try it now [Core live] — distinguish mutation from rebinding (2 minutes)
+#### Try it now [Core live] — distinguish caller state from parameter copies (2 minutes)
 
 Start with `x = 3` and `y = 8`. Call `ineffective_swap(x, y)`, then print both
 variables and `absolute_value(-7)`. Predict the output before compiling.
@@ -243,10 +249,12 @@ void example(void) {
 }
 ```
 
-Both pointers are borrowed and must designate valid `int` objects for the whole
-call. The Week 4 lecture notes develop the complete model: pointer arithmetic, nullability,
-array relationships, lifetime, dynamic allocation, and ownership. Until then,
-do not infer that every address may be dereferenced or retained.
+Both pointers are **borrowed**: `swap` receives temporary access to the caller's
+objects but neither owns their storage nor keeps the addresses after returning.
+They must designate valid `int` objects for the whole call. The Week 4 lecture
+notes develop the complete model: pointer arithmetic, nullability, array
+relationships, lifetime, dynamic allocation, and ownership. Until then, do not
+infer that every address may be dereferenced or retained.
 
 #### Try it now [Core live] — trace an address-based update (3 minutes)
 
@@ -329,7 +337,7 @@ One coherent contract set is:
 | `read_scores` | `scores` is output storage; `capacity` is input; `count` is output | Empty input may succeed with `*count == 0`; return zero for malformed input or insufficient capacity |
 | `index_of_minimum` | `scores` and `count` are input | Require `count > 0`; no separate failure result is available |
 | `remove_at` | `scores` and `count` are input/output; `index` is input | Require `index < *count`; the prototype provides no failure result |
-| `mean` | `scores` and `count` are input | The earlier implementation defines an empty mean as `0.0` |
+| `mean` | `scores` and `count` are input | This contract defines an empty mean as `0.0`; the Hour 2 implementation follows that policy |
 
 These declarations produce no run-time output. The exercise is about making
 their contracts explicit before implementation. A production design could
@@ -346,12 +354,15 @@ change a `void` or index result to `int` when invalid input must be reported.
 > local name refers to storage that lasts for the whole program; ordinary local
 > variables remain the default in this course.
 
-Ordinary local variables are created on entry and cease to exist on return.
-A `static` local retains its value for the program's lifetime:
+**Scope** determines where a name may be used. **Storage duration** determines
+how long the named object exists. An ordinary block-local object with automatic
+storage duration exists each time execution enters its block and ceases to
+exist when execution leaves that block. A `static` local instead exists for the
+program's entire execution and retains its value between calls:
 
 ```c
-unsigned long next_sequence(void) {
-  static unsigned long value = 0;
+unsigned int next_sequence(void) {
+  static unsigned int value = 0;
   return ++value;
 }
 ```
@@ -375,10 +386,10 @@ three returned values with three textual positions. Store the results in
 separate statements:
 
 ```c
-unsigned long first = next_sequence();
-unsigned long second = next_sequence();
-unsigned long third = next_sequence();
-printf("%lu %lu %lu\n", first, second, third);
+unsigned int first = next_sequence();
+unsigned int second = next_sequence();
+unsigned int third = next_sequence();
+printf("%u %u %u\n", first, second, third);
 ```
 
 **Expected output in a fresh program:**
@@ -482,7 +493,10 @@ double mean(const int values[], size_t count) {
   for (size_t i = 0; i < count; ++i) {
     total += values[i];
   }
-  return count == 0 ? 0.0 : total / count;
+  if (count == 0) {
+    return 0.0;
+  }
+  return total / count;
 }
 ```
 
@@ -1328,9 +1342,9 @@ int finish_bounded_line(char line[]) {
     return feof(stdin) != 0;
   }
 
-  do {
+  while (next != '\n' && next != EOF) {
     next = fgetc(stdin);
-  } while (next != '\n' && next != EOF);
+  }
   return 0;
 }
 ```
@@ -1355,12 +1369,13 @@ only when the returned status is `1`.
 
 </details>
 
-Converting a substring into a number requires deciding both what the digits
-mean and where the conversion stopped. Week 7 develops that conversion directly
-in the lexer: it accumulates digits one at a time, checks each step against the
-representable range before multiplying, and leaves the scan position on the
-first character that is not part of the number. Until then, read numeric input
-with the Week 1 `scanf` contracts under their stated input bounds.
+Converting a substring into a number safely requires deciding both where the
+numeric text ends and whether its value is representable. Week 7 develops one
+explicit solution inside a lexer: it accumulates digits one at a time, checks
+each step against the representable range before multiplying, and, after a
+successful token, leaves the scan position on the first character that is not
+part of the number. Until then, read numeric input with the Week 1 `scanf`
+contracts under their stated representability assumptions.
 
 ---
 
@@ -1550,7 +1565,10 @@ int main(void) {
   int values[] = {4, 2, 2, 1};
   insertion_sort(values, 4);
   for (size_t i = 0; i < 4; ++i) {
-    printf("%s%d", i == 0 ? "" : " ", values[i]);
+    if (i > 0) {
+      printf(" ");
+    }
+    printf("%d", values[i]);
   }
   printf("\n");
   return 0;

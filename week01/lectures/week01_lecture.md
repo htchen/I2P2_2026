@@ -71,7 +71,7 @@ output.
 - **Extension:** remains beside the example for additional practice, but may be
   completed during a break, in the lab, or after class if time is short.
 
-The core-live exercises total about 13 minutes in Hour 1, 18 minutes in Hour 2,
+The core-live exercises total about 15 minutes in Hour 1, 18 minutes in Hour 2,
 and 16 minutes in Hour 3. This leaves time for transitions, questions, and a
 short break without removing the immediate practice opportunities.
 
@@ -593,7 +593,8 @@ stops with a syntax diagnostic.
 </details>
 
 - `#include <stdio.h>` makes the declarations of standard I/O functions known.
-- `main` is the program entry point.
+- `int main(void)` defines the program entry point. Here `void` says that this
+  version accepts no arguments, and `int` says that it reports an exit status.
 - Braces delimit a block; semicolons terminate statements.
 - `int courses_completed` declares storage and its interpretation.
 - Returning zero conventionally reports success to the operating system.
@@ -810,6 +811,20 @@ operand pairs produce:
 Conversions in C can discard information. Compile with warnings and make a
 conversion explicit when it is intentional.
 
+Integer remainder follows the same division rule. For a nonzero divisor, when
+the quotient is representable, C chooses `/` and `%` so that:
+
+```text
+(left / right) * right + left % right == left
+```
+
+Integer division truncates toward zero, so a nonzero remainder has the same
+sign as the left operand. For example, `-5 / 2` is `-2` and `-5 % 2` is `-1`.
+This also explains why testing `value % 2 == 0` correctly recognizes even
+negative integers. Division or remainder by zero is undefined. Signed division
+also requires a representable quotient; the integer-range reference below
+describes the important boundary case.
+
 ---
 
 ### Truth values
@@ -915,8 +930,10 @@ current environment.
 </details>
 
 Unsigned arithmetic wraps modulo one more than the maximum value. Signed
-overflow is undefined behavior. Mixing signed and unsigned values can convert a
-negative number to a very large unsigned value:
+overflow is undefined behavior. On a typical two's-complement implementation,
+`INT_MIN / -1` and `INT_MIN % -1` are also undefined because the mathematical
+quotient is not representable as an `int`. Mixing signed and unsigned values
+can convert a negative number to a very large unsigned value:
 
 ```c
 #include <stddef.h>
@@ -1403,9 +1420,11 @@ each representable as `int` and within `[-30000, 30000]`. The magnitude of the
 sum can therefore be at most `100 * 30000`, or 3,000,000, which fits in the
 minimum range guaranteed for `long long`. This proof keeps the example focused
 on input-loop behavior. Assume the course judge supplies a readable input
-stream; detecting a device-level I/O error is outside this exercise. Converting
-numeric text whose length is not bounded in advance requires the digit-by-digit
-conversion developed in Week 7.
+stream; detecting a device-level I/O error is outside this exercise. The `%d`
+conversion does not provide a safe recovery path when the input denotes a value
+that is not representable as `int`, so representability is an explicit
+precondition here. Week 7 develops a digit-by-digit conversion that checks the
+range before performing each arithmetic step.
 
 After the loop, `feof(stdin)` is nonzero only if the failed read encountered
 end-of-file. If the next token was not an integer, the conversion count is zero
@@ -1506,8 +1525,8 @@ Process each integer as it is read, without storing an array. Accept at most 100
 inputs, require every value to be in `[-30000, 30000]`, accumulate into a
 `long long`, and distinguish end-of-file from an invalid token. As with typical
 judge input using `%d`, assume that every numeric token is representable as an
-`int`; converting text whose length is not bounded in advance requires the
-digit-by-digit conversion developed in Week 7. Test:
+`int`. Week 7 removes that assumption for its lexer by accumulating digits only
+after checking that each arithmetic step remains representable. Test:
 
 - an empty line/end-of-file;
 - all negative values;

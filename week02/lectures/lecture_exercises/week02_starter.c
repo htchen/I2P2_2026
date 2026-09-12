@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/* In an unfinished function, (void)parameter explicitly discards an otherwise
+   unused value so the starter remains warning-clean. Remove each such statement
+   when the completed function uses that parameter. */
+
 void clamp_all(int values[], size_t size, int low, int high) {
   /* TODO: require low <= high and clamp each logical element. */
   (void)values;
@@ -13,7 +17,8 @@ void clamp_all(int values[], size_t size, int low, int high) {
 
 int build_positive_prefix(const int values[], size_t size, int64_t prefix[],
                           size_t prefix_capacity) {
-  /* TODO: write size + 1 boundary totals; count only positive values. */
+  /* TODO: write size + 1 boundary totals, adding each positive value and
+     treating each nonpositive value as zero. */
   (void)values;
   (void)size;
   (void)prefix;
