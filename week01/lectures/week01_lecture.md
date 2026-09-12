@@ -71,7 +71,7 @@ output.
 - **Extension:** remains beside the example for additional practice, but may be
   completed during a break, in the lab, or after class if time is short.
 
-The core-live exercises total about 15 minutes in Hour 1, 18 minutes in Hour 2,
+The core-live exercises total about 13 minutes in Hour 1, 18 minutes in Hour 2,
 and 16 minutes in Hour 3. This leaves time for transitions, questions, and a
 short break without removing the immediate practice opportunities.
 
@@ -1403,9 +1403,9 @@ each representable as `int` and within `[-30000, 30000]`. The magnitude of the
 sum can therefore be at most `100 * 30000`, or 3,000,000, which fits in the
 minimum range guaranteed for `long long`. This proof keeps the example focused
 on input-loop behavior. Assume the course judge supplies a readable input
-stream; detecting a device-level I/O error is outside this exercise. Safe
-conversion of arbitrary-length numeric text is introduced after character
-arrays and pointers.
+stream; detecting a device-level I/O error is outside this exercise. Converting
+numeric text whose length is not bounded in advance requires the digit-by-digit
+conversion developed in Week 7.
 
 After the loop, `feof(stdin)` is nonzero only if the failed read encountered
 end-of-file. If the next token was not an integer, the conversion count is zero
@@ -1506,8 +1506,8 @@ Process each integer as it is read, without storing an array. Accept at most 100
 inputs, require every value to be in `[-30000, 30000]`, accumulate into a
 `long long`, and distinguish end-of-file from an invalid token. As with typical
 judge input using `%d`, assume that every numeric token is representable as an
-`int`; safe conversion of arbitrary-length text is introduced after character
-arrays and pointers. Test:
+`int`; converting text whose length is not bounded in advance requires the
+digit-by-digit conversion developed in Week 7. Test:
 
 - an empty line/end-of-file;
 - all negative values;

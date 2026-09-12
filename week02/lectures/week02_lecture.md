@@ -1355,10 +1355,12 @@ only when the returned status is `1`.
 
 </details>
 
-Converting a substring into a number requires an interface that reports both
-the converted value and where conversion stopped. That interface is deferred
-until Week 4, when pointer-valued positions and their lifetime rules have been
-introduced fully.
+Converting a substring into a number requires deciding both what the digits
+mean and where the conversion stopped. Week 7 develops that conversion directly
+in the lexer: it accumulates digits one at a time, checks each step against the
+representable range before multiplying, and leaves the scan position on the
+first character that is not part of the number. Until then, read numeric input
+with the Week 1 `scanf` contracts under their stated input bounds.
 
 ---
 

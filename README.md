@@ -201,9 +201,11 @@ The three hours normally progress as follows:
 
 Short breaks may be placed between the hourly blocks. The hour-by-hour plan and
 its stated in-class production allow material to be trimmed or extended without
-losing the conceptual sequence. How each hour divides between explanation and
-in-class work is left to the instructor; the Week 1 note additionally marks
-short **Try it now** activities in place, each with a suggested duration.
+losing the conceptual sequence. Some notes additionally mark short **Try it
+now** activities in place, each labelled core or extension and carrying a
+suggested duration; where a note provides them, its opening section states the
+per-hour totals. A note without them leaves the division between explanation
+and in-class work to the instructor.
 
 ## Weekly Lab Pattern
 
