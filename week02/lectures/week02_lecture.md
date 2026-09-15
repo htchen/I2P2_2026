@@ -896,6 +896,21 @@ Therefore `lower == upper` means the target is absent, and `upper - lower` is
 the size of its equal block. The same boundaries also identify where a value
 could be inserted while preserving order.
 
+Both queries share one interface shape, and these are the names the exercise
+starter uses:
+
+```c
+#include <stddef.h>
+
+size_t lower_bound_int(const int values[], size_t size, int key);
+size_t upper_bound_int(const int values[], size_t size, int key);
+```
+
+Each requires `values` to hold `size` readable elements in ascending order,
+leaves them unchanged, and returns a position in `[0, size]`. Returning `size`
+means no element satisfies the condition. The next section derives the single
+loop that implements both.
+
 #### Try it now [Core live] — identify an equal block (3 minutes)
 
 For the displayed array, identify the lower bound, upper bound, and duplicate
@@ -1014,8 +1029,9 @@ for the two searches without writing their bodies.
 Both functions require an ascending sorted range of `count` readable elements,
 preserve that range, and return a position in `[0, count]`. The lower-bound
 result is the first value at least the target; the upper-bound result is the
-first value greater than the target. The table is expected trace output; the C
-function bodies remain for the exercise.
+first value greater than the target. The table is expected trace output. Write
+both bodies in the exercise starter first; [the complete example](examples.c)
+contains worked implementations to compare against afterward.
 
 </details>
 
