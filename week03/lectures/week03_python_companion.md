@@ -17,19 +17,25 @@ headers, the preprocessor, object files, and linking do not.
 
 ## Coverage map
 
-Every fenced example in the Week 3 note is accounted for below.
+The principal C examples in the Week 3 note are accounted for below. Shell
+commands, hand traces, expected-output blocks, and small practice variations
+reuse these same concepts rather than introducing separate Python translations.
 
 | Source example | Relationship | Companion treatment |
 |---|---|---|
 | `Student` structure and object | Closest model | Use a dataclass; explain missing fixed character array and layout |
 | Structure assignment | Partial | `copy.copy` creates another dataclass but may share mutable attributes |
+| Partial designated initialization | Same construction goal, different defaults | Keyword construction requires omitted fields to have declared defaults |
 | `TokenKind` enum and `Token` | Direct design | Use `Enum` and a dataclass |
 | `typedef struct Token Token` | No typedef need | Python binds the class name directly; an alias does not create a new type |
 | `Rational` structure and output factory | Same goal, different mechanism | Use a validated immutable value returned by a constructor/factory |
 | Designated `Student` initializer | Direct construction goal | Use keyword arguments |
 | Tagged union `Value` | Closest model | Pair an enum with a Python payload and validate matching alternatives |
+| `value_print` tag dispatch | Direct control-flow design | Branch on the enum before interpreting the Python payload |
+| Public `Date` design | Direct invariant design | A dataclass and validating factory can express the same calendar contract |
 | `rational.h` header | No header equivalent | Put the public class/functions in a module |
 | `rational.c` implementation | Direct invariant logic, different integers/errors | Normalize in a class constructor; Python has no `INT_MIN` bound or output pointer |
+| `main.c` module client | Same goal, different build model | Import the public Python module and construct a value |
 | Three compile/link commands | No link-step equivalent | Byte-compile modules optionally, then execute/import them |
 | Public `Counter` structure/functions | Direct abstraction goal | Use a class with methods and a read-only property |
 | `BUFFER_CAPACITY` macro | Same constant goal | Bind an uppercase module constant |
@@ -116,6 +122,7 @@ typedef.
 
 ```python
 from dataclasses import dataclass
+from datetime import date, timedelta
 from math import gcd
 
 
@@ -144,6 +151,19 @@ The invariant is shared: denominator positive, fraction reduced, and zero
 denominator rejected. Python returns a constructed value or raises an exception
 instead of filling a caller-provided output structure and returning success.
 Its integers also have no `INT_MIN` negation boundary.
+
+The `Date` design exercise has a close standard-library counterpart. Python's
+`date` constructor validates the calendar invariant, and adding one day handles
+month, leap-year, and year transitions:
+
+```python
+current = date(2024, 2, 28)
+following = current + timedelta(days=1)
+print(following.isoformat())
+```
+
+This prints `2024-02-29`. Python raises `ValueError` for a construction such as
+`date(2023, 2, 29)` instead of returning a C-style Boolean status.
 
 ## Tagged union versus tagged Python payload
 
@@ -176,11 +196,21 @@ class Value:
         }[self.kind]
         if type(self.payload) is not expected:
             raise TypeError("payload does not match its tag")
+
+
+def value_text(value: Value) -> str:
+    if value.kind is ValueKind.INTEGER:
+        return f"integer={value.payload}"
+    if value.kind is ValueKind.REAL:
+        return f"real={value.payload:.1f}"
+    return f"error={value.payload}"
 ```
 
 All payload objects exist through normal references; the alternatives do not
 share one memory region. The explicit check retains the important invariant
-that clients must not pair a tag with the wrong interpretation.
+that clients must not pair a tag with the wrong interpretation. `value_text`
+retains the C dispatch rule: inspect the tag before selecting an interpretation
+of the payload.
 
 ## Modules instead of headers and linking
 
@@ -311,7 +341,11 @@ def students_read(lines: Iterable[str], capacity: int) -> list[Student]:
 
 The same record grammar and capacity policy are visible. Python raises on bad
 conversion and manages the returned list; it does not fill a fixed destination
-array or update an output count pointer.
+array or update an output count pointer. The C example publishes complete
+records incrementally, so its output count still reports the accepted prefix
+after a later malformed record. This Python function raises before returning,
+so that partial list is not available to its caller; matching the C failure
+contract would require returning status and partial results explicitly.
 
 ## What the Python versions must not hide
 

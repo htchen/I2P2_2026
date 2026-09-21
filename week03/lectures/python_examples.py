@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from datetime import date, timedelta
 from enum import Enum, auto
 from math import gcd
 
@@ -72,6 +73,14 @@ class Value:
             raise TypeError("payload does not match its tag")
 
 
+def value_text(value: Value) -> str:
+    if value.kind is ValueKind.INTEGER:
+        return f"integer={value.payload}"
+    if value.kind is ValueKind.REAL:
+        return f"real={value.payload:.1f}"
+    return f"error={value.payload}"
+
+
 class Counter:
     def __init__(self) -> None:
         self._value = 0
@@ -123,7 +132,10 @@ def main() -> None:
     assert duplicate == student and duplicate is not student
     assert Token(TokenKind.INTEGER, 7).value == 7
     assert str(Rational(2, -4)) == "-1/2"
-    assert Value(ValueKind.ERROR, "bad input").payload == "bad input"
+    assert date(2024, 2, 28) + timedelta(days=1) == date(2024, 2, 29)
+    assert value_text(Value(ValueKind.INTEGER, 42)) == "integer=42"
+    assert value_text(Value(ValueKind.REAL, 3.5)) == "real=3.5"
+    assert value_text(Value(ValueKind.ERROR, "bad input")) == "error=bad input"
     counter = Counter()
     counter.increment()
     assert counter.value == 1

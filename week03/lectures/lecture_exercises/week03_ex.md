@@ -6,7 +6,13 @@
 
 Complete `rational_make` so every nonzero rational has a positive denominator
 and is reduced. Write the invariant before the code and include a defined policy
-for a zero denominator.
+for a zero denominator. Follow the lecture's published domain: reject a null
+output pointer, a zero denominator, and `INT_MIN` in either numeric argument.
+On every failure, leave the destination unchanged. Normalize zero to `0/1`.
+
+The temporary `(void)parameter;` statements explicitly discard unused values
+while the starter is incomplete. Remove each statement when the implementation
+begins using that parameter.
 
 ## Hour 2 — Interface/build graph
 
