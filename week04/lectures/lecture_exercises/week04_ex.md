@@ -10,9 +10,19 @@ half-open pointer range.
 
 ## Hour 2 — Transactional allocation
 
-Implement `make_sequence`. Handle zero length, multiplication overflow, and
-allocation failure without publishing a partial result. State who owns the
-returned block.
+Implement `make_sequence`. The `int** out` parameter points to the caller's
+owning `int*`, so successful construction can replace that caller variable.
+Its contract is:
+
+- `out` points to an initialized owner whose current value is `NULL`;
+- size zero succeeds and keeps that owner equal to `NULL`;
+- positive-size success publishes a block of `size` zero-initialized integers;
+- the caller owns the published block and must eventually release it; and
+- invalid input, multiplication overflow, or allocation failure returns
+  `false` without changing the owner.
+
+Test zero length, a null output parameter, multiplication overflow, and an
+attempt to overwrite an owner that already holds an allocation.
 
 ## Hour 3 — Cleanup audit
 
@@ -21,10 +31,17 @@ failure paths under AddressSanitizer/UndefinedBehaviorSanitizer and show that
 each successful allocation has exactly one eventual `free`. Its contract is:
 
 - `values` identifies the caller's owning pointer;
-- when `old_size > 0`, that pointer owns a block of at least `old_size` integers;
+- `old_size == 0` exactly when the current owner is `NULL`;
+- when `old_size > 0`, the owner designates a block of at least `old_size`
+  integers;
 - growth zero-initializes indices `[old_size, new_size)`;
 - `new_size == 0` releases the block and publishes `NULL`; and
 - overflow or allocation failure returns `false` without changing the owner.
+
+The supplied checks cover growth, shrinking, overflow preservation, release,
+and a repeated empty release. Allocation failure caused only by resource
+exhaustion is not deterministic; the overflow case exercises the same
+failure-preservation contract without trying to exhaust the machine.
 
 ## Compile and verify
 

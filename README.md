@@ -236,7 +236,7 @@ midterm project demo.
 | [1](week01/) | Sep. 8 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Lab |
 | [2](week02/) | Sep. 15 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Lab |
 | [3](week03/) | Sep. 22 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Lab |
-| [4](week04/) | Sep. 29 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Lab |
+| [4](week04/) | Sep. 29 | Pointers, automatic and allocated storage, `malloc`, and `free` | Oct. 1 | Lab |
 | [5](week05/) | Oct. 6 | Linked lists and pointer-to-pointer techniques | Oct. 8 | **Quiz 1 + Lab** |
 | [6](week06/) | Oct. 13 | Recursion, binary trees, and AST ownership | Oct. 15 | Lab |
 | [7](week07/) | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | **Midterm Exam 1 + Written Assessment** |

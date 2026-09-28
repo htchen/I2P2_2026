@@ -7,9 +7,11 @@ cleanup on success and failure, and use diagnostics to repair a memory defect.
 
 ## Part A — AI-free readiness
 
-Draw stack and heap objects for a supplied allocation function. Mark the owner,
-one borrower, the lifetime end, and one dangling use. Then repair the function
-without changing its public contract.
+Draw automatic-duration and dynamically allocated objects for a supplied
+allocation function. Mark the owner, one borrower, the lifetime end, and one
+dangling use. A stack/heap drawing may be used as an implementation model, but
+the explanation must use the C lifetime rules. Then repair the function without
+changing its public contract.
 
 ## Part B — Project ownership table
 

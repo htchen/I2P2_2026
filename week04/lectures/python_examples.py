@@ -35,6 +35,13 @@ def contains_zero(values: Sequence[int]) -> bool:
     return any(value == 0 for value in values)
 
 
+def find_index(values: Sequence[int], target: int) -> int | None:
+    for index, value in enumerate(values):
+        if value == target:
+            return index
+    return None
+
+
 def read_values(tokens: Iterable[str], count: int) -> list[int]:
     if count < 0:
         raise ValueError("negative count")
@@ -47,6 +54,12 @@ def read_values(tokens: Iterable[str], count: int) -> list[int]:
             raise ValueError("not enough values") from error
         values.append(int(token))
     return values
+
+
+def make_sequence(size: int) -> list[int]:
+    if size < 0:
+        raise ValueError("negative size")
+    return [0] * size
 
 
 class IntBuffer:
@@ -81,6 +94,10 @@ def rank_students(students: Sequence[Student]) -> list[Student]:
     return sorted(students, key=lambda student: student.grade, reverse=True)
 
 
+def add(left: int, right: int) -> int:
+    return left + right
+
+
 def main() -> None:
     left = Box(10)
     right = Box(20)
@@ -88,7 +105,10 @@ def main() -> None:
     assert (left.value, right.value) == (20, 10)
     assert swapped(10, 20) == (20, 10)
     assert contains_zero([3, 0, 4])
+    assert find_index([4, 7, 9], 7) == 1
+    assert find_index([4, 7, 9], 8) is None
     assert read_values(["10", "20", "30"], 3) == [10, 20, 30]
+    assert make_sequence(3) == [0, 0, 0]
     try:
         read_values([], -1)
     except ValueError:
@@ -113,6 +133,8 @@ def main() -> None:
         [Student(1, 82.0), Student(2, 95.0), Student(3, 88.5)]
     )
     assert [student.student_id for student in ranking] == [2, 3, 1]
+    operation = add
+    assert operation(3, 4) == 7
     assert Node(1).next is None
     print("Week 4 Python contrasts passed.")
 

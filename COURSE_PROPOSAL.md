@@ -129,7 +129,7 @@ reserved for the final project demo.
 | 1 | Sep. 8 | From Python to C: toolchain, types, expressions, I/O, and control flow | Sep. 10 | Compiler and translation lab |
 | 2 | Sep. 15 | C functions, arrays, strings, and Python comparisons | Sep. 17 | Arrays and strings lab |
 | 3 | Sep. 22 | Structures, modular programs, headers, debugging, and builds | Sep. 24 | Midterm scaffold build and code map |
-| 4 | Sep. 29 | Pointers, stack and heap, `malloc`, and `free` | Oct. 1 | Midterm ownership and sanitizer milestone |
+| 4 | Sep. 29 | Pointers, automatic and allocated storage, `malloc`, and `free` | Oct. 1 | Midterm ownership and sanitizer milestone |
 | 5 | Oct. 6 | Linked lists and pointer-to-pointer techniques | Oct. 8 | **Quiz 1**; token-list tracing and testing milestone |
 | 6 | Oct. 13 | Recursion, binary trees, and AST ownership | Oct. 15 | Recursive AST ownership lab |
 | 7 | Oct. 20 | Expression parsing and syntax trees | Oct. 22 | **Midterm Exam 1 + Written Assessment**; asynchronous parser-integration checkpoint |

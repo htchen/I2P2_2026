@@ -4,26 +4,26 @@
 #include <stdlib.h>
 
 static bool make_sequence(size_t size, int** out) {
-  if (out == NULL || size > SIZE_MAX / sizeof(int)) {
+  if (out == NULL || *out != NULL || size > SIZE_MAX / sizeof(int)) {
     return false;
   }
-  *out = NULL;
-  if (size == 0) {
-    return true;
-  }
-  int* candidate = malloc(size * sizeof(*candidate));
-  if (candidate == NULL) {
-    return false;
-  }
-  for (size_t i = 0; i < size; ++i) {
-    candidate[i] = 0;
+  int* candidate = NULL;
+  if (size > 0) {
+    candidate = malloc(size * sizeof(*candidate));
+    if (candidate == NULL) {
+      return false;
+    }
+    for (size_t i = 0; i < size; ++i) {
+      candidate[i] = 0;
+    }
   }
   *out = candidate;
   return true;
 }
 
 static bool resize_sequence(int** values, size_t old_size, size_t new_size) {
-  if (values == NULL || (old_size > 0 && *values == NULL) ||
+  if (values == NULL || (old_size == 0 && *values != NULL) ||
+      (old_size > 0 && *values == NULL) ||
       new_size > SIZE_MAX / sizeof(**values)) {
     return false;
   }
@@ -44,27 +44,55 @@ static bool resize_sequence(int** values, size_t old_size, size_t new_size) {
   return true;
 }
 
+static bool check(bool condition, const char* message) {
+  if (!condition) {
+    fprintf(stderr, "check failed: %s\n", message);
+    return false;
+  }
+  return true;
+}
+
 int main(void) {
   int* values = NULL;
   const size_t size = 6;
-  if (!make_sequence(size, &values)) {
-    fputs("allocation failed\n", stderr);
+  if (!check(make_sequence(size, &values), "initial allocation")) {
     return 1;
   }
+
+  int* original = values;
+  if (!check(!make_sequence(3, &values) && values == original,
+             "reject replacement of an existing owner")) {
+    free(values);
+    return 1;
+  }
+
   const size_t larger_size = 9;
-  if (!resize_sequence(&values, size, larger_size)) {
-    fputs("resize failed\n", stderr);
+  if (!check(resize_sequence(&values, size, larger_size), "growth")) {
     free(values);
     return 1;
   }
   for (size_t i = 0; i < larger_size; ++i) {
-    printf("%d%c", values[i], i + 1 == larger_size ? '\n' : ' ');
+    printf("%d", values[i]);
+    if (i + 1 == larger_size) {
+      fputc('\n', stdout);
+    } else {
+      fputc(' ', stdout);
+    }
   }
-  if (!resize_sequence(&values, larger_size, 3) ||
-      !resize_sequence(&values, 3, 0) || values != NULL) {
-    fputs("shrink or release failed\n", stderr);
+
+  int* before_failure = values;
+  if (!check(!resize_sequence(&values, larger_size, SIZE_MAX) &&
+                 values == before_failure,
+             "overflow failure preserves the owner") ||
+      !check(resize_sequence(&values, larger_size, 3), "shrink") ||
+      !check(resize_sequence(&values, 3, 0) && values == NULL, "release") ||
+      !check(resize_sequence(&values, 0, 0) && values == NULL,
+             "repeated empty release") ||
+      !check(!make_sequence(SIZE_MAX, &values) && values == NULL,
+             "allocation-size overflow")) {
     free(values);
     return 1;
   }
+  puts("all Week 4 example checks passed");
   return 0;
 }
