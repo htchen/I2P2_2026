@@ -14,9 +14,10 @@
   allocate/resize/free one dynamic array, and state who owns it.
 - **Practice:** complete the [Week 4 exercise](lecture_exercises/week04_ex.md)
   before comparing with [the complete example](examples.c).
-- **Supporting ideas:** declaration-precedence puzzles, `ptrdiff_t`, function
-  pointers, and `qsort` extend the model; they should not replace the central
-  address, bounds, lifetime, and ownership reasoning on a first reading.
+- **Supporting ideas:** structure-initialization reminders,
+  declaration-precedence puzzles, function pointers, and `qsort` extend the
+  model; they should not replace the central address, bounds, lifetime, and
+  ownership reasoning on a first reading.
 - **Python bridge:** use the companion for conceptual comparison; Python object
   references are not C pointers.
 
@@ -41,7 +42,7 @@ By the end of this lecture, you should be able to:
 |------|---------------|---------------------|
 | 1 | What exactly does a pointer designate? | Draw automatic-duration objects and trace pointer/array expressions |
 | 2 | How is dynamic lifetime created and changed? | Implement a failure-aware dynamic integer buffer |
-| 3 | How do ownership APIs and generic callbacks remain safe? | Sort records, audit ownership, and repair sanitizer findings |
+| 3 | How do ownership APIs remain safe, and how are memory errors diagnosed? | Audit ownership and repair sanitizer findings |
 
 Each hour interleaves about 35–45 minutes of explanation and live coding with
 roughly 15–20 minutes of core practice. The remaining time supports questions,
@@ -67,22 +68,20 @@ not be executed.
 - **Core live:** part of the planned in-class route.
 - **Extension:** additional practice for the lab, a break, or later study.
 
-The core-live exercises total about 18 minutes in Hour 1, 20 minutes in Hour 2,
-and 18 minutes in Hour 3.
+The core-live exercises total about 15 minutes in Hour 1, 23 minutes in Hour 2,
+and 15 minutes in Hour 3. Supporting exercises provide additional material when
+the class moves faster than planned.
 
 ---
 
 ## Hour 1 — Addresses, indirection, arrays, and `const`
 
 > **Hour 1 route:** [A pointer stores an address](#1-a-pointer-stores-an-address)
-> → [Initialize structure objects explicitly](#initialize-structure-objects-explicitly)
 > → [Pass an address to modify a caller's object](#2-pass-an-address-to-modify-a-callers-object)
 > → [Use `const` to prevent accidental writes](#use-const-to-prevent-accidental-writes)
 > → [Arrays and pointers are related, not identical](#3-arrays-and-pointers-are-related-not-identical)
-> → [Return a borrowed element pointer](#return-a-borrowed-element-pointer)
-> → [Read declarations from the identifier outward](#read-declarations-from-the-identifier-outward)
-> → [Pointer/array trace](#pointerarray-trace)
-> → [Supporting syntax checkpoint](#supporting-syntax-checkpoint)
+> → [Pointer/array trace](#pointerarray-trace). Then use
+> [Hour 1 supporting extensions](#hour-1-supporting-extensions) if time permits.
 
 ### 1. A pointer stores an address
 
@@ -104,6 +103,13 @@ int main(void) {
 - `pointer` stores that address.
 - `*pointer` designates the object at that address.
 - The pointer type describes the pointed-to object and controls pointer arithmetic.
+
+The `%p` conversion prints a pointer value in an implementation-selected form.
+It expects an argument of type `void*`, so `(void*)&value` explicitly converts
+the address before passing it to `printf`. A `void*` is C's generic
+object-pointer type: it can hold an object address, but it does not say what
+pointed-to type may be dereferenced. Later examples use typed pointers such as
+`int*` whenever they access an object.
 
 ```mermaid
 flowchart LR
@@ -175,52 +181,6 @@ value=9 through-pointer=9
 There is one `int` object, named `value`, and one pointer object, named
 `pointer`. Dereferencing the pointer designates the existing integer; it does
 not create a second integer.
-
-</details>
-
----
-
-### Initialize structure objects explicitly
-
-Week 3 introduced structures. In C17, a member declaration describes layout;
-it cannot contain an initializer. Initialize each object when it is created:
-
-```c
-#include <stddef.h>
-
-typedef struct Node {
-  int value;
-  struct Node* next; /* no "= NULL" here in C17 */
-} Node;
-
-Node node = {0, NULL}; /* initialize an object when it is created */
-```
-
-Also notice that the body uses `struct Node*`: the typedef name `Node` becomes
-available only after the closing brace. For dynamically allocated nodes,
-initialization happens after allocation and before another function observes
-the node. Week 5 centralizes this work in a node-creation function so every new
-node begins with the same valid invariant.
-
-#### Try it now [Extension] — separate a type from an initialized object (2 minutes)
-
-Why is `struct Node* next = NULL;` invalid inside the structure body in C17,
-while `Node node = {0, NULL};` is valid after the type definition? Change the
-object initializer to a designated initializer.
-
-<details>
-<summary>Reveal solution</summary>
-
-A structure body contains member declarations, not construction statements or
-per-object default values. The object declaration is where storage is created
-and initialized:
-
-```c
-Node node = {.value = 0, .next = NULL};
-```
-
-This declaration produces no run-time output. Both members have explicit values
-before another function observes the object.
 
 </details>
 
@@ -347,35 +307,6 @@ location or object.
 
 </details>
 
-<details>
-<summary>Optional machine-code preview: forming an address is not accessing an object</summary>
-
-The following comparison is useful after the C pointer model is clear; it is
-not required to read or write pointer code.
-
-Consider three different C operations:
-
-```c
-int value = 7;
-int* pointer = &value; /* form an address */
-int copy = *pointer;   /* load through an address */
-*pointer = 9;          /* store through an address */
-```
-
-On x86, an unoptimized compiler may use `lea` to calculate an effective address
-and `mov` with a memory operand to load or store. `lea` does not dereference the
-address, and it is also used for ordinary address arithmetic. Conversely, a
-memory operand such as `[register]` asks the processor to access memory at the
-computed address. Intel and AT&T assembly syntax even write operands in
-different orders, so always read the compiler's selected syntax before tracing.
-
-This is a useful model, not a source-level equivalence: `&` and `*` obey C's
-type, bounds, alignment, and lifetime rules, while `lea` and `mov` are target
-instructions. Optimization may keep `value` only in a register or replace the
-whole fragment with a constant, leaving no visible pointer operation.
-
-</details>
-
 ---
 
 ### 3. Arrays and pointers are related, not identical
@@ -446,107 +377,6 @@ pointer parameter.
 
 ---
 
-### Return a borrowed element pointer
-
-Week 2 previewed a search interface that returns either an element pointer or
-`NULL`. Its complete lifetime contract is now visible:
-
-```c
-#include <stddef.h>
-
-const int* find_element(const int values[], size_t count, int target) {
-  for (size_t i = 0; i < count; ++i) {
-    if (values[i] == target) {
-      return &values[i];
-    }
-  }
-  return NULL;
-}
-```
-
-The returned pointer is borrowed. It remains usable only while the caller's
-array is alive and has not been released or relocated. The function does not
-transfer ownership, and the caller must not pass the returned interior pointer
-to `free`.
-
-#### Try it now [Core live] — preserve a returned pointer's lifetime (3 minutes)
-
-Call `find_element` on `{4, 7, 9}` for targets `7` and `8`. Check for `NULL`
-before dereferencing and print the results. Who owns the array?
-
-<details>
-<summary>Reveal solution</summary>
-
-```c
-#include <stdio.h>
-
-int main(void) {
-  const int values[] = {4, 7, 9};
-  const int* found = find_element(values, 3, 7);
-  if (found != NULL) {
-    printf("found=%d\n", *found);
-  }
-  found = find_element(values, 3, 8);
-  printf("missing=%d\n", found == NULL);
-  return 0;
-}
-```
-
-**Expected output:**
-
-```text
-found=7
-missing=1
-```
-
-`main` owns the automatic-duration array. The search function and returned
-pointer only borrow its elements.
-
-</details>
-
----
-
-### Read declarations from the identifier outward
-
-> **Supporting syntax:** pointer-to-data and pointer-to-const declarations are
-> required. Const-pointer and function-pointer forms are recognition material
-> here; the later callback section gives the function-pointer form a purpose.
-
-```c
-int value = 0;
-int* p;                    /* pointer to int */
-const int* read_only;      /* pointer to const int */
-int* const fixed = &value; /* const pointer to int */
-const int* const both = &value;
-int (*operation)(int, int); /* pointer to function */
-```
-
-`const` applies to the item immediately to its left, or to its right when there
-is no type on the left. Use typedefs sparingly when they clarify a complicated
-callback, but do not use them to avoid learning the underlying type.
-
-#### Try it now [Extension] — classify two kinds of `const` (3 minutes)
-
-For `const int* read_only` and `int* const fixed`, decide separately whether the
-pointer may be redirected and whether the pointed-to integer may be changed
-through that pointer.
-
-<details>
-<summary>Reveal solution</summary>
-
-| Declaration | Redirect pointer? | Write through pointer? |
-|-------------|-------------------|------------------------|
-| `const int* read_only` | yes | no |
-| `int* const fixed` | no | yes |
-| `const int* const both` | no | no |
-
-This is a type-classification exercise, so it has no run-time output. Attempting
-a forbidden assignment requires a compile-time diagnostic.
-
-</details>
-
----
-
 ### Pointer/array trace
 
 ```c
@@ -608,9 +438,137 @@ version has no defined output and must not be used as a normal test.
 
 ---
 
-### Supporting syntax checkpoint
+### Hour 1 supporting extensions
 
-#### Try it now [Extension] — make pointer precedence explicit (4 minutes)
+The core route ends with the pointer/array trace. The following short sections
+reinforce Week 3 structure syntax, less common declaration forms, and the
+machine-level analogy; use them after the central pointer model is secure or
+assign them for later study.
+
+<details>
+<summary>Optional machine-code preview: forming an address is not accessing an object</summary>
+
+The following comparison is useful after the C pointer model is clear; it is
+not required to read or write pointer code.
+
+Consider three different C operations:
+
+```c
+int value = 7;
+int* pointer = &value; /* form an address */
+int copy = *pointer;   /* load through an address */
+*pointer = 9;          /* store through an address */
+```
+
+On x86, an unoptimized compiler may use `lea` to calculate an effective address
+and `mov` with a memory operand to load or store. `lea` does not dereference the
+address, and it is also used for ordinary address arithmetic. Conversely, a
+memory operand such as `[register]` asks the processor to access memory at the
+computed address. Intel and AT&T assembly syntax even write operands in
+different orders, so always read the compiler's selected syntax before tracing.
+
+This is a useful model, not a source-level equivalence: `&` and `*` obey C's
+type, bounds, **alignment** (the address-placement requirement of a type), and
+lifetime rules, while `lea` and `mov` are target instructions. Optimization may
+keep `value` only in a register or replace the whole fragment with a constant,
+leaving no visible pointer operation.
+
+</details>
+
+---
+
+#### Initialize structure objects explicitly
+
+Week 3 introduced structures. In C17, a member declaration describes layout;
+it cannot contain an initializer. Initialize each object when it is created:
+
+```c
+#include <stddef.h>
+
+typedef struct Node {
+  int value;
+  struct Node* next; /* no "= NULL" here in C17 */
+} Node;
+
+Node node = {0, NULL}; /* initialize an object when it is created */
+```
+
+Here `NULL` is C's standard null-pointer constant: it intentionally designates
+no object and must not be dereferenced. The Hour 2 core route uses it to
+represent an unsuccessful search and an empty owner.
+
+Also notice that the body uses `struct Node*`: the typedef name `Node` becomes
+available only after the closing brace. For dynamically allocated nodes,
+initialization happens after allocation and before another function observes
+the node. Week 5 centralizes this work in a node-creation function so every new
+node begins with the same valid invariant.
+
+##### Try it now [Extension] — separate a type from an initialized object (2 minutes)
+
+Why is `struct Node* next = NULL;` invalid inside the structure body in C17,
+while `Node node = {0, NULL};` is valid after the type definition? Change the
+object initializer to a designated initializer.
+
+<details>
+<summary>Reveal solution</summary>
+
+A structure body contains member declarations, not construction statements or
+per-object default values. The object declaration is where storage is created
+and initialized:
+
+```c
+Node node = {.value = 0, .next = NULL};
+```
+
+This declaration produces no run-time output. Both members have explicit values
+before another function observes the object.
+
+</details>
+
+---
+
+#### Read declarations from the identifier outward
+
+> **Supporting syntax:** pointer-to-data and pointer-to-const declarations are
+> required. Const-pointer forms are recognition material here.
+
+```c
+int value = 0;
+int* p;                    /* pointer to int */
+const int* read_only;      /* pointer to const int */
+int* const fixed = &value; /* const pointer to int */
+const int* const both = &value;
+```
+
+`const` applies to the item immediately to its left, or to its right when there
+is no type on the left. Use typedefs sparingly when they clarify a complicated
+callback, but do not use them to avoid learning the underlying type.
+
+##### Try it now [Extension] — classify two kinds of `const` (3 minutes)
+
+For `const int* read_only` and `int* const fixed`, decide separately whether the
+pointer may be redirected and whether the pointed-to integer may be changed
+through that pointer.
+
+<details>
+<summary>Reveal solution</summary>
+
+| Declaration | Redirect pointer? | Write through pointer? |
+|-------------|-------------------|------------------------|
+| `const int* read_only` | yes | no |
+| `int* const fixed` | no | yes |
+| `const int* const both` | no | no |
+
+This is a type-classification exercise, so it has no run-time output. Attempting
+a forbidden assignment requires a compile-time diagnostic.
+
+</details>
+
+---
+
+#### Pointer-precedence checkpoint
+
+##### Try it now [Extension] — make pointer precedence explicit (4 minutes)
 
 For each expression, state whether it changes the pointer, the pointed-to value,
 both, or neither: `*p++`, `(*p)++`, `*++p`, `++*p`. Then add parentheses that
@@ -640,10 +598,11 @@ specific initial pointer and array.
 ## Hour 2 — Lifetime and dynamic storage
 
 > **Hour 2 route:** [Lifetime is different from scope](#4-lifetime-is-different-from-scope)
+> → [Return a borrowed element pointer](#return-a-borrowed-element-pointer)
 > → [Dynamic allocation](#5-dynamic-allocation)
 > → [Publish ownership through a double pointer](#publish-ownership-through-a-double-pointer)
-> → [Build a dynamic buffer incrementally](#build-a-dynamic-buffer-incrementally)
 > → [`calloc` and `realloc`](#calloc-and-realloc)
+> → [Build a dynamic buffer incrementally](#build-a-dynamic-buffer-incrementally)
 > → [Lifetime timeline exercise](#lifetime-timeline-exercise)
 
 ### 4. Lifetime is different from scope
@@ -700,21 +659,88 @@ dereference; diagnosing the warning and lifetime error is the exercise.
 
 ---
 
+### Return a borrowed element pointer
+
+Now that lifetime is explicit, we can state the complete contract of the search
+interface previewed in Week 2. It returns either a pointer to an existing array
+element or `NULL`. A null pointer designates no object; code may compare it, but
+must not dereference it:
+
+```c
+#include <stddef.h>
+
+const int* find_element(const int values[], size_t count, int target) {
+  for (size_t i = 0; i < count; ++i) {
+    if (values[i] == target) {
+      return &values[i];
+    }
+  }
+  return NULL;
+}
+```
+
+The returned pointer is **borrowed**: it permits access to an object that
+someone else owns. It remains usable only while the caller's array is alive and
+has not been released or relocated. The function does not transfer ownership,
+and only the array's owner is responsible for any later release.
+
+#### Try it now [Core live] — preserve a returned pointer's lifetime (3 minutes)
+
+Call `find_element` on `{4, 7, 9}` for targets `7` and `8`. Check for `NULL`
+before dereferencing and print the results. Who owns the array?
+
+<details>
+<summary>Reveal solution</summary>
+
+```c
+#include <stdio.h>
+
+int main(void) {
+  const int values[] = {4, 7, 9};
+  const int* found = find_element(values, 3, 7);
+  if (found != NULL) {
+    printf("found=%d\n", *found);
+  }
+  found = find_element(values, 3, 8);
+  printf("missing=%d\n", found == NULL);
+  return 0;
+}
+```
+
+**Expected output:**
+
+```text
+found=7
+missing=1
+```
+
+`main` owns the automatic-duration array. The search function and returned
+pointer only borrow its elements.
+
+</details>
+
+---
+
 ### 5. Dynamic allocation
 
-Storage returned by `malloc` is suitably aligned for ordinary object types but
-its bytes are uninitialized. Read an element only after the program has stored
-a value there. In C, do not cast the result of `malloc`; including `<stdlib.h>`
-provides the required declaration and `void*` converts to an object-pointer type.
+Storage returned by `malloc` is suitably **aligned** for ordinary object types:
+its address satisfies the placement requirement of the object type stored
+there. Its bytes are uninitialized, so read an element only after the program
+has stored a value there. In C, do not cast the result of `malloc`; including
+`<stdlib.h>` provides the required declaration, and the returned `void*`
+converts to an object-pointer type such as `int*`.
 
 The successful caller owns the allocation until ownership is transferred or
 `free` releases it. `free` does not set any pointer to `NULL`, and clearing one
 owner variable does not clear other aliases. Those aliases become dangling when
 the allocation's lifetime ends.
 
-`NULL` is the standard null-pointer constant used in C headers. A pointer equal
-to `NULL` intentionally designates no object. It may be compared, assigned, or
-passed when an interface permits “no object,” but it must never be dereferenced.
+The `NULL` checks below distinguish allocation or input failure from a usable
+nonempty result. As in the search example, never dereference a null pointer.
+
+`SIZE_MAX`, provided here by `<stdint.h>`, is the largest value representable by
+`size_t`. The guard below checks `count * sizeof(int)` **before** multiplying,
+so an overflowing byte count cannot be sent to `malloc`.
 
 ```c
 #include <stdint.h>
@@ -870,6 +896,85 @@ on that path the owner remains `NULL` and there is no standard output.
 
 ---
 
+### `calloc` and `realloc`
+
+> **Core resizing rule:** publish a `realloc` result only after it succeeds.
+> `calloc` and the exact zero-size corner cases are supporting library details.
+
+- `calloc(count, size)` allocates and zeroes the bytes.
+- `realloc(old, new_size)` may resize in place or move the allocation.
+
+For an integer array, the all-zero bytes produced by `calloc` represent integer
+zero. Do not generalize that statement to every possible C type: an all-bits-zero
+object representation is not promised to be a null pointer representation.
+
+Never overwrite the only pointer before confirming `realloc` succeeded:
+
+```c
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+bool resize_int_block(int** owner, size_t new_count) {
+  if (owner == NULL || new_count > SIZE_MAX / sizeof(**owner)) {
+    return false;
+  }
+  if (new_count == 0) {
+    free(*owner);
+    *owner = NULL;
+    return true;
+  }
+
+  int* candidate = realloc(*owner, new_count * sizeof(*candidate));
+  if (candidate == NULL) {
+    return false;
+  }
+  *owner = candidate;
+  return true;
+}
+```
+
+The temporary `candidate` makes the operation transactional. Failure leaves
+`*owner` unchanged; success publishes the only pointer that should be used for
+the resized allocation. This minimal helper does not initialize newly added
+elements because it does not receive the old element count. The lecture
+exercise's `resize_sequence` adds that contract.
+
+```mermaid
+flowchart TD
+    call["request resize"] --> zero{"new count is zero?"}
+    zero -->|yes| release["free old block<br/>publish NULL"]
+    zero -->|no| attempt["realloc into temporary"]
+    attempt -->|failure| preserve["return false<br/>old owner unchanged"]
+    attempt -->|success| publish["publish returned pointer<br/>old aliases invalid"]
+```
+
+Handling zero separately avoids the implementation-defined corner cases of
+`realloc(pointer, 0)` in C17.
+
+#### Try it now [Extension] — preserve ownership on failure (4 minutes)
+
+Explain why replacing the temporary-pointer pattern with
+`*owner = realloc(*owner, bytes)` can leak. For success that moves the block,
+classify the old owner value and every pointer into the old block.
+
+<details>
+<summary>Reveal solution</summary>
+
+If `realloc` returns `NULL`, direct assignment overwrites the only pointer to the
+still-live old allocation. That allocation can no longer be released: it is
+leaked. With a temporary, the old owner remains available on failure.
+
+On success, the old allocation's lifetime ends even when the returned address
+looks numerically unchanged. The returned pointer becomes the owner; old owner
+copies and interior element pointers must not be used. This reasoning trace has
+no program output because allocation success, failure, and movement are not
+deterministic events to demand from one ordinary run.
+
+</details>
+
+---
+
 ### Build a dynamic buffer incrementally
 
 ```c
@@ -996,86 +1101,6 @@ destruction releases it.
 
 ---
 
-### `calloc` and `realloc`
-
-> **Supporting library detail:** understand the allocate-copy-free effect and
-> the failure-safe temporary-pointer pattern. Memorizing every zero-size corner
-> case is reference knowledge.
-
-- `calloc(count, size)` allocates and zeroes the bytes.
-- `realloc(old, new_size)` may resize in place or move the allocation.
-
-For an integer array, the all-zero bytes produced by `calloc` represent integer
-zero. Do not generalize that statement to every possible C type: an all-bits-zero
-object representation is not promised to be a null pointer representation.
-
-Never overwrite the only pointer before confirming `realloc` succeeded:
-
-```c
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-bool resize_int_block(int** owner, size_t new_count) {
-  if (owner == NULL || new_count > SIZE_MAX / sizeof(**owner)) {
-    return false;
-  }
-  if (new_count == 0) {
-    free(*owner);
-    *owner = NULL;
-    return true;
-  }
-
-  int* candidate = realloc(*owner, new_count * sizeof(*candidate));
-  if (candidate == NULL) {
-    return false;
-  }
-  *owner = candidate;
-  return true;
-}
-```
-
-The temporary `candidate` makes the operation transactional. Failure leaves
-`*owner` unchanged; success publishes the only pointer that should be used for
-the resized allocation. This minimal helper does not initialize newly added
-elements because it does not receive the old element count. The lecture
-exercise's `resize_sequence` adds that contract.
-
-```mermaid
-flowchart TD
-    call["request resize"] --> zero{"new count is zero?"}
-    zero -->|yes| release["free old block<br/>publish NULL"]
-    zero -->|no| attempt["realloc into temporary"]
-    attempt -->|failure| preserve["return false<br/>old owner unchanged"]
-    attempt -->|success| publish["publish returned pointer<br/>old aliases invalid"]
-```
-
-Handling zero separately avoids the implementation-defined corner cases of
-`realloc(pointer, 0)` in C17.
-
-#### Try it now [Extension] — preserve ownership on failure (4 minutes)
-
-Explain why replacing the temporary-pointer pattern with
-`*owner = realloc(*owner, bytes)` can leak. For success that moves the block,
-classify the old owner value and every pointer into the old block.
-
-<details>
-<summary>Reveal solution</summary>
-
-If `realloc` returns `NULL`, direct assignment overwrites the only pointer to the
-still-live old allocation. That allocation can no longer be released: it is
-leaked. With a temporary, the old owner remains available on failure.
-
-On success, the old allocation's lifetime ends even when the returned address
-looks numerically unchanged. The returned pointer becomes the owner; old owner
-copies and interior element pointers must not be used. This reasoning trace has
-no program output because allocation success, failure, and movement are not
-deterministic events to demand from one ordinary run.
-
-</details>
-
----
-
 ### Lifetime timeline exercise
 
 Draw a timeline for this sequence: declare a buffer, allocate eight elements,
@@ -1109,14 +1134,15 @@ to `NULL` does not modify this separate borrowed pointer.
 
 ---
 
-## Hour 3 — Ownership APIs, callbacks, and memory-error diagnosis
+## Hour 3 — Ownership APIs and memory-error diagnosis
 
 > **Hour 3 route:** [Ownership contracts](#6-ownership-contracts)
 > → [Opaque ownership revisited](#opaque-ownership-revisited)
-> → [Function pointers and `qsort`](#function-pointers-and-qsort)
+> → [Failure patterns and sanitizer command](#7-failure-patterns-and-sanitizer-command)
 > → [Sanitizer triage studio](#sanitizer-triage-studio)
-> → [Failure patterns](#7-failure-patterns)
-> → [project ownership audit](#midterm-project-connection--ownership-is-part-of-correctness)
+> → [project ownership audit](#midterm-project-connection--ownership-is-part-of-correctness).
+> [Function pointers and `qsort`](#hour-3-supporting-extension--function-pointers-and-qsort)
+> form a supporting extension after the core route.
 
 ### 6. Ownership contracts
 
@@ -1128,18 +1154,6 @@ For every pointer, ask:
 4. Who owns the allocation?
 5. Who must free it, and when?
 6. Can another pointer outlive the owner?
-
-As an optional assembly cross-check, compile one safe pointer example and one
-returning the address of a local object:
-
-```sh
-cc -std=c17 -O0 -S pointer_demo.c
-```
-
-`-O0` asks the compiler not to optimize, which usually keeps the generated code
-closer to the source. `-S` stops after producing an assembly file rather than an
-executable. Identifying an address calculation does not prove that the pointer
-remains valid; the lifetime argument must still be made at the C level.
 
 Examples:
 
@@ -1245,11 +1259,177 @@ implementation and driver are supplied.
 
 ---
 
-### Function pointers and `qsort`
+### 7. Failure patterns and sanitizer command
+
+| Failure | Meaning |
+|---------|---------|
+| Leak | The last usable pointer is lost before `free` |
+| Dangling pointer | The pointer remains after the object's lifetime ends |
+| Use after free | A dangling pointer is used after deallocation |
+| Double free | The same allocation is released more than once |
+| Invalid free | `free` receives an automatic-duration or interior address rather than an active allocation pointer |
+| Null dereference | `*pointer` is evaluated when `pointer == NULL` |
+| Buffer overflow | Access goes before or beyond an allocation |
+
+Compile memory-sensitive work with sanitizers:
+
+```sh
+cc -std=c17 -Wall -Wextra -Wpedantic -g \
+  -fsanitize=address,undefined program.c -o program
+```
+
+`-std=c17` selects this course's C language version; `-Wall -Wextra -Wpedantic`
+enable the usual warning set, and `-g` adds source-level debug information.
+`-fsanitize=address,undefined` instruments the executable so the available
+AddressSanitizer and UndefinedBehaviorSanitizer checks can report many invalid
+operations near where they occur. These options are compiler facilities rather
+than C17 features, and they do not prove correctness.
+
+#### Try it now [Core live] — classify failures by lifetime and bounds (4 minutes)
+
+Classify each scenario and state the smallest contract-level repair:
+
+1. overwrite the only owner with a failed `realloc` result;
+2. call `free(&local)` for an automatic-duration integer;
+3. keep `&values[2]`, successfully resize `values`, then read through the old
+   element pointer;
+4. write `values[count]` when exactly `count` elements are allocated.
+
+<details>
+<summary>Reveal solution</summary>
+
+| Scenario | Failure | Contract-level repair |
+|----------|---------|-----------------------|
+| overwrite owner on failed `realloc` | leak | receive the result in a temporary and publish only on success |
+| `free(&local)` | invalid free | release only a live allocation pointer or `NULL` |
+| use old element pointer after resize | dangling use | recompute borrowers from the published resized owner |
+| write element `count` | buffer overflow | restrict valid indices to `[0, count)` |
+
+These are failure classifications, not requests to run undefined behavior. A
+repaired valid test may produce ordinary output; the invalid versions have no
+portable expected output.
+
+</details>
+
+---
+
+### Sanitizer triage studio
+
+Run a seeded program containing one each of these actual memory errors:
+
+- read one element beyond a dynamic array;
+- use an element pointer after `realloc`;
+- free an automatic-duration address;
+- leak on an early return;
+- dereference a null output parameter.
+
+For every report the available toolchain produces, record the invalid
+operation, where the affected allocation was created or released, and the
+ownership rule that would have prevented it. Fix the contract or control flow,
+not only the single reported line. AddressSanitizer and UndefinedBehaviorSanitizer
+availability varies by compiler and platform. Leak detection is a separate
+capability and is not enabled or available with every AddressSanitizer build, so
+the lab must identify the expected tool rather than promise one report for every
+seeded defect.
+
+Then call the `values_destroy` implementation above twice with the same owning
+pointer. This is a **safety check**, not a seeded error: the first call sets the
+owner to `NULL`, and the second call reaches `free(NULL)`, which is defined to do
+nothing. Confirm that the sanitizer emits no report. Contrast this behavior with
+a destroy function that frees the allocation but leaves the caller's pointer
+dangling.
+
+#### Try it now [Core live] — read a use-after-free report (5 minutes)
+
+Run this deliberately invalid program only in the controlled sanitizer studio.
+Before running, identify the owner, alias, lifetime end, and invalid operation:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+  int* owner = malloc(sizeof(*owner));
+  if (owner == NULL) {
+    return 1;
+  }
+  *owner = 17;
+  int* alias = owner;
+  free(owner);
+  owner = NULL;
+  printf("%d\n", *alias);
+  return 0;
+}
+```
+
+<details>
+<summary>Reveal solution</summary>
+
+- `owner` initially owns the allocation.
+- `alias` borrows the same integer.
+- `free(owner)` ends the allocation's lifetime.
+- `owner = NULL` changes only the owner variable; `alias` still contains a
+  dangling pointer value.
+- `*alias` is the invalid read.
+
+An AddressSanitizer-enabled run commonly reports a heap-use-after-free and
+points to both the invalid read and the earlier deallocation. Exact wording and
+addresses are not portable. The program has no defined standard output; remove
+the post-lifetime dereference rather than relying on a particular observed
+number.
+
+</details>
+
+---
+
+### Midterm project connection — Ownership is part of correctness
+
+Create an ownership table for the compiler scaffold. Include the token list,
+token array if present, AST nodes, and any temporary buffers. For each resource,
+record its creator, owner, borrowers, successful release, and error-path
+release. Then trace three cases: valid input, invalid syntax after partial AST
+construction, and a semantic failure after parsing.
+
+An LLM can propose likely owners, but it cannot infer the contract reliably
+from a partial snippet. Check call sites and cleanup code, run a small case under
+AddressSanitizer, and reject any suggested repair that merely suppresses a
+report without restoring the ownership rule.
+
+#### Try it now [Core live] — audit one error path (3 minutes)
+
+Choose one parser function that allocates a node and then calls another
+operation that may fail. Draw the success and failure paths. For every allocated
+object, identify the owner immediately before the possible failure and the
+reachable cleanup operation. Do not implement a project TODO during this trace.
+
+<details>
+<summary>Reveal solution</summary>
+
+A valid audit has this shape; exact names must come from the released scaffold:
+
+```text
+allocate node
+  ├─ allocation fails -> report failure; no node exists
+  └─ node owner established
+       ├─ child/stage succeeds -> transfer or retain ownership as documented
+       └─ child/stage fails -> release completed children, release node,
+                               propagate failure
+```
+
+The important evidence is a reachable release on every path after successful
+allocation and an explicit ownership transfer when a callee retains the node.
+The trace itself has no standard output; sanitizer results and public tests are
+subsequent evidence, not substitutes for the ownership map.
+
+</details>
+
+---
+
+### Hour 3 supporting extension — Function pointers and `qsort`
 
 > **Supporting extension:** first secure allocation, ownership, and ordinary
 > typed function calls. This section shows why callback types and `void*` exist;
-> it is not a prerequisite for the dynamic-array exercise.
+> it is not a prerequisite for the dynamic-array exercise or ownership audit.
 
 A function pointer stores callable behavior with a particular signature:
 
@@ -1285,7 +1465,7 @@ add=7
 multiply=12
 ```
 
-#### Try it now [Core live] — match a callback signature (3 minutes)
+#### Try it now [Extension] — match a callback signature (3 minutes)
 
 Add a subtraction function, assign it to `operation`, and print the result for
 `3` and `4`. Then explain why a function returning `double` is not compatible
@@ -1367,9 +1547,9 @@ id=1 grade=82.0
 The compiler can diagnose an incompatible comparator function type at the call
 site. It cannot verify that a correctly typed `const void*` comparator casts to
 the actual element type or that `element_size` describes the array elements;
-violating those requirements can produce undefined behavior.
-This comparator assumes every grade is finite; a design that permits NaN must
-define and implement an explicit total ordering for it.
+violating those requirements can produce undefined behavior. This comparator
+assumes every grade is finite; a design that permits a not-a-number value
+(NaN) must define and implement an explicit total ordering for it.
 
 #### Try it now [Extension] — make ties deterministic (4 minutes)
 
@@ -1395,169 +1575,6 @@ return (a->id > b->id) - (a->id < b->id);
 The comparator now defines an explicit result for the tie. Exact full output
 depends on the added student's ID, but among equal finite grades the smaller ID
 must appear first.
-
-</details>
-
----
-
-### Sanitizer triage studio
-
-Run a seeded program containing one each of these actual memory errors:
-
-- read one element beyond a dynamic array;
-- use an element pointer after `realloc`;
-- free an automatic-duration address;
-- leak on an early return;
-- dereference a null output parameter.
-
-For every report the available toolchain produces, record the invalid
-operation, where the affected allocation was created or released, and the
-ownership rule that would have prevented it. Fix the contract or control flow,
-not only the single reported line. AddressSanitizer and UndefinedBehaviorSanitizer
-availability varies by compiler and platform. Leak detection is a separate
-capability and is not enabled or available with every AddressSanitizer build, so
-the lab must identify the expected tool rather than promise one report for every
-seeded defect.
-
-Then call the `values_destroy` implementation above twice with the same owning
-pointer. This is a **safety check**, not a seeded error: the first call sets the
-owner to `NULL`, and the second call reaches `free(NULL)`, which is defined to do
-nothing. Confirm that the sanitizer emits no report. Contrast this behavior with
-a destroy function that frees the allocation but leaves the caller's pointer
-dangling.
-
-#### Try it now [Core live] — read a use-after-free report (5 minutes)
-
-Run this deliberately invalid program only in the controlled sanitizer studio.
-Before running, identify the owner, alias, lifetime end, and invalid operation:
-
-```c
-#include <stdio.h>
-#include <stdlib.h>
-
-int main(void) {
-  int* owner = malloc(sizeof(*owner));
-  if (owner == NULL) {
-    return 1;
-  }
-  *owner = 17;
-  int* alias = owner;
-  free(owner);
-  owner = NULL;
-  printf("%d\n", *alias);
-  return 0;
-}
-```
-
-<details>
-<summary>Reveal solution</summary>
-
-- `owner` initially owns the allocation.
-- `alias` borrows the same integer.
-- `free(owner)` ends the allocation's lifetime.
-- `owner = NULL` changes only the owner variable; `alias` still contains a
-  dangling pointer value.
-- `*alias` is the invalid read.
-
-An AddressSanitizer-enabled run commonly reports a heap-use-after-free and
-points to both the invalid read and the earlier deallocation. Exact wording and
-addresses are not portable. The program has no defined standard output; remove
-the post-lifetime dereference rather than relying on a particular observed
-number.
-
-</details>
-
----
-
-### 7. Failure patterns
-
-| Failure | Meaning |
-|---------|---------|
-| Leak | The last usable pointer is lost before `free` |
-| Dangling pointer | The pointer remains after the object's lifetime ends |
-| Use after free | A dangling pointer is used after deallocation |
-| Double free | The same allocation is released more than once |
-| Invalid free | `free` receives an automatic-duration or interior address rather than an active allocation pointer |
-| Null dereference | `*pointer` is evaluated when `pointer == NULL` |
-| Buffer overflow | Access goes before or beyond an allocation |
-
-Compile memory-sensitive work with sanitizers:
-
-```sh
-cc -std=c17 -Wall -Wextra -Wpedantic -g \
-  -fsanitize=address,undefined program.c -o program
-```
-
-Sanitizers do not prove correctness, but supported checks turn many silent
-errors into a report close to the failing operation. These options are compiler
-facilities rather than C17 features.
-
-#### Try it now [Core live] — classify failures by lifetime and bounds (4 minutes)
-
-Classify each scenario and state the smallest contract-level repair:
-
-1. overwrite the only owner with a failed `realloc` result;
-2. call `free(&local)` for an automatic-duration integer;
-3. keep `&values[2]`, successfully resize `values`, then read through the old
-   element pointer;
-4. write `values[count]` when exactly `count` elements are allocated.
-
-<details>
-<summary>Reveal solution</summary>
-
-| Scenario | Failure | Contract-level repair |
-|----------|---------|-----------------------|
-| overwrite owner on failed `realloc` | leak | receive the result in a temporary and publish only on success |
-| `free(&local)` | invalid free | release only a live allocation pointer or `NULL` |
-| use old element pointer after resize | dangling use | recompute borrowers from the published resized owner |
-| write element `count` | buffer overflow | restrict valid indices to `[0, count)` |
-
-These are failure classifications, not requests to run undefined behavior. A
-repaired valid test may produce ordinary output; the invalid versions have no
-portable expected output.
-
-</details>
-
----
-
-## Midterm project connection — Ownership is part of correctness
-
-Create an ownership table for the compiler scaffold. Include the token list,
-token array if present, AST nodes, and any temporary buffers. For each resource,
-record its creator, owner, borrowers, successful release, and error-path
-release. Then trace three cases: valid input, invalid syntax after partial AST
-construction, and a semantic failure after parsing.
-
-An LLM can propose likely owners, but it cannot infer the contract reliably
-from a partial snippet. Check call sites and cleanup code, run a small case under
-AddressSanitizer, and reject any suggested repair that merely suppresses a
-report without restoring the ownership rule.
-
-### Try it now [Core live] — audit one error path (3 minutes)
-
-Choose one parser function that allocates a node and then calls another
-operation that may fail. Draw the success and failure paths. For every allocated
-object, identify the owner immediately before the possible failure and the
-reachable cleanup operation. Do not implement a project TODO during this trace.
-
-<details>
-<summary>Reveal solution</summary>
-
-A valid audit has this shape; exact names must come from the released scaffold:
-
-```text
-allocate node
-  ├─ allocation fails -> report failure; no node exists
-  └─ node owner established
-       ├─ child/stage succeeds -> transfer or retain ownership as documented
-       └─ child/stage fails -> release completed children, release node,
-                               propagate failure
-```
-
-The important evidence is a reachable release on every path after successful
-allocation and an explicit ownership transfer when a callee retains the node.
-The trace itself has no standard output; sanitizer results and public tests are
-subsequent evidence, not substitutes for the ownership map.
 
 </details>
 
