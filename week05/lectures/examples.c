@@ -99,8 +99,7 @@ int main(void) {
     list_destroy(&head);
     return 1;
   }
-  if (list_reverse_range(&head, 3, 4) ||
-      !list_reverse_range(&head, 3, 3)) {
+  if (list_reverse_range(&head, 3, 4) || !list_reverse_range(&head, 3, 3)) {
     fputs("range validation failed\n", stderr);
     list_destroy(&head);
     return 1;
