@@ -18,15 +18,18 @@ concepts even when a Python list model produces the same sequence.
 
 ## Coverage map
 
-Every fenced example in the Week 5 note is accounted for below.
+The principal C examples in the Week 5 note are accounted for below.
+Collapsible practice solutions, expected-output blocks, ownership traces, and
+test tables reuse these concepts rather than introducing separate Python
+translations.
 
 | Source example | Relationship | Companion treatment |
 |---|---|---|
 | Three-node text diagram | Diagram/invariant | Reuse as object reachability, not byte/address layout |
 | `Node` and `List` structures | Closest model | Dataclasses hold a head reference and explicit size |
-| `list_init` | Same initial state | Constructor/defaults establish `head is None` and size zero |
+| `list_init` | Closest Python model | Constructor/defaults establish `head is None` and size zero |
 | `node_create` with `malloc` | No allocation equivalent | Construct `Node(value, next)`; Python reports allocation failure differently |
-| Owning `StringNode` payload | No explicit string ownership | A node holds a string reference; exclusive ownership is not enforced |
+| `StringNode` payload ownership choice | No explicit string ownership | A node holds a string reference; exclusive ownership is not enforced |
 | Push front | Direct link algorithm | Construct a node, redirect `head`, increment size |
 | List invariant validator | Direct traversal, different lifetime | Count nodes and detect cycles by identity |
 | Head-link Mermaid diagram | Diagram, no `Node**` equivalent | Explain the head attribute as a mutation target |

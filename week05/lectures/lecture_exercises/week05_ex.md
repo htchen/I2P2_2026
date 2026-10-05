@@ -4,7 +4,11 @@
 
 The lecture uses `struct List { Node* head; size_t size; }`; this focused starter
 uses only `Node* head`. Consequently, its functions receive `Node** head` and do
-not update a cached size. The owning-link algorithm is the same in both forms.
+not update a cached size. The owning-link algorithm is the same in both forms,
+but the operations are deliberately different: the lecture emphasizes
+value-based insertion/removal and whole-list reversal, while this exercise uses
+numeric positions and half-open ranges. Do not mix the two APIs in one
+implementation.
 
 ## Hour 1 — Representation and ownership
 

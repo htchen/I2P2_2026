@@ -13,7 +13,7 @@
   interior changes, reverse links without losing nodes, and destroy the list.
 - **Practice:** complete the [Week 5 exercise](lecture_exercises/week05_ex.md),
   which deliberately uses a bare owning head pointer; compare it afterward with
-  [the complete example](examples.c).
+  [the complete bare-head example](examples.c).
 - **Supporting ideas:** the `struct List` representation adds a cached size;
   circular lists and Josephus are comparative applications after the linear-list
   invariant is secure.
@@ -77,6 +77,7 @@ questions, transitions, and a short break.
 > **Hour 1 route:** [Why link nodes?](#1-why-link-nodes)
 > → [Representation and invariants](#2-representation-and-invariants)
 > → [Two interfaces used this week](#two-interfaces-used-this-week)
+> → [Common API preconditions](#common-api-preconditions)
 > → [Allocate one node safely](#3-allocate-one-node-safely)
 > → [Separate payload from structure](#separate-payload-from-structure)
 > → [Insert at the front](#4-insert-at-the-front)
@@ -128,6 +129,7 @@ a link and cost trace, not a complete program, so it has no run-time output.
 ### 2. Representation and invariants
 
 ```c
+#include <stdbool.h>
 #include <stddef.h>
 
 struct Node {
@@ -184,10 +186,20 @@ is visible with less surrounding code. Translate between them as follows:
 | address of owning link `&list->head` | address already received as `head` |
 | cached `list->size` | determine boundaries by walking nodes |
 
-Do not mix the two function signatures in one implementation. The node and
-ownership reasoning is identical; only the container wrapper differs. A later
+Do not mix the two function families in one implementation. The owning-link
+reasoning is identical, but the public operations are intentionally different:
+
+| Lecture operation | Focused exercise operation |
+|-------------------|----------------------------|
+| push-front and sorted insertion | insert before a numeric index |
+| remove-first and remove-all by value | erase at a numeric index |
+| reverse the entire list | reverse a half-open index range |
+| clear a `struct List` | destroy a bare owning head |
+
+The lecture and starter both use `bool` for success/failure operations. A later
 refactor can place the exercise's head pointer in `struct List` and update the
-cached size after every successful mutation.
+cached size after every successful mutation, but it must still preserve the
+chosen operation's contract.
 
 #### Try it now [Extension] — translate one owning link (3 minutes)
 
@@ -203,6 +215,26 @@ the corresponding link location is `&list->head`, whose type is also
 `struct Node**`. This type exercise has no run-time output.
 
 </details>
+
+---
+
+### Common API preconditions
+
+Unless a function states otherwise, every `struct List*` parameter below must
+be non-`NULL` and designate an initialized, valid, acyclic list. These examples
+use that precondition instead of repeating a defensive null check in every
+operation.
+
+- `list_init` is the exception: its non-`NULL` argument designates writable
+  `struct List` storage whose members need not yet be initialized.
+- `list_is_valid` is the other exception: the list object and every traversed
+  pointer must be readable and live, but the cached size or acyclic invariant
+  may be wrong because those are the properties it checks.
+- A borrowed node position must remain live and belong to the required list for
+  the duration stated by the operation.
+- `list_print` additionally requires a non-`NULL` writable stream.
+- A failed allocation or rejected position must leave the original list
+  unchanged.
 
 Initialize every link before publishing the node into the list.
 
@@ -282,18 +314,19 @@ the bytes inline; these choices change destruction and copy behavior.
 
 ```c
 struct StringNode {
-  char* owned_text;
+  char* text;
   struct StringNode* next;
 };
 ```
 
-If `owned_text` is owned, node creation must duplicate the string and node
-destruction must free it before freeing the node. If it is borrowed, the source
-string must outlive the list. Never leave this decision implicit.
+The neutral field name does not claim an ownership policy. If `text` owns a
+copy, node creation must duplicate the string and node destruction must free it
+before freeing the node. If `text` is borrowed, the source string must outlive
+the list. Never leave this decision implicit in the API contract.
 
 #### Try it now [Extension] — choose a string ownership contract (3 minutes)
 
-For one version in which `owned_text` owns a copy and another in which the node
+For one version in which `text` owns a copy and another in which the node
 borrows text, state the creation and destruction responsibilities. Do not write
 a copying function yet.
 
@@ -314,12 +347,12 @@ This is an API-contract exercise and produces no run-time output.
 ### 4. Insert at the front
 
 ```c
-int list_push_front(struct List* list, int value) {
+bool list_push_front(struct List* list, int value) {
   struct Node* node = node_create(value, list->head);
-  if (node == NULL) return 0;
+  if (node == NULL) return false;
   list->head = node;
   ++list->size;
-  return 1;
+  return true;
 }
 ```
 
@@ -340,12 +373,12 @@ success:
   allocate node {5, old head}
   list.head -> 5 -> 10 -> 20 -> NULL
   list.size = 3
-  return 1
+  return true
 
 failure:
   list.head -> 10 -> 20 -> NULL
   list.size = 2
-  return 0
+  return false
 ```
 
 `list_push_front` itself prints nothing. With `list_print` from Hour 3, the
@@ -358,12 +391,12 @@ successful state would print `5 -> 10 -> 20` followed by a newline.
 ### Validate the invariant during development
 
 ```c
-int list_is_valid(const struct List* list) {
+bool list_is_valid(const struct List* list) {
   size_t observed = 0;
   const struct Node* node = list->head;
   while (node != NULL) {
     ++observed;
-    if (observed > list->size) return 0; /* cycle or wrong size */
+    if (observed > list->size) return false; /* cycle or wrong size */
     node = node->next;
   }
   return observed == list->size;
@@ -388,14 +421,14 @@ particular check loop forever?
 <summary>Reveal solution</summary>
 
 ```text
-size 3: observed becomes 1, 2, 3; traversal reaches NULL; return 1
-size 2: observed becomes 1, 2, 3; 3 > 2; return 0 immediately
+size 3: observed becomes 1, 2, 3; traversal reaches NULL; return true
+size 2: observed becomes 1, 2, 3; 3 > 2; return false immediately
 ```
 
 For a cycle, `observed` eventually becomes greater than the cached `size`, so
-the function returns `0`. It prints nothing. It still depends on `size` being a
-reasonable finite bound; Floyd's algorithm detects a cycle without that cached
-field.
+the function returns `false`. It prints nothing. It still depends on `size`
+being a reasonable finite bound; Floyd's algorithm detects a cycle without
+that cached field.
 
 </details>
 
@@ -422,10 +455,13 @@ forced failure on push 10:
                 head -> 20 -> 30 -> NULL, size 2
 ```
 
-Each successful node owns the previous head through its initialized `next`
-field before `list->head` changes. On failure no new node exists and the old
-head is never overwritten. The functions produce no standard output unless a
-driver calls `list_print`.
+Before publication, the caller owns the new allocation through its local
+`node` pointer, while `list->head` still owns the old chain. The initialized
+`node->next` is a prepared link to that chain, not a second published owner.
+Assigning `list->head = node` commits the mutation: the head link owns the new
+node, and the new node's `next` becomes the unique incoming link to the previous
+head. On failure no new node exists and the old head is never overwritten. The
+functions produce no standard output unless a driver calls `list_print`.
 
 </details>
 
@@ -504,20 +540,20 @@ the actual mutation target is a **link**. Representing that link directly remove
 the artificial head/interior distinction:
 
 ```c
-int list_remove_first(struct List* list, int target) {
+bool list_remove_first(struct List* list, int target) {
   struct Node** link = &list->head;
 
   while (*link != NULL && (*link)->value != target) {
     link = &(*link)->next;
   }
 
-  if (*link == NULL) return 0;
+  if (*link == NULL) return false;
 
   struct Node* removed = *link;
   *link = removed->next;
   free(removed);
   --list->size;
-  return 1;
+  return true;
 }
 ```
 
@@ -537,9 +573,9 @@ and `99`. Treat each call independently.
 
 | Target | Final `link` location | Changed link | Result |
 |--------|-----------------------|--------------|--------|
-| `10` | `&list->head` | `list->head = removed->next` | `20 -> 30`, size 2, return 1 |
-| `20` | `&node10->next` | `node10->next = removed->next` | `10 -> 30`, size 2, return 1 |
-| `99` | address of `node30->next` | none | list unchanged, size 3, return 0 |
+| `10` | `&list->head` | `list->head = removed->next` | `20 -> 30`, size 2, return `true` |
+| `20` | `&node10->next` | `node10->next = removed->next` | `10 -> 30`, size 2, return `true` |
+| `99` | address of `node30->next` | none | list unchanged, size 3, return `false` |
 
 In the successful cases the bypass link is written before `removed` is freed;
 no later expression reads the freed node. The function prints nothing. With
@@ -553,17 +589,17 @@ no later expression reads the freed node. The function prints nothing. With
 ### 6. Insert in sorted order
 
 ```c
-int list_insert_sorted(struct List* list, int value) {
+bool list_insert_sorted(struct List* list, int value) {
   struct Node** link = &list->head;
   while (*link != NULL && (*link)->value < value) {
     link = &(*link)->next;
   }
 
   struct Node* node = node_create(value, *link);
-  if (node == NULL) return 0;
+  if (node == NULL) return false;
   *link = node;
   ++list->size;
-  return 1;
+  return true;
 }
 ```
 
@@ -582,12 +618,12 @@ Starting from `10 -> 30 -> 50`, trace insertion of `30` and then insertion of
 insert 30:
   link stops at the link owning the existing 30
   result: 10 -> 30(new) -> 30(old) -> 50
-  size increases by one; return 1
+  size increases by one; return true
 
 insert 60:
   link stops at the final NULL link
   result: 10 -> 30 -> 50 -> 60
-  size increases by one; return 1
+  size increases by one; return true
 ```
 
 The strict `< value` condition places a new equal value before existing equal
@@ -1075,7 +1111,9 @@ answer back to the original numbering.
 
 The recursive and iterative versions express the same recurrence. The iterative
 form below makes the changing subproblem size visible and avoids using one
-call-stack frame per participant:
+call-stack frame per participant. Its precondition is `count > 0` and
+`step > 0`; the assertions check programmer-controlled calls during development
+but are not recoverable input validation:
 
 ```c
 #include <assert.h>
@@ -1153,8 +1191,8 @@ A satisfactory verification record contains:
 
 Exact sanitizer text is platform-dependent. A valid run should emit no
 sanitizer diagnostic; functional output must match the hand-built oracle. The
-repository's [complete example](examples.c) builds `10, 20, 30`, reverses it,
-removes its middle node, and prints:
+repository's [complete bare-head exercise example](examples.c) builds
+`10, 20, 30`, reverses it, removes its middle node, and prints:
 
 ```text
 30 10
