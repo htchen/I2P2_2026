@@ -35,8 +35,10 @@ By the end of this lecture, you should be able to:
 5. Compare linked-list and array operation costs.
 6. Specify and test indexed insertion, removal, filtering, and subrange reversal
    without losing nodes or dereferencing freed storage.
-7. Distinguish an array of pointers from a pointer to an array and use a pointer
-   table as a view over dynamically allocated row-major storage.
+
+**Supporting-extension objective:** if you complete the final extension,
+distinguish an array of pointers from a pointer to an array and use a pointer
+table as a view over dynamically allocated row-major storage.
 
 ---
 
@@ -114,14 +116,17 @@ Draw an array containing `10, 20, 30` and the list above. Insert `15` before
 <summary>Reveal solution</summary>
 
 The array must move `20` and `30` one position to the right before storing
-`15`. In the list, after a new node has been allocated and initialized, only
-two links change:
+`15`. In the list, one link in the new node is initialized and one existing
+link is rewired:
 
 ```text
 before: 10.next -> 20
 new:    15.next -> 20
 after:  10.next -> 15
 ```
+
+If the list representation caches its size, that field must also increase from
+`3` to `4`; it is metadata rather than another node link.
 
 The logical sequence becomes `10, 15, 20, 30` in both representations. This is
 a link and cost trace, not a complete program, so it has no run-time output.
@@ -591,6 +596,11 @@ no later expression reads the freed node. The function prints nothing. With
 ---
 
 ### 6. Insert in sorted order
+
+Precondition: the input list is already sorted in nondecreasing order. Under
+that precondition, the operation preserves sorted order; on an arbitrary list,
+the same pointer manipulation is memory-safe but does not sort the existing
+nodes.
 
 ```c
 bool list_insert_sorted(struct List* list, int value) {
@@ -1127,12 +1137,16 @@ static int josephus_survivor(int count, int step) {
   assert(step > 0);
 
   int survivor = 0; /* J(1, step), in zero-based numbering */
-  for (int circle_size = 2; circle_size <= count; ++circle_size) {
+  for (long long circle_size = 2; circle_size <= count; ++circle_size) {
     survivor = (int)(((long long)survivor + step) % circle_size);
   }
   return survivor + 1; /* convert to the labels 1 through count */
 }
 ```
+
+The wider `long long` loop variable prevents the increment after
+`circle_size == INT_MAX` from overflowing when `count` has that extreme value.
+In practice, the O(n) running time usually imposes a much smaller useful bound.
 
 For `count = 7` and `step = 3`, the successive zero-based survivor positions
 for circle sizes `1` through `7` are `0, 1, 1, 0, 3, 0, 3`; the final `+1`

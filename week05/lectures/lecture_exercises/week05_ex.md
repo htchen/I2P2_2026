@@ -19,7 +19,8 @@ owning head link, each owning `next` link, and the one-past-end null value.
 
 Implement insertion and erasure with a `Node** link` cursor. Test the head,
 middle, tail, and out-of-range cases. State whether an index equal to the list
-length is accepted for insertion.
+length is accepted for insertion. The supplied driver checks all four position
+categories and verifies that a rejected operation leaves the list unchanged.
 
 ## Hour 3 — Segment reversal and cleanup
 
@@ -28,7 +29,9 @@ the complete list. Trace every changed link before running the code under a
 sanitizer. Implement `list_reverse_range(head, first, last)` with the following
 contract: `[first, last)` is measured in node indices; equal boundaries are a
 successful no-op; and an invalid or out-of-range boundary returns `false`
-without changing the list.
+without changing the list. The driver checks a one-element range, a middle
+range, the complete range, an empty range at the end, reversed boundaries, and
+a boundary beyond the list length.
 
 ## Compile and verify
 

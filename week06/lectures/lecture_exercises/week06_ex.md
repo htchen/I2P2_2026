@@ -22,6 +22,19 @@ distinct-label preconditions, use half-open subranges, return an owned root
 through `out`, and release every partially built subtree if reconstruction or
 allocation fails.
 
+Use this precise input/output contract:
+
+- `out` must be non-`NULL` for every call;
+- when `size == 0`, the two traversal pointers may be `NULL`, the function
+  succeeds, and it stores `NULL` in `*out`;
+- when `size > 0`, both traversal pointers must be non-`NULL`, both sequences
+  must contain the same distinct labels, and their orders must describe one
+  consistent tree;
+- every failure returns `false` and leaves `*out == NULL`; and
+- allocate nodes through the supplied `tree_node_allocate()` function rather
+  than by calling `malloc()` directly. The driver uses that wrapper to force a
+  deterministic mid-construction allocation failure.
+
 ## Compile and verify
 
 Print each visited value followed by one space; the driver supplies line breaks.
@@ -42,5 +55,8 @@ postorder: 2 3 1
 all Week 6 starter checks passed
 ```
 
-Use [`../examples.c`](../examples.c) afterward to compare reconstruction and
-partial-allocation cleanup.
+The driver also checks empty input, null pointers, duplicate labels, mismatched
+label sets, inconsistent orders, and partial-allocation cleanup. Run it with
+AddressSanitizer so the injected failure also detects an unreachable partial
+tree. Use [`../examples.c`](../examples.c) afterward to compare the complete
+implementation.

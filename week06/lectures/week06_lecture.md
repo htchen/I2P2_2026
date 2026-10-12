@@ -649,10 +649,10 @@ invariants when the compiler pipeline is introduced.
 
 #### Try it now [Core live] — reconstruct from two orders (5 minutes)
 
-For a seven-node tree, derive preorder, inorder, and postorder sequences. Then
-work backward: given preorder and inorder with unique labels, circle the root,
-partition both sequences, and repeat on each subtree. Include an empty subtree
-and a one-child node rather than using only a perfect tree.
+For the five-node tree described below, derive preorder, inorder, and postorder
+sequences. Then work backward: given preorder and inorder with unique labels,
+circle the root, partition both sequences, and repeat on each subtree. Include
+an empty subtree and a one-child node rather than using only a perfect tree.
 
 Use this concrete pair for the backward trace:
 
@@ -954,7 +954,8 @@ shapes:
 1. sequence lengths agree;
 2. all sequences contain the same label set or multiset;
 3. the stated distinctness/duplicate policy holds;
-4. the first preorder label agrees with the last postorder label;
+4. when both preorder and postorder are supplied and nonempty, the first
+   preorder label agrees with the last postorder label;
 5. each recursive subtree occupies a contiguous segment of every traversal;
 6. every indexed search checks the bound before reading the candidate element.
 
@@ -1032,12 +1033,35 @@ double free during `tree_destroy`.
 
 ### Reconstruction implementation plan
 
-Use half-open ranges in the traversal arrays. A helper receives an inorder range,
-a matching preorder or postorder range, and an output tree link. The supplied
-exercise uses postorder, so its root is the final element of that range. Allocate
-the root only after validating that it appears in the inorder range. If either
-subtree fails, destroy any partial children and the root before returning
-failure.
+Use half-open ranges in the traversal arrays. For the supplied
+inorder-plus-postorder exercise, a useful private helper contract is:
+
+```c
+static bool build_subtree(const int inorder[], const int postorder[],
+                          size_t size, struct TreeNode** out);
+```
+
+The two pointers identify the first elements of matching ranges, and `size`
+gives both range lengths. The base case `size == 0` stores `NULL` in `*out` and
+succeeds. Otherwise, `postorder[size - 1]` is the root value. Find its bounded
+index `root_index` in the inorder range, then divide the arrays as follows:
+
+| Subtree | Inorder range | Postorder range | Size |
+|---------|---------------|-----------------|------|
+| left | `[0, root_index)` | `[0, root_index)` | `root_index` |
+| right | `[root_index + 1, size)` | `[root_index, size - 1)` | `size - root_index - 1` |
+
+The postorder endpoint `size - 1` is excluded from both child ranges because it
+stores the current root. Notice that each row gives child ranges of equal
+length; writing the ranges before the recursive calls prevents an off-by-one
+split.
+
+Validate that the root occurs exactly once in the current inorder range before
+allocating it. Initialize both child links to `NULL`, construct the left and
+right children, and publish the completed root through `*out` only after both
+calls succeed. If allocation or either recursive call fails, destroy every
+partial child and the current root before returning failure. This staged
+ownership rule ensures that every failing call leaves `*out == NULL`.
 
 ---
 
@@ -1045,7 +1069,7 @@ failure.
 
 #### Try it now [Core live] — compare balanced and skewed shapes (5 minutes)
 
-Insert a sequence, verify inorder ordering and recorded size, search present and
+Insert a sequence, verify inorder ordering and computed size, search present and
 absent values, reconstruct one tree from two traversals, and destroy both trees.
 Run the insertion sequence for balanced and sorted orders; compare observed
 height and maximum recursion depth.

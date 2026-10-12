@@ -163,6 +163,10 @@ head branch in Python, but it is a data-structure redesign—not a translation o
 
 ## Sorted insertion, reversal, and removal of all matches
 
+As in the C note, `insert_sorted` has a precondition: the existing list is
+already in nondecreasing order. The operation preserves that invariant; it does
+not sort an arbitrary list.
+
 ```python
 def insert_sorted(values: LinkedList, value: int) -> None:
     previous: Node | None = None
