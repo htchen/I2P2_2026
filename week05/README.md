@@ -9,5 +9,8 @@
 Focus: node ownership, list invariants, insertion/removal, destruction, circular
 lists, indexed sequence-editing specifications, and representation tradeoffs.
 
+Supporting extension: arrays of pointers, a checked dynamically allocated
+row-major matrix view, and `qsort` of pointer views without moving payloads.
+
 Project milestone: trace token-list construction and conversion, then design
 boundary and invalid-input tests without implementing the graded parser TODOs.

@@ -45,6 +45,10 @@ translations.
 | `list_clear` with `free` | No explicit release equivalent | Detach the head and size; optional link breaking only changes reachability |
 | Circular-list representation | Closest model | Store a tail and close the cycle; Python does not enforce ownership or prompt reclamation |
 | Iterative Josephus recurrence | Direct | Preserve the zero-based recurrence and one-based result |
+| `int* rows[]` versus `int (*row)[3]` | No faithful type equivalent | Python sequences do not encode a C pointer target or fixed row stride |
+| Jagged pointer-array view | Closest model | A list can contain row-list references, but not C pointer objects |
+| Dynamically allocated `IntMatrix` | Same indexing goal, different ownership | Nested lists provide a matrix model without `malloc`, pointer tables, or overflow-size checks |
+| `qsort` of string pointers | Direct ordering goal, different mechanism | `sorted` returns a new reference list; no `void*` comparator or element-size contract |
 
 ## Nodes and reachability
 
@@ -277,12 +281,60 @@ Python avoids fixed-width addition overflow, but the recurrence, zero-based
 state, and one-based output are the same. It still computes only the survivor,
 not the elimination order.
 
+## Pointer arrays, matrix storage, and sorted views
+
+Python has no declaration corresponding to either `int* rows[2]` or
+`int (*row)[3]`. A list can hold references to other lists:
+
+```python
+short_row = [10, 20]
+long_row = [30, 40, 50]
+rows = [short_row, long_row]
+```
+
+This reproduces the jagged indexing results, but `rows[0]` is an object
+reference—not a C pointer that advances by `sizeof(int)`. The outer list also
+does not encode the inner row lengths in its type.
+
+A conventional Python rewrite of the dynamic `2 x 3` matrix is:
+
+```python
+row_count = 2
+column_count = 3
+matrix = [
+    [10 * row + column for column in range(column_count)]
+    for row in range(row_count)
+]
+```
+
+The nested lists are separately managed Python objects. This is not the C
+representation with one contiguous data allocation plus a pointer-table
+allocation, and it does not teach allocation-size overflow or explicit cleanup.
+A flat Python list with `data[row * column_count + column]` is the closer
+algorithmic model for row-major indexing, still without C ownership.
+
+Python sorting also works at the level of object references:
+
+```python
+words = ["pear", "fig", "banana", "kiwi"]
+alphabetical = sorted(words)
+length_then_text = sorted(words, key=lambda word: (len(word), word))
+```
+
+`alphabetical` is `['banana', 'fig', 'kiwi', 'pear']`, and
+`length_then_text` is `['fig', 'kiwi', 'pear', 'banana']`. The ordering goal
+transfers, but Python does not expose `qsort`'s `void*` callback, address of an
+array element, or `sizeof` element contract. `sorted` returns a new list;
+`words.sort()` would reorder the original list of references.
+
 ## What the Python versions must not hide
 
 - A Python object reference is not a C pointer and has no address-of operator.
 - Attribute assignment is not a general `Node**` link-location abstraction.
 - Garbage collection does not prove C ownership or replace `free` on every path.
 - Shared Python references mean a removed node may remain alive.
+- A list of lists does not model a C pointer table or contiguous allocation.
+- Python sorting does not validate a C `qsort` comparator or element size.
 - The linked-list algorithms and invariants still transfer and provide a useful
   reference model for sequence results.
 

@@ -1,7 +1,8 @@
 # Week 5 Lecture Notes — Linked Lists and Pointer-to-Pointer Techniques
 
-> October 6, 2026 · Source lineage: previous linked-list notes and the 2025
-> Week 1–3 notebooks; examples were consolidated around explicit ownership
+> October 6, 2026 · Source lineage: previous linked-list notes, the 2025 Week
+> 1–3 notebooks, and the pointer/2D-array and `qsort` notebooks; examples were
+> consolidated around explicit ownership
 
 > Python bridge: [Python Contrast Companion for Week 5](week05_python_companion.md)
 
@@ -16,7 +17,8 @@
   [the complete bare-head example](examples.c).
 - **Supporting ideas:** the `struct List` representation adds a cached size;
   circular lists and Josephus are comparative applications after the linear-list
-  invariant is secure.
+  invariant is secure. A final extension combines earlier array, allocation,
+  and `qsort` ideas through pointer arrays and a dynamic matrix view.
 - **Python bridge:** use the companion to compare references and mutation, while
   keeping C allocation and ownership explicit.
 
@@ -33,6 +35,8 @@ By the end of this lecture, you should be able to:
 5. Compare linked-list and array operation costs.
 6. Specify and test indexed insertion, removal, filtering, and subrange reversal
    without losing nodes or dereferencing freed storage.
+7. Distinguish an array of pointers from a pointer to an array and use a pointer
+   table as a view over dynamically allocated row-major storage.
 
 ---
 
@@ -1271,6 +1275,289 @@ ways to corrupt links.
 
 ---
 
+## Supporting extension — Pointer arrays, dynamic 2D storage, and `qsort`
+
+> **Prerequisite bridge:** Week 2 introduced fixed two-dimensional arrays and
+> row-major layout. Week 4 introduced dynamic allocation, ownership, function
+> pointers, and the core [`qsort` interface](../../week04/lectures/week04_lecture.md#hour-3-supporting-extension--function-pointers-and-qsort).
+> This extension combines those ideas. It is not required before the linked-list
+> core, and it may move to a lab or later review.
+
+### An array of pointers stores one pointer in each element
+
+Read a declaration from the identifier outward:
+
+```c
+int* rows[2];       /* rows is an array of 2 pointers to int. */
+int (*row)[3];      /* row is a pointer to an array of 3 int. */
+```
+
+The brackets bind more tightly than `*`, so the parentheses change the type.
+The first form can point at rows with different lengths; the second advances in
+fixed groups of three `int` objects.
+
+This complete example builds a **jagged view** over two existing arrays:
+
+```c
+#include <stddef.h>
+#include <stdio.h>
+
+int main(void) {
+  int short_row[] = {10, 20};
+  int long_row[] = {30, 40, 50};
+  int* rows[] = {short_row, long_row};
+  const size_t lengths[] = {2, 3};
+  const size_t row_count = sizeof(rows) / sizeof(rows[0]);
+
+  for (size_t r = 0; r < row_count; ++r) {
+    for (size_t c = 0; c < lengths[r]; ++c) {
+      printf("%d%c", rows[r][c], c + 1 == lengths[r] ? '\n' : ' ');
+    }
+  }
+  return 0;
+}
+```
+
+**Expected output:**
+
+```text
+10 20
+30 40 50
+```
+
+`rows[r][c]` means `*(*(rows + r) + c)`: select pointer `r`, then move `c`
+integers from the address stored there. The two row arrays remain the owners;
+the pointer array only borrows their addresses.
+
+#### Try it now [Extension] — distinguish the two declarations (4 minutes)
+
+For `int values[2][3] = {{1, 2, 3}, {4, 5, 6}};`, declare one pointer that can
+advance from `values[0]` to `values[1]`. Separately, declare an array containing
+pointers to both rows. Predict `(*row)[2]` and `row_views[1][0]`.
+
+<details>
+<summary>Reveal solution</summary>
+
+```c
+int (*row)[3] = values;
+int* row_views[2] = {values[0], values[1]};
+```
+
+The expressions produce:
+
+```text
+(*row)[2] = 3
+row_views[1][0] = 4
+```
+
+These declarations themselves print nothing. The displayed lines are the
+predicted values; a driver must use `printf` to emit them.
+
+</details>
+
+---
+
+### A dynamic matrix can own one data block and one pointer table
+
+One useful run-time representation separates ownership from the convenient
+`matrix.row[r][c]` view:
+
+```text
+matrix.row (owned table)        matrix.data (one contiguous owned block)
+    |                           +----+----+----+----+----+----+
+    v                      +--->|  0 |  1 |  2 | 10 | 11 | 12 |
++----------+               |    +----+----+----+----+----+----+
+| data + 0 |---------------+                   ^
++----------+                                   |
+| data + 3 |-----------------------------------+
++----------+
+```
+
+The table elements point inside `data`; they do not own separate rows. This
+keeps row-major locality and requires exactly two successful allocations,
+regardless of the row count.
+
+`int_matrix_create` requires `out` to designate an uninitialized or already
+empty `IntMatrix`; destroy an existing matrix before reusing the same object.
+On success, the caller owns both allocations through that one structure.
+
+```c
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+  size_t rows;
+  size_t columns;
+  int* data;
+  int** row;
+} IntMatrix;
+
+void int_matrix_destroy(IntMatrix* matrix) {
+  if (matrix == NULL) return;
+  free(matrix->row);
+  free(matrix->data);
+  *matrix = (IntMatrix){0};
+}
+
+bool int_matrix_create(size_t rows, size_t columns, IntMatrix* out) {
+  if (out == NULL) return false;
+  *out = (IntMatrix){0};
+
+  if (rows == 0 || columns == 0) {
+    out->rows = rows;
+    out->columns = columns;
+    return true;
+  }
+  if (rows > SIZE_MAX / sizeof(*out->row) || columns > SIZE_MAX / rows) {
+    return false;
+  }
+  const size_t element_count = rows * columns;
+  if (element_count > SIZE_MAX / sizeof(*out->data)) return false;
+
+  int* data = calloc(element_count, sizeof(*data));
+  if (data == NULL) return false;
+  int** row = malloc(rows * sizeof(*row));
+  if (row == NULL) {
+    free(data);
+    return false;
+  }
+
+  for (size_t r = 0; r < rows; ++r) row[r] = data + r * columns;
+  *out = (IntMatrix){rows, columns, data, row};
+  return true;
+}
+
+int main(void) {
+  IntMatrix matrix;
+  if (!int_matrix_create(2, 3, &matrix)) return EXIT_FAILURE;
+
+  for (size_t r = 0; r < matrix.rows; ++r) {
+    for (size_t c = 0; c < matrix.columns; ++c) {
+      matrix.row[r][c] = (int)(10 * r + c);
+      printf("%d%c", matrix.row[r][c], c + 1 == matrix.columns ? '\n' : ' ');
+    }
+  }
+  int_matrix_destroy(&matrix);
+  return EXIT_SUCCESS;
+}
+```
+
+**Expected output:**
+
+```text
+0 1 2
+10 11 12
+```
+
+The overflow checks happen before each allocation-size multiplication. On every
+failure, `out` remains the valid empty state. Destruction releases the pointer
+table and data block exactly once, then restores that empty state. The `row`
+field is an array-like table of pointers, not a true C two-dimensional array;
+the flat equivalent of `row[r][c]` is `data[r * columns + c]`.
+
+#### Try it now [Extension] — trace allocation ownership (5 minutes)
+
+Suppose the `data` allocation succeeds but the `row` allocation fails. List the
+live objects immediately before returning. Then change the driver to create a
+`3 x 2` matrix and predict the final row after the same assignment formula.
+
+<details>
+<summary>Reveal solution</summary>
+
+Before the second allocation attempt, local `data` is the only owner of the
+contiguous block. If the pointer-table allocation fails, `free(data)` ends that
+ownership before the function returns; `out` still contains only zeros.
+
+For a `3 x 2` matrix, row `2` receives values `20` and `21`, so its output is:
+
+```text
+20 21
+```
+
+</details>
+
+---
+
+### `qsort` can reorder a pointer view without moving the payloads
+
+Week 4 sorted records in place. The referenced notebook also uses a pointer
+array to sort variable-length strings. Here the array elements being moved are
+`const char*` pointers, while the comparator follows those pointers to compare
+the strings:
+
+```c
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int compare_string_pointers(const void* left, const void* right) {
+  const char* const* a = left;
+  const char* const* b = right;
+  return strcmp(*a, *b);
+}
+
+int main(void) {
+  const char* order[] = {"pear", "fig", "banana", "kiwi"};
+  const size_t count = sizeof(order) / sizeof(order[0]);
+  qsort(order, count, sizeof(order[0]), compare_string_pointers);
+  for (size_t i = 0; i < count; ++i) printf("%s\n", order[i]);
+  return 0;
+}
+```
+
+**Expected output:**
+
+```text
+banana
+fig
+kiwi
+pear
+```
+
+`qsort` receives the address of each array element, so a comparator for an array
+of `const char*` observes a pointer to a pointer. Sorting changes only the order
+array. The string payloads remain where they were and are never modified.
+
+#### Try it now [Extension] — order by length, then spelling (5 minutes)
+
+Change the comparator so shorter strings come first and equal-length strings
+are ordered by `strcmp`. Predict the complete output for the same four words.
+
+<details>
+<summary>Reveal solution</summary>
+
+```c
+int compare_length_then_text(const void* left, const void* right) {
+  const char* const* a = left;
+  const char* const* b = right;
+  const size_t a_length = strlen(*a);
+  const size_t b_length = strlen(*b);
+  if (a_length < b_length) return -1;
+  if (a_length > b_length) return 1;
+  return strcmp(*a, *b);
+}
+```
+
+Using this function in the same `qsort` call produces:
+
+```text
+fig
+kiwi
+pear
+banana
+```
+
+The secondary comparison makes the result deterministic for `kiwi` and `pear`.
+Do not rely on `qsort` preserving the original order of equivalent elements.
+
+</details>
+
+---
+
 ## References and source materials
 
 - [Linus Torvalds, *The mind behind Linux* (TED2016)](https://www.ted.com/talks/linus_torvalds_the_mind_behind_linux)
@@ -1280,3 +1567,5 @@ ways to corrupt links.
 - [Instructor slides: *Josephus Problem*](../../assets/references/josephus_lee.pptx)
 - [2025 Week 1 notebook (Colab)](https://colab.research.google.com/drive/1Asu-XpzM8EfrB8ANf4ze4ejDUdgIFGq0)
 - [2025 Week 2 notebook (Colab)](https://colab.research.google.com/drive/1U1VXgyhO50YCJUTD7BPrA-zvr6GTMHIr)
+- [Pointer arrays and two-dimensional arrays notebook (Colab)](https://colab.research.google.com/drive/19lD7E8o9ASefXIzibuOWUSYFMov2DDel)
+- [`qsort`, pointer-array sorting, and dynamic allocation notebook (Colab)](https://colab.research.google.com/drive/1XFB8kN-hekc4lyW8Z1Xawr6mJ0-_DrR5)

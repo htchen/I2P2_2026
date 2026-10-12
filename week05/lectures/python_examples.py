@@ -1,4 +1,4 @@
-"""Runnable Python contrasts for the Week 5 linked-list examples."""
+"""Runnable Python contrasts for the Week 5 examples."""
 
 from __future__ import annotations
 
@@ -170,6 +170,28 @@ def main() -> None:
     clear(values)
     assert values.head is None and values.size == 0
     assert josephus_survivor(7, 3) == 4
+
+    short_row = [10, 20]
+    long_row = [30, 40, 50]
+    rows = [short_row, long_row]
+    assert rows == [[10, 20], [30, 40, 50]]
+
+    row_count = 2
+    column_count = 3
+    matrix = [
+        [10 * row + column for column in range(column_count)]
+        for row in range(row_count)
+    ]
+    assert matrix == [[0, 1, 2], [10, 11, 12]]
+
+    words = ["pear", "fig", "banana", "kiwi"]
+    assert sorted(words) == ["banana", "fig", "kiwi", "pear"]
+    assert sorted(words, key=lambda word: (len(word), word)) == [
+        "fig",
+        "kiwi",
+        "pear",
+        "banana",
+    ]
     print("Week 5 Python contrasts passed.")
 
 

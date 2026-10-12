@@ -18,7 +18,10 @@ and explicit postorder destruction do not.
 
 ## Coverage map
 
-Every fenced example in the Week 6 note is accounted for below.
+Every principal fenced example in the Week 6 note is accounted for below.
+Collapsible practice solutions, expected-output blocks, and hand traces apply
+the same recurrences and tree operations rather than introducing separate
+Python mechanisms.
 
 | Source example | Relationship | Companion treatment |
 |---|---|---|

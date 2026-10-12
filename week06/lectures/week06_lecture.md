@@ -45,6 +45,35 @@ By the end of this lecture, you should be able to:
 | 2 | How does tree shape determine traversal order? | Draw trees and derive traversal/query functions |
 | 3 | What can traversal sequences prove about a tree? | Reconstruct, validate, and compare possible interpretations |
 
+Each hour alternates explanation, hand traces, live coding, and short practice.
+Exercises labelled **Core live** belong to the planned classroom route.
+Exercises labelled **Extension** may move to the lab or independent study when
+the class needs more time for the core recursion and tree traces.
+
+### Inline practice routine
+
+For each **Try it now** activity:
+
+1. predict the return value, visit order, tree shape, or diagnostic before
+   running code;
+2. write the recursive contract, base case, and decreasing measure when the
+   activity introduces a recursive function;
+3. draw one stack or tree trace rather than relying only on final output;
+4. compile valid C with `-std=c17 -Wall -Wextra -Wpedantic`; and
+5. compare the result with the hidden solution only after making an attempt.
+
+Only the question is visible initially. Expand **Reveal solution** to see an
+expected output, completed trace, or an explanation that the example has no
+run-time output. Exact memory addresses and sanitizer wording are
+machine-dependent and are never part of a required answer.
+
+- **Core live:** part of the planned in-class route.
+- **Extension:** extra practice for a break, lab, or later review.
+
+The core-live activities total about 19 minutes in Hour 1, 16 minutes in Hour
+2, and 20 minutes in Hour 3. The remaining time is for explanation, live
+coding, questions, transitions, and a short break.
+
 ---
 
 ## Hour 1 — Recursive reasoning and the call stack
@@ -79,6 +108,34 @@ unsigned long long factorial(unsigned int n) {
 The measure `n` decreases. This function is structurally correct but its result
 still overflows quickly; recursion does not remove numeric limits.
 
+The function itself performs no input or output. A caller such as
+`printf("%llu\n", factorial(5));` prints `120` while the value remains
+representable.
+
+#### Try it now [Core live] — complete the recursive contract (3 minutes)
+
+For `factorial(5)`, write the contract, base case, decreasing measure, maximum
+number of active calls, and returned value. Then predict the output of the
+caller above.
+
+<details>
+<summary>Reveal solution</summary>
+
+- Contract: for the demonstrated nonnegative input, return `n!` when the result
+  is representable as `unsigned long long`.
+- Base case: `n <= 1`, returning `1`.
+- Decreasing measure: `n`; the recursive call receives `n - 1`.
+- Maximum active calls for `factorial(5)`: five, for arguments `5` through `1`.
+- Unwinding values: `1`, `2`, `6`, `24`, `120`.
+
+**Expected output:**
+
+```text
+120
+```
+
+</details>
+
 ---
 
 ### 2. Stack frames
@@ -110,6 +167,35 @@ flowchart TD
 
 Each unfinished box is one active call. The boxes disappear in the reverse
 order as return values move upward.
+
+#### Try it now [Core live] — distinguish calling from returning (3 minutes)
+
+Trace `factorial(4)`. Immediately before the base case returns, list the active
+arguments from the oldest frame to the newest. Then list the multiplication
+results in the order in which calls return.
+
+<details>
+<summary>Reveal solution</summary>
+
+Immediately before the base case returns, the active arguments are:
+
+```text
+4 -> 3 -> 2 -> 1
+```
+
+Return and multiplication proceed in the opposite direction:
+
+```text
+factorial(1) = 1
+factorial(2) = 2 * 1  = 2
+factorial(3) = 3 * 2  = 6
+factorial(4) = 4 * 6  = 24
+```
+
+This is a call trace, not program output; the function prints nothing by
+itself.
+
+</details>
 
 <details>
 <summary>Optional machine-code lens: calls, frames, and the ABI</summary>
@@ -230,6 +316,40 @@ The measure `n` decreases, but each non-base call creates two recursive calls.
 The number of moves satisfies `T(n) = 2T(n - 1) + 1 = 2^n - 1`. Trace `n = 3`
 before running it and check that no larger disk is ever placed on a smaller one.
 
+Calling `hanoi(2, 'A', 'B', 'C')` produces this deterministic output:
+
+```text
+move disk 1: A -> B
+move disk 2: A -> C
+move disk 1: B -> C
+```
+
+#### Try it now [Core live] — preserve parameter roles (4 minutes)
+
+Without running the program, write the seven output lines for
+`hanoi(3, 'A', 'B', 'C')`. Underline the single move of disk `3`, and explain
+why the two recursive calls exchange different peg roles.
+
+<details>
+<summary>Reveal solution</summary>
+
+```text
+move disk 1: A -> C
+move disk 2: A -> B
+move disk 1: C -> B
+move disk 3: A -> C
+move disk 1: B -> A
+move disk 2: B -> C
+move disk 1: A -> C
+```
+
+Before disk `3` moves, peg `C` is temporary and peg `B` is the destination for
+the top two disks. After disk `3` moves, peg `A` becomes temporary and peg `C`
+is the destination. The two calls therefore represent different subproblems,
+even though both use `n - 1`.
+
+</details>
+
 ---
 
 ### Backtracking: choose, recurse, undo
@@ -278,13 +398,60 @@ positions, occupied-line sets, and result accumulator as parameters or group
 them in a context structure. Hidden mutable `static` work buffers make repeated
 calls and tests harder to reason about.
 
+The pseudocode describes state transitions and produces no output by itself.
+A complete four-queen counter should report `2`; that result is useful only
+after the choose/undo invariant has been traced.
+
+#### Try it now [Core live] — find the missing undo (4 minutes)
+
+Suppose a four-queen search marks a column and both diagonals before recursion
+but unmarks only the column afterward. What invariant is broken, and what kind
+of wrong result should you expect?
+
+<details>
+<summary>Reveal solution</summary>
+
+On return, the caller requires all three occupied-line sets to describe exactly
+the queens in earlier rows. Leaving either diagonal marked records a queen that
+no longer exists in the partial board. Later legal positions are then rejected,
+so the search can undercount solutions—often reporting `0` or `1` instead of
+the correct four-queen count:
+
+```text
+2
+```
+
+The precise wrong count depends on which stale mark remains and the search
+order; the invariant violation, not one accidental output, identifies the bug.
+
+</details>
+
 ---
 
 ### Hour 1 checkpoint
 
+#### Try it now [Core live] — compare recursive shapes (5 minutes)
+
 For factorial, Towers of Hanoi, and N queens, state the contract, base case,
 decreasing measure, maximum depth, and number of recursive calls per non-base
 case. Then explain which one uses “undo” and why the other two do not.
+
+<details>
+<summary>Reveal solution</summary>
+
+| Example | Base case | Decreasing measure | Maximum depth | Recursive calls per non-base case |
+|---------|-----------|--------------------|---------------|-----------------------------------|
+| factorial | `n <= 1` | `n` | O(n) | 1 |
+| Hanoi | `n == 0` | `n` | O(n) | 2 |
+| N queens | `row == n` | `n - row` | O(n) | one for each currently safe column |
+
+Factorial and Hanoi do not mutate shared search choices; their local parameters
+fully describe each subproblem. N queens marks shared occupancy state, so every
+recursive branch must undo those marks before its sibling branch begins. This
+checkpoint has no program output; the table and invariant explanation are the
+deliverables.
+
+</details>
 
 ---
 
@@ -308,6 +475,29 @@ struct TreeNode {
 
 A tree is either empty (`NULL`) or a node with two smaller trees. The data
 definition suggests the program structure.
+
+#### Try it now [Core live] — expand one recursive definition (3 minutes)
+
+For a node whose left child is a leaf and whose right child is `NULL`, draw both
+nodes and all four child-pointer fields. How many nonempty recursive tree
+objects and how many empty recursive tree objects are present?
+
+<details>
+<summary>Reveal solution</summary>
+
+```text
+root
+├─ left -> leaf
+│          ├─ left  -> NULL
+│          └─ right -> NULL
+└─ right -> NULL
+```
+
+There are two nonempty trees (the root tree and the leaf subtree) and three
+empty trees (the root's right subtree and the leaf's two children). This is a
+representation trace; it has no program output.
+
+</details>
 
 ---
 
@@ -368,6 +558,30 @@ For the pictured tree:
 Point to the line containing `printf` in each function: its position relative
 to the two recursive calls exactly matches the order's definition.
 
+#### Try it now [Core live] — move one visit operation (4 minutes)
+
+For the pictured seven-node tree, predict the three output lines produced when
+each traversal is followed by `putchar('\n')`. Then move only the `printf` line
+in `preorder` to obtain inorder and postorder behavior.
+
+<details>
+<summary>Reveal solution</summary>
+
+The `TreeNode` stores `int`, so use values `1` through `7` in the positions
+shown as `A` through `G`. The output is:
+
+```text
+1 2 4 5 3 6 7
+4 2 5 1 6 3 7
+4 5 2 6 7 3 1
+```
+
+Placing the visit before both recursive calls gives preorder, between them gives
+inorder, and after both gives postorder. The rendered block omits the final
+formatting space that `printf("%d ", node->value)` emits before each newline.
+
+</details>
+
 ---
 
 ### 4. Aggregate queries
@@ -391,6 +605,29 @@ int tree_height(const struct TreeNode* node) {
 Define conventions explicitly. Some books call an empty tree height `0` and a
 leaf height `1`; this note measures edges, so they are `-1` and `0`.
 
+#### Try it now [Core live] — combine subtree results (4 minutes)
+
+Using the pictured seven-node perfect tree, compute every returned value of
+`tree_size` and `tree_height` from the leaves upward. Then predict the output of:
+
+```c
+printf("size=%zu height=%d\n", tree_size(root), tree_height(root));
+```
+
+<details>
+<summary>Reveal solution</summary>
+
+Every `NULL` size call returns `0`; each leaf therefore returns size `1`, each
+two-child internal subtree returns `3`, and the root returns `7`. Every `NULL`
+height call returns `-1`; each leaf returns `0`, its parent returns `1`, and the
+root returns `2`.
+
+```text
+size=7 height=2
+```
+
+</details>
+
 ---
 
 ### Derive, do not memorize, traversal order
@@ -410,10 +647,48 @@ invariants when the compiler pipeline is introduced.
 
 ### Hour 2 board exercise
 
+#### Try it now [Core live] — reconstruct from two orders (5 minutes)
+
 For a seven-node tree, derive preorder, inorder, and postorder sequences. Then
 work backward: given preorder and inorder with unique labels, circle the root,
 partition both sequences, and repeat on each subtree. Include an empty subtree
 and a one-child node rather than using only a perfect tree.
+
+Use this concrete pair for the backward trace:
+
+```text
+preorder:  A B D C E
+inorder:   D B A E C
+```
+
+<details>
+<summary>Reveal solution</summary>
+
+`A` is the preorder root. In inorder, `D B` is its left segment and `E C` is
+its right segment, so the next two preorder labels `B D` belong left and `C E`
+belong right. Recursing yields:
+
+```text
+      A
+     / \
+    B   C
+   /   /
+  D   E
+```
+
+The derived sequences are:
+
+```text
+preorder:  A B D C E
+inorder:   D B A E C
+postorder: D B E C A
+```
+
+The absent right children of `B`, `C`, `D`, and `E`, and the absent left
+children of `D` and `E`, are base cases. These lines are a traversal trace, not
+output from the integer-printing C functions above.
+
+</details>
 
 ---
 
@@ -463,6 +738,44 @@ This iterative version reuses the pointer-to-pointer technique from linked
 lists. A recursive insertion is also natural; both must preserve the BST
 invariant and handle allocation failure.
 
+The function itself produces no output. It returns `1` for both a successful
+new insertion and an already-present value, and `0` only when allocation of a
+needed node fails. That contract makes duplicate insertion a successful no-op.
+
+#### Try it now [Core live] — follow the incoming tree link (4 minutes)
+
+Starting from `root == NULL`, trace insertions of `4, 2, 6, 3`. For each value,
+write whether `link` designates `root`, a `left` field, or a `right` field when
+the new node is published. Predict the inorder output afterward.
+
+<details>
+<summary>Reveal solution</summary>
+
+| Value | Final location designated by `link` |
+|-------|-------------------------------------|
+| `4` | the caller's `root` |
+| `2` | node `4`'s `left` field |
+| `6` | node `4`'s `right` field |
+| `3` | node `2`'s `right` field |
+
+The shape is:
+
+```text
+    4
+   / \
+  2   6
+   \
+    3
+```
+
+Calling `inorder(root)` and then `putchar('\n')` produces:
+
+```text
+2 3 4 6
+```
+
+</details>
+
 ---
 
 ### 6. Destruction is postorder
@@ -485,6 +798,32 @@ At the owning call site:
 tree_destroy(root);
 root = NULL;
 ```
+
+`tree_destroy` intentionally produces no output. The required trace is the
+release order, and a correct sanitizer run should add no diagnostic.
+
+#### Try it now [Core live] — release children before their owner (3 minutes)
+
+For the four-node BST above, list the order in which `free` is called. Why
+would moving `free(node)` before either recursive call make the later reads
+invalid?
+
+<details>
+<summary>Reveal solution</summary>
+
+The postorder release sequence is:
+
+```text
+3, 2, 6, 4
+```
+
+After `free(node)`, evaluating `node->left` or `node->right` reads an object
+whose lifetime has ended. Saving both child pointers first could make a
+different implementation possible, but the direct ownership recursion is
+clearest when children are destroyed before their parent. There is no normal
+program output; successful sanitizer execution is silent.
+
+</details>
 
 ---
 
@@ -517,6 +856,44 @@ sizes split the preceding postorder range. Recursively repeat the same rule.
 This is the same structural argument, with the root read from the opposite end
 of the second traversal.
 
+#### Try it now [Core live] — split inorder and postorder ranges (5 minutes)
+
+Reconstruct the tree described by these distinct labels. At each call, write
+the root and the left/right subrange sizes before drawing the node.
+
+```text
+inorder:    D B E A F C
+postorder:  D E B F C A
+```
+
+<details>
+<summary>Reveal solution</summary>
+
+The final postorder label makes `A` the root. Its inorder position splits three
+left labels from two right labels. The left postorder segment ends in `B`; the
+right segment ends in `C`.
+
+```text
+      A
+     / \
+    B   C
+   / \ /
+  D  E F
+```
+
+The split trace is:
+
+| Root | Left size | Right size |
+|------|-----------|------------|
+| `A` | 3 | 2 |
+| `B` | 1 | 1 |
+| `C` | 1 | 0 |
+
+Preorder verification visits `A B D E C F`. This exercise reveals the hand
+trace, not an implementation of the reconstruction assignment.
+
+</details>
+
 ---
 
 ### Which traversal pairs are sufficient?
@@ -541,6 +918,31 @@ information is exactly what distinguishes the two orientations. If the domain
 guarantees a full binary tree—every internal node has two children—distinct
 preorder and postorder labels are sufficient; without that structural promise,
 ambiguity is part of the problem rather than an input error.
+
+#### Try it now [Extension] — recognize missing orientation (3 minutes)
+
+Can preorder `A B C` and postorder `C B A` describe more than one ordered tree?
+Give two shapes or explain why not.
+
+<details>
+<summary>Reveal solution</summary>
+
+Yes. Both traversal sequences say only that `B` is the single descendant of
+`A` and `C` is the single descendant of `B`; neither sequence tells whether a
+one-child edge points left or right. For example, these two of the four possible
+orientation choices are both valid:
+
+```text
+    A       A
+   /         \
+  B           B
+ /           /
+C           C
+```
+
+This is a shape trace and has no program output.
+
+</details>
 
 ---
 
@@ -599,6 +1001,33 @@ const struct TreeNode* bst_minimum(const struct TreeNode* node) {
 Both return borrowed pointers. They do not transfer ownership, and a later tree
 mutation or destruction may invalidate them.
 
+#### Try it now [Core live] — separate a borrowed result from an owner (3 minutes)
+
+For the BST built from `4, 2, 6, 1, 3, 5, 7`, predict the values returned by
+`bst_find(root, 5)`, `bst_find(root, 8)`, and `bst_minimum(root)`. Then explain
+why the caller must not `free` a successful result individually.
+
+<details>
+<summary>Reveal solution</summary>
+
+- `bst_find(root, 5)` returns a borrowed pointer to the node storing `5`.
+- `bst_find(root, 8)` returns `NULL`.
+- `bst_minimum(root)` returns a borrowed pointer to the node storing `1`.
+
+If a driver prints present value, absence, and minimum, its output can be:
+
+```text
+found=5
+found=no
+minimum=1
+```
+
+The tree still owns all successful results. Freeing one directly would leave
+its parent's child field dangling and would later cause invalid access or a
+double free during `tree_destroy`.
+
+</details>
+
 ---
 
 ### Reconstruction implementation plan
@@ -614,10 +1043,36 @@ failure.
 
 ### Hour 3 integration test
 
+#### Try it now [Core live] — compare balanced and skewed shapes (5 minutes)
+
 Insert a sequence, verify inorder ordering and recorded size, search present and
 absent values, reconstruct one tree from two traversals, and destroy both trees.
 Run the insertion sequence for balanced and sorted orders; compare observed
 height and maximum recursion depth.
+
+<details>
+<summary>Reveal solution</summary>
+
+For the seven-value orders below, both inorder traversals must print the same
+sorted values, but the shapes differ:
+
+| Insertion order | Size | Edge height | Maximum traversal depth |
+|-----------------|------|-------------|-------------------------|
+| `4, 2, 6, 1, 3, 5, 7` | 7 | 2 | 3 active non-`NULL` calls |
+| `1, 2, 3, 4, 5, 6, 7` | 7 | 6 | 7 active non-`NULL` calls |
+
+With the note's printing convention, each inorder traversal is:
+
+```text
+1 2 3 4 5 6 7
+```
+
+A final formatting space precedes the newline in the actual traversal output.
+A complete test must also confirm one present search, one absent search,
+matching reconstruction traversals, `root = NULL` after destruction at each
+owning call site, and no sanitizer diagnostic.
+
+</details>
 
 ---
 
