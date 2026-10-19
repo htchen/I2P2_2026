@@ -28,7 +28,18 @@ class ParseError(ValueError):
     pass
 
 
+def is_ascii_digit(character: str) -> bool:
+    """Returns whether character is one ASCII decimal digit."""
+    return len(character) == 1 and "0" <= character <= "9"
+
+
 class Lexer:
+    """Tokenizes the bounded expression language.
+
+    The default maximum models a signed 64-bit target. Pass another maximum to
+    model a C implementation or simulated target with a different range.
+    """
+
     def __init__(self, source: str, maximum: int = (1 << 63) - 1) -> None:
         self.source = source
         self.position = 0
@@ -52,11 +63,13 @@ class Lexer:
         current = self.peek()
         if not current:
             return Token(TokenKind.END, position=start)
-        if current.isdigit():
+        if is_ascii_digit(current):
             value = 0
-            while self.peek().isdigit():
+            while is_ascii_digit(self.peek()):
                 digit = int(self.take())
                 if value > (self.maximum - digit) // 10:
+                    while is_ascii_digit(self.peek()):
+                        self.take()
                     raise ParseError("integer literal is out of range")
                 value = value * 10 + digit
             return Token(TokenKind.INTEGER, value, start)
@@ -91,7 +104,11 @@ class Ast:
     right: Ast | None = None
 
     def __post_init__(self) -> None:
-        is_number = self.kind is AstKind.INTEGER and self.left is None
+        is_number = (
+            self.kind is AstKind.INTEGER
+            and self.left is None
+            and self.right is None
+        )
         is_unary = (
             self.kind is AstKind.NEGATE
             and self.left is not None
@@ -236,6 +253,31 @@ def main() -> None:
         pass
     else:
         raise AssertionError("invalid expression was accepted")
+
+    child = Ast(kind=AstKind.INTEGER, value=9)
+    try:
+        Ast(kind=AstKind.INTEGER, value=4, right=child)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("integer node with a child was accepted")
+
+    overflow_lexer = Lexer("1000+1", maximum=99)
+    try:
+        overflow_lexer.next_token()
+    except ParseError:
+        pass
+    else:
+        raise AssertionError("out-of-range integer was accepted")
+    assert overflow_lexer.position == 4
+    assert overflow_lexer.next_token().kind is TokenKind.PLUS
+
+    try:
+        Lexer("١").next_token()
+    except ParseError:
+        pass
+    else:
+        raise AssertionError("non-ASCII digit was accepted")
     print("Week 7 Python contrasts passed.")
 
 

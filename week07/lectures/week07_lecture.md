@@ -42,6 +42,34 @@ By the end of this lecture, you should be able to:
 | 2 | How does grammar become an owning syntax tree? | Trace one precedence level and audit its failure cleanup |
 | 3 | How does tree meaning become checked instructions? | Add semantic checks, generate code, and test end to end |
 
+Each hour alternates explanation, hand traces, live coding, and short practice.
+Exercises labelled **Core live** belong to the planned classroom route.
+Exercises labelled **Extension** may move to the asynchronous project work or
+independent study when the class needs more time for the core pipeline.
+
+### Inline practice routine
+
+For each **Try it now** activity:
+
+1. predict the token sequence, parser state, tree shape, value, diagnostic, or
+   instruction trace before running code;
+2. name the pipeline stage and the owner of every allocated subtree involved;
+3. compile valid C with `-std=c17 -Wall -Wextra -Wpedantic` when the activity
+   asks for a code change;
+4. compare the observed result with the expected output or trace; and
+5. expand **Reveal solution** only after recording an attempt.
+
+Every solution states whether its text is program output, a conceptual trace,
+or a description of a fragment that performs no input/output. Exact allocation
+addresses and sanitizer wording are machine-dependent and are not required.
+
+- **Core live:** part of the planned in-class route.
+- **Extension:** additional practice for project work or later review.
+
+The core-live activities total about 18 minutes in Hour 1, 23 minutes in Hour
+2, and 15 minutes in Hour 3. The remaining time is for explanation, live
+coding, questions, transitions, and a short break.
+
 ---
 
 ## Hour 1 — Compiler stages and lexical analysis
@@ -74,6 +102,30 @@ Each stage gives a simpler contract to the next:
 
 Do not make every function inspect raw input. Good intermediate representations
 localize errors and make stages testable independently.
+
+The diagram is a conceptual data-flow trace, not program output.
+
+#### Try it now [Core live] — assign one responsibility per stage (4 minutes)
+
+For the source `12 + 3 * )`, state the first useful fact that each stage can
+contribute. Which stage should report the unmatched `)` in this grammar, and
+why should the code generator never receive this input?
+
+<details>
+<summary>Reveal solution</summary>
+
+- The lexer produces valid tokens: integer `12`, plus, integer `3`, star,
+  right parenthesis, and end.
+- The parser accepts the left operand of `*` but cannot parse a unary or primary
+  expression beginning with `)`. It reports the structural error.
+- Semantic analysis and code generation do not run because no complete AST was
+  produced.
+
+The character `)` is lexically valid, so rejecting it in the lexer would mix
+token recognition with grammatical context. This is a pipeline trace; it has
+no run-time output.
+
+</details>
 
 ---
 
@@ -108,6 +160,29 @@ position makes later diagnostics precise.
 The complete teaching example intentionally parses numeric expressions only.
 The project adds identifiers and more operators using the same pipeline. Keeping
 the teaching language small lets us see every ownership and error path.
+
+These declarations define data representations and produce no run-time output.
+
+#### Try it now [Core live] — distinguish kind, value, and position (4 minutes)
+
+Suppose the lexer reads the source ` 42+7`. Write the three fields of the first
+three non-end tokens. Which field is meaningful for every token, and which
+field is meaningful only for `TOKEN_INTEGER`?
+
+<details>
+<summary>Reveal solution</summary>
+
+| Lexeme | `kind` | `value` | `position` |
+|--------|--------|---------|------------|
+| `42` | `TOKEN_INTEGER` | `42` | `1` |
+| `+` | `TOKEN_PLUS` | unused (`0` in the complete example) | `3` |
+| `7` | `TOKEN_INTEGER` | `7` | `4` |
+
+`kind` and `position` are meaningful for every token. `value` carries source
+meaning only for an integer token. The table is a predicted token trace; the
+declarations themselves print nothing.
+
+</details>
 
 ---
 
@@ -150,6 +225,10 @@ while (isdigit((unsigned char)peek(lexer))) {
 Cast to `unsigned char` before calling `<ctype.h>` classification functions;
 passing a negative plain `char` other than `EOF` is undefined behavior.
 
+Neither the `peek`/`take` helpers nor the integer-scanning fragment prints
+anything. A test driver must display returned tokens if a visible trace is
+wanted.
+
 The declarations above and all helper definitions appear together in the
 [complete Week 7 example](examples.c). The
 [starter file](lecture_exercises/week07_starter.c) uses the same `TokenKind`,
@@ -165,12 +244,45 @@ guessing an omitted helper.
 
 ### Hour 1 lexer lab
 
+#### Try it now [Core live] — make progress visible (10 minutes)
+
 For input `" 12 + 3*(4 - 1)"`, write every token with `[start,end)`, kind, and
-value/lexeme. Then test empty input, every operator, `LONG_MAX`, one overflowing
-integer, the unsupported identifier in `"12 + x"`, and repeated calls after
-end. In this teaching grammar, `x` is an invalid token rather than an identifier;
-identifier support is introduced below as a project extension. The parser should
-never need to inspect raw characters or repeat overflow logic.
+value or lexeme. Then predict the behavior for empty input, `LONG_MAX`, one
+integer one greater than `LONG_MAX`, the unsupported identifier in `"12 + x"`,
+and repeated calls after end. In this teaching grammar, `x` is an invalid token
+rather than an identifier.
+
+<details>
+<summary>Reveal solution</summary>
+
+The complete token trace is:
+
+| Range | Kind | Value or lexeme |
+|-------|------|-----------------|
+| `[1,3)` | `TOKEN_INTEGER` | `12` |
+| `[4,5)` | `TOKEN_PLUS` | `+` |
+| `[6,7)` | `TOKEN_INTEGER` | `3` |
+| `[7,8)` | `TOKEN_STAR` | `*` |
+| `[8,9)` | `TOKEN_LEFT_PAREN` | `(` |
+| `[9,10)` | `TOKEN_INTEGER` | `4` |
+| `[11,12)` | `TOKEN_MINUS` | `-` |
+| `[13,14)` | `TOKEN_INTEGER` | `1` |
+| `[14,15)` | `TOKEN_RIGHT_PAREN` | `)` |
+| `[15,15)` | `TOKEN_END` | end of input |
+
+- Empty input immediately returns `TOKEN_END` at position `0`.
+- The decimal representation of `LONG_MAX` is one valid integer token.
+- A decimal integer one greater than `LONG_MAX` becomes `TOKEN_INVALID`; the
+  lexer consumes the remaining digits so it still makes progress.
+- In `12 + x`, the `x` becomes `TOKEN_INVALID` at position `5`.
+- Calls made after end keep returning `TOKEN_END` at the unchanged end
+  position.
+
+This table is the expected lexer trace. The lexer itself returns tokens and
+does not print them. The parser should never inspect raw characters or repeat
+the overflow logic.
+
+</details>
 
 ---
 
@@ -222,6 +334,39 @@ tree is `2 * 3`. For `8 - 3 - 2`, the repetition builds `(8 - 3) - 2`.
 Grammar is executable design: one parser function corresponds to each
 nonterminal.
 
+The grammar description produces no run-time output; its observable result is
+the tree shape built by the corresponding parser functions.
+
+#### Try it now [Core live] — read precedence from the grammar (4 minutes)
+
+Draw the ASTs for `1 + 2 * 3` and `8 - 3 - 2`. Then write each tree in the
+prefix notation used by the Week 7 starter and predict its evaluated value.
+
+<details>
+<summary>Reveal solution</summary>
+
+Multiplication is nested beneath addition because `term` handles `*` before
+`expression` combines terms:
+
+```text
+source: 1 + 2 * 3
+tree:   (+ 1 (* 2 3))
+value:  7
+```
+
+The loop in `parse_expression` combines subtraction from left to right:
+
+```text
+source: 8 - 3 - 2
+tree:   (- (- 8 3) 2)
+value:  3
+```
+
+These are AST and evaluation traces. They become program output only when a
+driver calls the tree printer and evaluator.
+
+</details>
+
 ---
 
 ### 4. AST representation
@@ -253,6 +398,30 @@ Representation rules:
 An AST omits punctuation that was required only to parse. Parentheses affect
 shape but do not need their own nodes.
 
+The type declarations themselves produce no run-time output.
+
+#### Try it now [Extension] — check node invariants (4 minutes)
+
+For each proposed node, decide whether it satisfies the representation rules:
+
+1. `AST_INTEGER` with value `4` and no children;
+2. `AST_NEGATE` with a left child and no right child;
+3. `AST_ADD` with a left child but no right child; and
+4. `AST_INTEGER` with a left child.
+
+<details>
+<summary>Reveal solution</summary>
+
+The first two nodes are valid. The third is missing one owned operand, and the
+fourth gives a number node a child it must not have. A constructor that enforces
+these rules accepts cases 1 and 2 and rejects cases 3 and 4.
+
+This is an invariant check, not program output. If a test driver printed only
+acceptance results, an illustrative output would be `accept, accept, reject,
+reject`.
+
+</details>
+
 ---
 
 ### 5. Parser state and errors
@@ -266,6 +435,9 @@ struct Parser {
 
 static void parser_advance(struct Parser* parser) {
   parser->current = lexer_next(&parser->lexer);
+  if (parser->current.kind == TOKEN_INVALID && parser->error == NULL) {
+    parser->error = "invalid token or integer overflow";
+  }
 }
 ```
 
@@ -276,6 +448,33 @@ Every parser function follows a useful contract:
 
 The top-level parse succeeds only if an expression is followed by `TOKEN_END`.
 Accepting a valid prefix while ignoring trailing garbage is a parser bug.
+
+The state declarations and `parser_advance` helper do not print. They update
+`current`; diagnostics become visible only when a caller prints `error` and the
+current token's position.
+
+#### Try it now [Core live] — reject a valid prefix with trailing input (3 minutes)
+
+Trace the top-level parser on `1 + 2 3`. What tree can `parse_expression`
+temporarily build, which token remains unused, and what diagnostic does the
+complete example print when run with this argument?
+
+<details>
+<summary>Reveal solution</summary>
+
+`parse_expression` can build `(+ 1 2)`, but the integer token `3` remains at
+position `6`. Because the first unused token is not `TOKEN_END`, the top-level
+parser destroys the temporary tree and rejects the input.
+
+**Expected diagnostic from `examples.c`:**
+
+```text
+parse error at 6: unexpected token after expression
+```
+
+The program writes this line to standard error and exits with failure.
+
+</details>
 
 ---
 
@@ -315,21 +514,67 @@ static struct Ast* parse_expression(struct Parser* parser) {
 Updating `left` after each operator creates left association. Notice the
 failure paths: every successfully constructed subtree has exactly one owner.
 
+The function returns an owned AST or `NULL`; it produces no direct output.
+
+#### Try it now [Core live] — follow the accumulating left subtree (4 minutes)
+
+For `8 - 3 - 2`, record the tree owned by `left` immediately after the initial
+`parse_term` and after each loop iteration. If parsing the final right operand
+failed instead, which subtree would this function destroy?
+
+<details>
+<summary>Reveal solution</summary>
+
+```text
+after initial term:       8
+after first subtraction:  (- 8 3)
+after second subtraction: (- (- 8 3) 2)
+```
+
+At every point, `left` owns the complete tree built so far. If a later right
+operand fails, `parse_expression` destroys that entire `left` tree before
+returning `NULL`. This is an ownership trace; the function itself prints
+nothing. The starter's tree printer displays the final tree as
+`(- (- 8 3) 2)`.
+
+</details>
+
 ---
 
 ### Precedence trace
 
-Trace `-2 * (3 + 4) - 5` as a table:
+#### Try it now [Core live] — expand the parser call trace (5 minutes)
+
+Trace `-2 * (3 + 4) - 5`. For the outer calls to `parse_unary`, `parse_term`,
+and `parse_expression`, record the token on entry, returned subtree, and first
+unused token. Draw the final owned tree and predict its value.
+
+<details>
+<summary>Reveal solution</summary>
 
 | Function | Token on entry | Result on return | First unused token |
 |----------|----------------|------------------|--------------------|
-| `parse_primary` | `2` | integer 2 | `*` |
-| `parse_unary` | `-` | negate(2) | `*` |
-| `parse_term` | `-` | multiply(negate(2), add(3,4)) | `-` |
-| `parse_expression` | `-` | subtract(previous,5) | end |
+| `parse_primary` for `2` | `2` | `2` | `*` |
+| outer `parse_unary` | first `-` | `(neg 2)` | `*` |
+| outer `parse_term` | first `-` | `(* (neg 2) (+ 3 4))` | second `-` |
+| outer `parse_expression` | first `-` | `(- (* (neg 2) (+ 3 4)) 5)` | end |
 
-Students should fill the omitted intermediate calls and draw the owned tree.
-This makes it visible that unary minus is syntax, not part of the integer token.
+```text
+        (-)
+       /   \
+     (*)    5
+    /   \
+ (neg)  (+)
+   |    / \
+   2   3   4
+```
+
+The evaluation trace computes `3 + 4 = 7`, negates `2`, multiplies to obtain
+`-14`, and subtracts `5`, producing `-19`. Unary minus is therefore syntax, not
+part of the integer token. This table and diagram are conceptual traces; a
+driver that prints only the value would output `-19`.
+
+</details>
 
 ---
 
@@ -358,10 +603,38 @@ static struct Ast* ast_create(enum AstKind kind, long value, struct Ast* left,
 }
 ```
 
+This constructor performs no input/output. Its observable effects are either a
+new allocation returned to the caller or `NULL` with child ownership unchanged.
+
 Define whether ownership transfers only on success or whenever nonnull children
 are passed. `ast_create` transfers ownership only when it succeeds; on failure,
 the parser destroys both children itself. A mismatched convention causes leaks
 or double free.
+
+#### Try it now [Extension] — decide who owns the children (3 minutes)
+
+Assume `left` and `right` are valid owned subtrees. For each call below, state
+whether the shape is valid and who owns the children after success or failure:
+
+```c
+ast_create(AST_ADD, 0, left, right);
+ast_create(AST_NEGATE, 0, left, right);
+```
+
+<details>
+<summary>Reveal solution</summary>
+
+- The `AST_ADD` shape is valid. On successful allocation, the returned parent
+  owns both children. On allocation failure, the caller still owns both and
+  must destroy them.
+- The `AST_NEGATE` shape is invalid because a negate node must have no right
+  child. The function returns `NULL` without taking either child; the caller
+  still owns both.
+
+There is no normal program output. A memory checker should also be silent when
+the caller follows this ownership contract.
+
+</details>
 
 `parse_primary` handles integers and parenthesized expressions:
 
@@ -386,28 +659,77 @@ static struct Ast* parse_primary(struct Parser* parser) {
     return inside;
   }
 
-  parser->error = "expected an integer or '('";
+  if (parser->error == NULL) {
+    parser->error = "expected an integer or '('";
+  }
   return NULL;
 }
 ```
+
+`parse_primary` returns a subtree or `NULL`; it does not print its diagnostic.
+The top-level driver is responsible for displaying the stored error.
+
+#### Try it now [Extension] — clean up a missing parenthesis (4 minutes)
+
+Trace `parse_primary` for `(2 + 3`. At what position is the error detected,
+what partial tree exists at that moment, and who releases it?
+
+<details>
+<summary>Reveal solution</summary>
+
+The recursive expression parse successfully builds `(+ 2 3)`. The next token
+is `TOKEN_END` at position `6`, where `parse_primary` expected `)`. It records
+the error, destroys the `inside` tree, and returns `NULL`.
+
+**Expected diagnostic from `examples.c`:**
+
+```text
+parse error at 6: expected ')'
+```
+
+The diagnostic is standard-error output. A sanitizer run should add no leak or
+invalid-access report.
+
+</details>
 
 ---
 
 ### Hour 2 guided trace and controlled modification
 
+#### Try it now [Core live] — trace unary recursion and cleanup (7 minutes)
+
 The starter supplies a complete `parse_unary` implementation. Do not rewrite it
 as a hidden TODO. Trace how it implements
 `unary -> ('+' | '-') unary | primary` for `+5`, `-5`, `--5`, and
 `-(2 + 3)`. For every recursive call, record the current token and the owner of
-the returned subtree. If creating an `AST_NEGATE` node fails, the parser still
-owns and must destroy the operand returned by the recursive call.
+the returned subtree. What must happen if creating an `AST_NEGATE` node fails?
 
-After the trace, make one controlled modification: temporarily omit that cleanup
-or inject a construction failure, run a memory checker, explain its evidence,
-and restore the correct code. Then use malformed cases to inspect existing
-cleanup paths: `1 +`, `2 * )`, `(3 + 4`, and an incomplete `-`. The exercise
-guide specifies expected AST shapes, values, rejection cases, and the final test
-summary, so correctness does not depend on guessing an implicit output contract.
+Then inject a construction failure, run a memory checker, explain its evidence,
+and restore the correct code. Use malformed cases to inspect existing cleanup
+paths: `1 +`, `2 * )`, `(3 + 4`, and an incomplete `-`.
+
+<details>
+<summary>Reveal solution</summary>
+
+| Source | Returned tree | Value |
+|--------|---------------|-------|
+| `+5` | `5` | `5` |
+| `-5` | `(neg 5)` | `-5` |
+| `--5` | `(neg (neg 5))` | `5` |
+| `-(2 + 3)` | `(neg (+ 2 3))` | `-5` |
+
+Unary plus passes through the recursive call's owned result. Each unary minus
+temporarily owns its operand; successful construction transfers that ownership
+to the new negate node. If construction fails, `parse_unary` must destroy the
+operand before returning `NULL`.
+
+The malformed inputs are all rejected. The incomplete `-` reaches
+`TOKEN_END` at position `1` and records `expected an integer or '('`. Exact
+memory-checker wording depends on the tool, but the restored implementation
+must finish with no leak or invalid-access diagnostic. The table is a tree and
+value trace; the parser functions themselves print nothing.
+
+</details>
 
 ---
 
@@ -473,12 +795,41 @@ int ast_evaluate(const struct Ast* node, long* result) {
 }
 ```
 
+This pedagogical fragment returns a success flag and writes through `result`;
+it prints nothing by itself. A caller decides whether to print the value or an
+evaluation diagnostic.
+
 Production code must also define and check overflow behavior. The complete
 example rejects arithmetic overflow; the shorter fragment keeps the traversal
 visible. Semantic analysis can reject invalid constructs before code generation.
 This evaluator fragment covers the lecture's numeric trees. When the project
 adds identifier nodes, evaluation requires an environment that maps each
 identifier to its current value.
+
+#### Try it now [Core live] — evaluate only after the children (4 minutes)
+
+Write the recursive visit and operation order for `1 + 2 * 3`. Then trace
+`8 / (3 - 3)` and identify the exact node that reports failure.
+
+<details>
+<summary>Reveal solution</summary>
+
+For `1 + 2 * 3`, postorder visits and computes:
+
+```text
+integer 1 -> integer 2 -> integer 3 -> multiply -> add
+2 * 3 = 6
+1 + 6 = 7
+```
+
+For `8 / (3 - 3)`, the subtraction succeeds with `0`; the divide node then
+detects a zero right operand and returns failure. Its ancestors, if any, must
+propagate that failure without using an unwritten result.
+
+The evaluator itself produces no output. A simple driver could print `7` for
+the first tree and `evaluation error` for the second.
+
+</details>
 
 ---
 
@@ -495,6 +846,25 @@ expression.
 An AST retains enough structure to report “left operand is not modifiable” at
 the operator position. Do not twist the grammar until it rejects every
 context-sensitive rule.
+
+#### Try it now [Core live] — separate syntax from meaning (3 minutes)
+
+Assume the project extension has identifier, addition, and assignment nodes.
+Classify `x = 3`, `(x + 1) = 3`, and `7 = 3` as grammatically shaped expressions
+and then as semantically valid or invalid assignment targets.
+
+<details>
+<summary>Reveal solution</summary>
+
+All three can be represented by a permissive expression grammar. Semantic
+analysis accepts `x = 3` because the left subtree names modifiable storage. It
+rejects `(x + 1) = 3` because the addition produces a temporary value, and it
+rejects `7 = 3` because an integer literal is not modifiable.
+
+This is a semantic classification trace, not output from the numeric teaching
+parser, which intentionally has no identifiers or assignment node.
+
+</details>
 
 ---
 
@@ -543,6 +913,37 @@ problem: which temporary register holds each intermediate result? The midterm
 project's hidden tests check language behavior, but the demo checks whether you
 can connect emitted instructions back to AST structure.
 
+#### Try it now [Core live] — lower a tree to stack instructions (4 minutes)
+
+Emit stack-machine instructions for `(8 - 3) / 5`. After every instruction,
+write the stack from bottom to top and predict the final value.
+
+<details>
+<summary>Reveal solution</summary>
+
+| Instruction | Stack afterward |
+|-------------|-----------------|
+| `PUSH 8` | `8` |
+| `PUSH 3` | `8, 3` |
+| `SUB` | `5` |
+| `PUSH 5` | `5, 5` |
+| `DIV` | `1` |
+
+**Generated instruction trace:**
+
+```text
+PUSH 8
+PUSH 3
+SUB
+PUSH 5
+DIV
+```
+
+The instructions are generated output. Executing them in the described stack
+machine leaves the value `1` on the stack.
+
+</details>
+
 ---
 
 ### Register pressure and evaluation order
@@ -577,6 +978,27 @@ resource exhaustion.
 For rehearsal, a student should tokenize one expression, draw its AST, identify
 owned allocations, explain semantic acceptance, predict instructions, make one
 small live change, and add a test that fails without the change.
+
+#### Try it now [Core live] — build a differential test table (4 minutes)
+
+For `8 - 3 - 2`, `1 / 0`, and `1 +`, state what the parser, direct evaluator,
+and generated-program runner should report. Which comparisons are meaningful?
+
+<details>
+<summary>Reveal solution</summary>
+
+| Source | Parser | Direct evaluator | Generated program |
+|--------|--------|------------------|-------------------|
+| `8 - 3 - 2` | accept `(- (- 8 3) 2)` | value `3` | value `3` |
+| `1 / 0` | accept | evaluation error | matching run-time error |
+| `1 +` | reject | not run | not generated |
+
+Compare values only after both executions succeed, and compare failure
+categories when the language defines corresponding run-time errors. A rejected
+parse has no AST, so neither evaluation nor generation is meaningful. This is
+an expected-results table, not literal output from one program.
+
+</details>
 
 ---
 
@@ -635,7 +1057,37 @@ Week 10 demo.
 2. Why does the grammar use a loop for left-associative binary operators?
 3. Where must a partial tree be freed when the right operand fails to parse?
 4. Why must the top-level parser require `TOKEN_END`?
-5. Emit stack-machine instructions for `(8 - 3) / 5`.
+5. Emit stack-machine instructions for `6 / (1 + 2) + 4`.
+
+<details>
+<summary>Reveal solutions</summary>
+
+1. Prefix form: `(+ (neg 1) (* 2 (- 3 4)))`. Its value is `-3`.
+2. Each iteration combines the accumulated left subtree with the next right
+   operand, producing `(a - b) - c` rather than `a - (b - c)`.
+3. The parser function that owns the accumulated left subtree must destroy it
+   before propagating failure. Any right-side function must similarly clean up
+   allocations it has not transferred.
+4. Without the end check, a valid prefix such as `1 + 2` could be accepted from
+   the invalid complete input `1 + 2 3`.
+5. The instruction trace is:
+
+   ```text
+   PUSH 6
+   PUSH 1
+   PUSH 2
+   ADD
+   DIV
+   PUSH 4
+   ADD
+   ```
+
+   It leaves `6` on the stack.
+
+Items 1–4 are conceptual traces and explanations. Item 5 is generated output;
+executing it produces the final stack value described above.
+
+</details>
 
 ---
 

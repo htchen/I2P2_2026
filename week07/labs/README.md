@@ -22,7 +22,7 @@ Do not debug the complete pipeline as one black box. Plan these gates in order
 and complete the instructor-assigned representative subset during the
 checkpoint:
 
-1. lexer/token tests from Week 5;
+1. existing lexer/token tests from the Week 5 project checkpoint;
 2. AST-shape traces for every precedence level;
 3. valid and invalid semantic cases, especially increment/decrement operands;
 4. instruction traces for constants, variables, assignment, unary operations,

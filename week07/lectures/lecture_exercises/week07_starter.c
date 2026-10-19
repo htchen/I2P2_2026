@@ -100,13 +100,11 @@ static void ast_destroy(Ast* node) {
 }
 
 static Ast* ast_create(AstKind kind, long value, Ast* left, Ast* right) {
-  const bool is_integer =
-    kind == AST_INTEGER && left == NULL && right == NULL;
+  const bool is_integer = kind == AST_INTEGER && left == NULL && right == NULL;
   const bool is_unary = kind == AST_NEGATE && left != NULL && right == NULL;
-  const bool is_binary =
-    (kind == AST_ADD || kind == AST_SUBTRACT || kind == AST_MULTIPLY ||
-     kind == AST_DIVIDE) &&
-    left != NULL && right != NULL;
+  const bool is_binary = (kind == AST_ADD || kind == AST_SUBTRACT ||
+                          kind == AST_MULTIPLY || kind == AST_DIVIDE) &&
+                         left != NULL && right != NULL;
   if (!is_integer && !is_unary && !is_binary) {
     return NULL;
   }
@@ -200,7 +198,7 @@ static Ast* parse_term(Parser* parser) {
   }
 
   while (parser->current.kind == TOKEN_STAR ||
-       parser->current.kind == TOKEN_SLASH) {
+         parser->current.kind == TOKEN_SLASH) {
     const TokenKind operation = parser->current.kind;
     parser_advance(parser);
     Ast* right = parse_unary(parser);
@@ -209,8 +207,7 @@ static Ast* parse_term(Parser* parser) {
       return NULL;
     }
 
-    const AstKind kind =
-      operation == TOKEN_STAR ? AST_MULTIPLY : AST_DIVIDE;
+    const AstKind kind = operation == TOKEN_STAR ? AST_MULTIPLY : AST_DIVIDE;
     Ast* combined = ast_create(kind, 0, left, right);
     if (combined == NULL) {
       ast_destroy(left);
@@ -229,7 +226,7 @@ static Ast* parse_expression(Parser* parser) {
   }
 
   while (parser->current.kind == TOKEN_PLUS ||
-       parser->current.kind == TOKEN_MINUS) {
+         parser->current.kind == TOKEN_MINUS) {
     const TokenKind operation = parser->current.kind;
     parser_advance(parser);
     Ast* right = parse_term(parser);
@@ -251,7 +248,7 @@ static Ast* parse_expression(Parser* parser) {
 }
 
 static Ast* parse(const char* input, const char** error,
-          size_t* error_position) {
+                  size_t* error_position) {
   Parser parser;
   parser_init(&parser, input);
   Ast* tree = parse_expression(&parser);
@@ -273,7 +270,7 @@ static Ast* parse(const char* input, const char** error,
 
 static bool add_checked(long left, long right, long* result) {
   if ((right > 0 && left > LONG_MAX - right) ||
-    (right < 0 && left < LONG_MIN - right)) {
+      (right < 0 && left < LONG_MIN - right)) {
     return false;
   }
   *result = left + right;
@@ -282,7 +279,7 @@ static bool add_checked(long left, long right, long* result) {
 
 static bool subtract_checked(long left, long right, long* result) {
   if ((right > 0 && left < LONG_MIN + right) ||
-    (right < 0 && left > LONG_MAX + right)) {
+      (right < 0 && left > LONG_MAX + right)) {
     return false;
   }
   *result = left - right;
@@ -294,14 +291,13 @@ static bool multiply_checked(long left, long right, long* result) {
     *result = 0;
     return true;
   }
-  if ((left == -1 && right == LONG_MIN) ||
-    (right == -1 && left == LONG_MIN)) {
+  if ((left == -1 && right == LONG_MIN) || (right == -1 && left == LONG_MIN)) {
     return false;
   }
   if ((left > 0 && right > 0 && left > LONG_MAX / right) ||
-    (left > 0 && right < 0 && right < LONG_MIN / left) ||
-    (left < 0 && right > 0 && left < LONG_MIN / right) ||
-    (left < 0 && right < 0 && right < LONG_MAX / left)) {
+      (left > 0 && right < 0 && right < LONG_MIN / left) ||
+      (left < 0 && right > 0 && left < LONG_MIN / right) ||
+      (left < 0 && right < 0 && right < LONG_MAX / left)) {
     return false;
   }
   *result = left * right;
@@ -407,14 +403,14 @@ static bool run_test(const TestCase* test) {
       ast_destroy(tree);
       return false;
     }
-    printf("PASS: %s rejected at %zu: %s\n", test->input,
-         error_position, error);
+    printf("PASS: %s rejected at %zu: %s\n", test->input, error_position,
+           error);
     return true;
   }
 
   if (tree == NULL) {
-    printf("FAIL: %s rejected at %zu: %s\n", test->input,
-         error_position, error);
+    printf("FAIL: %s rejected at %zu: %s\n", test->input, error_position,
+           error);
     return false;
   }
 
@@ -443,13 +439,13 @@ static bool run_test(const TestCase* test) {
 
 int main(void) {
   const TestCase kTests[] = {
-    {"12 + 4 * (3 - 1)", true, true, 20},
-    {"8 - 3 - 2", true, true, 3},
-    {"--5 + 1", true, true, 6},
-    {"1 +", false, false, 0},
-    {"(3 + 4", false, false, 0},
-    {"12 + x", false, false, 0},
-    {"1 / 0", true, false, 0},
+      {"12 + 4 * (3 - 1)", true, true, 20},
+      {"8 - 3 - 2", true, true, 3},
+      {"--5 + 1", true, true, 6},
+      {"1 +", false, false, 0},
+      {"(3 + 4", false, false, 0},
+      {"12 + x", false, false, 0},
+      {"1 / 0", true, false, 0},
   };
   const size_t test_count = sizeof(kTests) / sizeof(kTests[0]);
   size_t passed = 0;

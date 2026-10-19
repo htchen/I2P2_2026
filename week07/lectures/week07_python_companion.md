@@ -17,7 +17,9 @@ output-pointer error contracts do not.
 
 ## Coverage map
 
-Every fenced example in the Week 7 note is accounted for below.
+The map groups every substantive representation, algorithm, and diagram in the
+Week 7 note. Short exercise traces use the treatment named by the corresponding
+row.
 
 | Source example | Relationship | Companion treatment |
 |---|---|---|
@@ -60,7 +62,6 @@ class TokenKind(Enum):
     LEFT_PAREN = auto()
     RIGHT_PAREN = auto()
     END = auto()
-    INVALID = auto()
 
 
 @dataclass(frozen=True)
@@ -70,8 +71,10 @@ class Token:
     position: int = 0
 ```
 
-The tag/value/position contract transfers. Python does not define the C enum's
-integer representation or the structure's field layout.
+The tag/value/position contract transfers. Unlike the C lexer, this Python
+version raises `ParseError` instead of returning an `INVALID` token, so its enum
+does not contain that member. Python also does not define the C enum's integer
+representation or the structure's field layout.
 
 ## Lexer state and checked integers
 
@@ -95,22 +98,35 @@ class Lexer:
 
 An empty string is the end marker; there is no exposed C null terminator.
 
-Python integers do not overflow at `LONG_MAX`. To test the same bounded language,
-make the limit an explicit lexer policy:
+Python integers do not overflow at `LONG_MAX`. To test the same bounded
+language, make the limit an explicit lexer policy and recognize the source
+language's ASCII digits explicitly:
 
 ```python
+def is_ascii_digit(character: str) -> bool:
+    return len(character) == 1 and "0" <= character <= "9"
+
+
 def take_integer(lexer: Lexer, maximum: int) -> int:
     value = 0
-    while lexer.peek().isdigit():
+    while is_ascii_digit(lexer.peek()):
         digit = int(lexer.take())
         if value > (maximum - digit) // 10:
-            raise ValueError("integer literal is out of range")
+            while is_ascii_digit(lexer.peek()):
+                lexer.take()
+            raise ParseError("integer literal is out of range")
         value = value * 10 + digit
     return value
 ```
 
-The recurrence and pre-multiplication check are direct. The caller must choose
-the maximum that matches the intended C implementation or simulated target.
+The recurrence and pre-multiplication check are direct. Consuming the remaining
+digits before raising matches the C lexer's progress rule, even though the error
+is represented by an exception. The caller must choose the maximum that matches
+the intended C implementation or simulated target; the runnable companion's
+default models a signed 64-bit maximum explicitly rather than claiming to
+discover the host C implementation's `LONG_MAX`. `ParseError` is the small
+`ValueError` subclass defined with the parser state below and used by the
+runnable lexer as well as the parser.
 
 ## Grammar remains the specification
 
@@ -151,7 +167,11 @@ class Ast:
     right: Ast | None = None
 
     def __post_init__(self) -> None:
-        is_number = self.kind is AstKind.INTEGER and self.left is None
+        is_number = (
+            self.kind is AstKind.INTEGER
+            and self.left is None
+            and self.right is None
+        )
         is_unary = (
             self.kind is AstKind.NEGATE
             and self.left is not None
