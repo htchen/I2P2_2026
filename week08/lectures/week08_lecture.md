@@ -44,6 +44,37 @@ By the end of this lecture, you should be able to:
 | 2 | How do references, `const`, and range loops express borrowing and mutation? | Annotate and implement parameter contracts |
 | 3 | How do exceptions and RAII make failure paths safe? | Trace unwinding, resource lifetimes, and a file-processing pipeline |
 
+Each hour alternates explanation, state or lifetime traces, live coding, and
+short practice. Exercises labelled **Core live** belong to the planned
+classroom route. Exercises labelled **Extension** may move to the Thursday lab
+or independent study when the class needs more time for the C-to-C++ transition.
+
+### Inline practice routine
+
+For each **Try it now** activity:
+
+1. predict the output, object state, parameter effect, exception path, or
+   destruction order before running code;
+2. classify every relevant value as an owner, copy, read-only borrow, or mutable
+   borrow;
+3. compile valid examples with
+   `c++ -std=c++17 -Wall -Wextra -Wpedantic`;
+4. compare the observation with the hidden solution; and
+5. explain which behavior comes from a core programming idea and which part is
+   specific C++ syntax or library support.
+
+Only the question is visible initially. Expand **Reveal solution** after making
+an attempt. Every solution states whether its text is terminal output, file
+content, a state/lifetime trace, or an explanation that the fragment itself
+performs no input/output.
+
+- **Core live:** part of the planned in-class route.
+- **Extension:** additional practice for the lab or later review.
+
+The core-live activities total about 22 minutes in Hour 1, 21 minutes in Hour
+2, and 17 minutes in Hour 3. The remaining time is for explanation, live
+coding, questions, transitions, and a short break.
+
 ---
 
 ## Hour 1 — C++ compilation, I/O, strings, and vectors
@@ -59,6 +90,10 @@ By the end of this lecture, you should be able to:
 ```sh
 c++ -std=c++17 program.cpp -o program
 ```
+
+On success, the compiler normally prints nothing and creates the executable
+named `program`. Diagnostics are compiler output; the program's output appears
+only after the executable is run.
 
 This is the minimum command used in the first demonstration: `-std=c++17`
 selects the language version, `program.cpp` is the source file, and `-o program`
@@ -88,6 +123,12 @@ int main() {
 }
 ```
 
+This program writes the following line to standard output:
+
+```text
+Now learning C++
+```
+
 `std` is a **namespace**: a named region that groups standard-library names.
 The `::` operator selects a name from that region, so `std::cout` means “the
 `cout` supplied by the standard library.” C has no namespace feature, which is
@@ -113,6 +154,54 @@ std;` imports many names at once, which can create collisions and hides where a
 facility came from. It is common in short contest solutions, but explicit
 qualification is clearer while learning the library.
 
+#### Try it now [Core live] — separate compilation from execution (3 minutes)
+
+Compile and run the first program. What output belongs to the compiler, what
+output belongs to the executable, and what does `std::` communicate?
+
+<details>
+<summary>Reveal solution</summary>
+
+A successful compiler invocation ordinarily has no terminal output; it creates
+`program`. Running that executable produces:
+
+```text
+Now learning C++
+```
+
+`std::string` and `std::cout` explicitly select names from the standard-library
+namespace. The namespace qualification is C++ syntax; separating translation
+from execution is the same core model introduced for C.
+
+</details>
+
+#### Try it now [Extension] — follow formatted input state (4 minutes)
+
+For the age program, predict the visible output and exit status for inputs
+`20`, `-1`, and `abc`. Identify which failures come from formatted extraction
+and which come from the program's domain rule.
+
+<details>
+<summary>Reveal solution</summary>
+
+With input `20`, the interaction is:
+
+```text
+Age? 20
+Next year: 21
+```
+
+The `20` shown after the prompt is normally terminal echo, not text printed by
+the program. The program returns success. Input `-1` is extracted as an integer
+but violates the range rule; `abc` makes extraction fail. Both failure cases
+write this diagnostic to standard error and return `1`:
+
+```text
+expected an age from 0 through 150
+```
+
+</details>
+
 ---
 
 ### 2. Prefer library values over manual buffers
@@ -130,10 +219,15 @@ A `std::vector<T>` is a resizable sequence of values of type `T`. It plays a
 role similar to a Python list, but every element has the same declared type:
 
 ```cpp
+#include <vector>
+
 std::vector<int> scores{91, 82, 73};
 scores.push_back(94);
 scores.push_back(85);
 ```
+
+Neither vector operation prints anything. After both calls, `scores` owns five
+integers and contains `91, 82, 73, 94, 85`.
 
 A vector combines a dynamic array with ownership and size information.
 
@@ -146,6 +240,34 @@ A vector combines a dynamic array with ownership and size information.
 
 Use `.at(i)` when checked access is useful and `operator[]` when bounds have
 already been established.
+
+#### Try it now [Core live] — trace two owning library values (4 minutes)
+
+If the string input is `Ada Lovelace`, predict its output. Then copy `scores`
+to `backup`, change `scores.at(0)` to `100`, and state the contents of both
+vectors. Which operation demonstrates value semantics?
+
+<details>
+<summary>Reveal solution</summary>
+
+The string fragment prints:
+
+```text
+Ada Lovelace has 12 characters
+```
+
+After the vector copy and mutation:
+
+```text
+scores: 100 82 73 94 85
+backup:  91 82 73 94 85
+```
+
+Assignment or initialization of `backup` creates an independent vector value;
+changing an element owned by `scores` does not change `backup`. The two state
+lines are an illustrative trace unless a driver explicitly prints them.
+
+</details>
 
 ---
 
@@ -163,6 +285,10 @@ if (!std::cin.eof()) {
 }
 ```
 
+For all-integer input, this fragment produces no output and finishes with the
+values stored in the vector. A non-integer token produces the shown diagnostic
+on standard error.
+
 The stream itself is tested as a condition. Extraction either succeeds and
 updates `value`, or sets failure state. This mirrors the checked `scanf` loop
 without exposing format strings or destination addresses.
@@ -170,6 +296,29 @@ without exposing format strings or destination addresses.
 When mixing `operator>>` with `getline`, remember that formatted extraction
 usually leaves the newline in the stream. Consume the remainder deliberately or
 use line-oriented input consistently.
+
+#### Try it now [Core live] — distinguish failure from end of file (4 minutes)
+
+Trace the loop for input `10 20 x 30`. Which values are appended, what stream
+condition ends the loop, and why does the later `eof()` check not excuse the
+failure?
+
+<details>
+<summary>Reveal solution</summary>
+
+The first two extractions succeed, so the vector contains `10, 20`. Extraction
+of `x` fails, sets the stream's failure state, and leaves `x` unread. The loop
+ends because the stream no longer converts to a successful condition. End of
+file was not encountered, so `eof()` is false and the program prints:
+
+```text
+input contained a non-integer token
+```
+
+The trailing `30` is never extracted. This is both a stream-state trace and the
+exact standard-error output.
+
+</details>
 
 ---
 
@@ -182,18 +331,63 @@ std::vector<int> first(5, 0);  /* five zeroes */
 std::vector<int> second{5, 0}; /* two elements: 5 and 0 */
 ```
 
+The declarations themselves produce no output.
+
 Brace initialization rejects many narrowing conversions, but constructor syntax
 can differ when an initializer-list overload exists. Predict `size()` for both
 vectors before compiling.
+
+#### Try it now [Core live] — do not guess from punctuation (3 minutes)
+
+Predict `first.size()`, `second.size()`, and every element. Why is this not a
+general rule that parentheses always mean “repeat” and braces always mean
+“list”?
+
+<details>
+<summary>Reveal solution</summary>
+
+```text
+first.size()  = 5, elements = 0 0 0 0 0
+second.size() = 2, elements = 5 0
+```
+
+These are object-state predictions, not output from the declarations. The
+difference comes from overload resolution: parentheses select the vector's
+count/value constructor, while braces prefer its initializer-list constructor.
+Other types and overload sets can behave differently.
+
+</details>
 
 ---
 
 ### Hour 1 refactoring studio
 
+#### Try it now [Core live] — preserve behavior while changing representation (8 minutes)
+
 Take the Week 2 C program that reads a bounded character array and a fixed score
 array. Replace ownership and capacity management with `std::string` and
 `std::vector<int>`, while preserving validation and output. List which C failure
 modes disappear and which domain errors remain.
+
+<details>
+<summary>Reveal solution</summary>
+
+A suitable design uses `std::getline` for the name and formatted extraction
+into a vector for the scores. The exact program depends on the chosen Week 2
+example, but the contract comparison should include:
+
+| Removed manual concern | Still required |
+|------------------------|----------------|
+| character-buffer capacity and terminator placement | decide whether an empty name is valid |
+| array capacity bookkeeping and manual resizing | reject malformed or out-of-range scores |
+| explicit release of dynamic storage | define behavior for empty score input |
+| cleanup branches for owned buffers | report input failure clearly |
+
+The refactoring should preserve the earlier program's visible output for valid
+input. This solution is a design and failure-mode trace rather than one fixed
+output transcript.
+
+</details>
 
 ---
 
@@ -214,6 +408,9 @@ void SwapValues(int& left, int& right) {
 }
 ```
 
+The function itself prints nothing. Its observable effect is the exchanged
+state of the two caller-owned integers.
+
 A reference must refer to an object when initialized and is used with ordinary
 value syntax. It is not a reseatable, nullable handle like a pointer.
 
@@ -233,6 +430,27 @@ std::cout << number << '\n';                 /* 17 */
 
 The function returns `15`, but its reference parameter changes `number` to
 `17`. Contrast this with a value parameter, which would change only a copy.
+
+#### Try it now [Core live] — separate a return value from a side effect (3 minutes)
+
+Predict all three output lines from the `SetToSeventeen` example. Immediately
+after the function returns, what value belongs to the expression and what value
+belongs to `number`?
+
+<details>
+<summary>Reveal solution</summary>
+
+```text
+13
+15
+17
+```
+
+The call expression has the returned value `15`, while the reference parameter
+has changed the caller's `number` to `17`. These are two independent effects of
+one call.
+
+</details>
 
 To connect the C pointer model with the new reference syntax, run the same swap
 through three parameter contracts:
@@ -271,8 +489,36 @@ SwapByPointer(&x, &y);   /* x == 7, y == 5 */
 SwapByReference(x, y);   /* x == 5, y == 7 */
 ```
 
-The standalone example prints every stage so the three contracts can be
-predicted before compilation.
+This call fragment itself prints nothing; its comments state the expected
+caller-visible state. The standalone example prints every stage so the three
+contracts can be predicted before compilation.
+
+#### Try it now [Core live] — compare copy, pointer, and reference parameters (5 minutes)
+
+Starting from `(x, y) == (5, 7)`, trace the three calls in order. For each
+function, identify what its parameters denote and predict the corresponding
+line printed by the complete example.
+
+<details>
+<summary>Reveal solution</summary>
+
+```text
+initial: (5, 7)
+by value: (5, 7)
+by pointer: (7, 5)
+by reference: (5, 7)
+```
+
+- Value parameters are independent local copies, so the first call cannot
+  change `x` or `y`.
+- Pointer parameters receive the addresses of the caller's integers and mutate
+  them through dereferencing.
+- Reference parameters are aliases for the caller's integers and swap them
+  again using ordinary expression syntax.
+
+The four lines are exact output from `examples.cpp`.
+
+</details>
 
 Parameter guidelines:
 
@@ -282,8 +528,33 @@ void Sort(std::vector<int>& values);               /* borrow, may modify */
 std::vector<int> Doubled(std::vector<int> values); /* local copy/value */
 ```
 
+These are declarations and produce no run-time output.
+
 Use a pointer when null is meaningful or pointer arithmetic/low-level interop is
-required. Use a reference for a required borrowed object.
+required. Use a reference for a required borrowed object. Small scalar values
+such as `int` are normally simpler to pass by value when no caller mutation is
+needed.
+
+#### Try it now [Core live] — read a contract from a signature (4 minutes)
+
+For `Print`, `Sort`, and `Doubled`, identify whether the caller's vector is
+copied, borrowed read-only, or borrowed mutably. Which function may change the
+caller's vector, and which function returns independent owned state?
+
+<details>
+<summary>Reveal solution</summary>
+
+| Function | Parameter contract | Caller-visible result |
+|----------|--------------------|-----------------------|
+| `Print` | required read-only borrow | prints values; cannot modify through `values` |
+| `Sort` | required mutable borrow | may reorder the caller's vector |
+| `Doubled` | independent local value | caller's argument is unchanged; returned vector owns its elements |
+
+The table is a contract trace, not output from the declarations. Passing an
+lvalue to `Doubled` copies it; later C++ topics explain when value transfers can
+avoid unnecessary copying.
+
+</details>
 
 ---
 
@@ -298,6 +569,8 @@ double Mean(const std::vector<int>& values) {
 }
 ```
 
+`Mean` returns a value and produces no output itself.
+
 The signature says the vector is required, borrowed, and not modified. The
 range loop copies each `int`, which is appropriate for a small scalar.
 `static_cast<double>(values.size())` explicitly converts the unsigned size to a
@@ -311,9 +584,34 @@ Accumulating in `double` avoids signed-integer overflow, although a large sum
 can round and floating-point overflow must still be considered for an
 unrestricted numeric interface.
 
+#### Try it now [Core live] — trace read-only borrowing and conversion (4 minutes)
+
+Trace `Mean` for `{2, 4, 6}` and for an empty vector. What is copied by the
+range loop, what remains borrowed, and what would a caller print for each
+result?
+
+<details>
+<summary>Reveal solution</summary>
+
+The parameter `values` is a read-only borrow of the complete vector. Each loop
+iteration copies one small `int` into `value`; no element is modified.
+
+```text
+Mean({2, 4, 6}) = 4
+Mean({})        = 0
+```
+
+If printed as ordinary `double` values with `std::cout`, the visible values are
+typically `4` and `0`. The function itself performs no output. The cast makes
+the divisor a `double`, although `total` already makes the division floating
+point in this implementation.
+
+</details>
+
 For larger elements:
 
 ```cpp
+const std::vector<std::string> words{"red", "blue"};
 for (const std::string& word : words) {
   std::cout << word << '\n';
 }
@@ -327,6 +625,10 @@ for (const auto& word : words) {
 }
 ```
 
+The first loop prints `red` and `blue` on separate lines. The `auto` loop has
+the same traversal and borrowing behavior but, as written, its body produces no
+output.
+
 Use `auto` when the initializer makes the type clear; spell the type when it
 communicates an important unit, conversion, or ownership decision.
 
@@ -338,6 +640,11 @@ A range-based loop expresses “visit every element,” but the loop variable st
 determines whether each element is copied, observed, or modified:
 
 ```cpp
+const std::vector<int> scores{91, 82};
+const std::vector<std::string> names{"Ada", "Linus"};
+std::vector<double> weights{2.0, 3.0};
+const double total_weight = 5.0;
+
 for (int score : scores) {
   std::cout << score << '\n'; /* copy a small scalar */
 }
@@ -355,14 +662,47 @@ The first form gives the loop body an independent value. The second and third
 forms create aliases to elements owned by the container. Those aliases are
 valid only while the elements remain alive and in place. Do not change a
 vector's size inside a loop that holds references to its elements; reallocation
-can invalidate the current reference and the loop's internal position.
+can invalidate every element reference, and even a `push_back` that does not
+reallocate invalidates the old past-the-end position used by traversal.
 
 This is not merely shorter loop syntax. It is another place to state the same
 copy/borrow/mutate contract used by function parameters.
 
+#### Try it now [Core live] — classify each loop variable (5 minutes)
+
+For the concrete containers in the example, classify `score`, `name`, and
+`weight` as a copy or borrow. Predict the terminal output and the final contents
+of `weights`. Why would `weights.push_back(...)` inside the final loop be
+unsafe?
+
+<details>
+<summary>Reveal solution</summary>
+
+- `score` is a copy of each integer.
+- `name` is a read-only reference to each owned string.
+- `weight` is a mutable reference to each owned `double`.
+
+**Terminal output:**
+
+```text
+91
+82
+Ada
+Linus
+```
+
+The last loop prints nothing and changes `weights` to `0.4, 0.6`.
+`push_back` invalidates the old past-the-end position used by the range loop. If
+it reallocates the vector's element storage, it also invalidates all element
+references, including the current `weight`.
+
+</details>
+
 ---
 
 ### Parameter and traversal audit
+
+#### Try it now [Extension] — design the interface before the body (8 minutes)
 
 For each operation, choose `T`, `T&`, `const T&`, or `T*` and explain why:
 
@@ -377,6 +717,27 @@ Then rewrite one index loop as a range loop. State whether its loop variable is
 a copy, a read-only borrow, or a mutable borrow, and explain what container
 changes would invalidate that borrow. Week 11 introduces iterators, algorithms,
 and lambdas after classes and callable objects have a proper foundation.
+
+<details>
+<summary>Reveal solution</summary>
+
+1. Print a vector through `const std::vector<int>&`: required, borrowed, and
+   read-only.
+2. Sort through `std::vector<int>&`: required mutable access to caller-owned
+   state.
+3. Use `std::ostream*` for an optional output destination when `nullptr` means
+   “do not write”; a required destination would normally be a reference.
+4. Take `std::string` by value when the operation needs its own independent
+   value under this week's model.
+5. Return `std::vector<int>` by value; if an input vector is only observed,
+   accept it through `const std::vector<int>&`.
+
+For an index loop that only prints small integers, `for (int value : values)`
+uses copies. For large read-only elements, `for (const auto& value : values)`
+uses borrows. Changing vector size can invalidate the latter references. These
+are interface and traversal decisions; no particular terminal output is implied.
+
+</details>
 
 ---
 
@@ -417,6 +778,12 @@ Automatic objects in exited scopes are destroyed in reverse construction order;
 this is **stack unwinding**. Catch standard exceptions by `const` reference to
 avoid copying and slicing. If no matching handler exists, the program terminates.
 
+For the shown call, the handler writes the following line to standard error:
+
+```text
+negative value
+```
+
 For a library value such as `std::string`, `std::vector`, or `std::ofstream`,
 **construction** establishes a usable object and **destruction** ends its
 lifetime and releases resources it owns. C++ invokes destruction automatically
@@ -430,6 +797,31 @@ an error code, so throwing is a conventional way to report construction failure.
 Later lectures build on this model when constructors validate invariants and
 copy operations promise exception-safety guarantees.
 
+#### Try it now [Core live] — follow handler selection (4 minutes)
+
+Trace control from `RequireNonnegative(-1)` through the handler. Which
+statements after the `throw` run, what object does `error` refer to, and what
+happens if the handler instead catches only `std::runtime_error`?
+
+<details>
+<summary>Reveal solution</summary>
+
+The `throw` immediately ends the current path through `RequireNonnegative`; no
+later statement in that function runs. The matching handler binds `error` as a
+read-only reference to the active `std::invalid_argument` exception object and
+prints:
+
+```text
+negative value
+```
+
+`std::invalid_argument` is not derived from `std::runtime_error`, so a handler
+for only `std::runtime_error` would not match. With no other matching handler,
+the program would terminate. This is a control-flow and handler-selection
+trace; the single line is standard-error output.
+
+</details>
+
 ---
 
 ### 7. RAII: lifetime controls resources
@@ -441,6 +833,7 @@ releases them when the object's lifetime ends.
 ```cpp
 #include <fstream>
 #include <stdexcept>
+#include <string>
 
 void WriteReport(const std::string& path) {
   std::ofstream output(path);
@@ -451,9 +844,40 @@ void WriteReport(const std::string& path) {
 } /* output is closed here, including during exception unwinding */
 ```
 
+On success, this function produces no terminal output. It creates or replaces
+the named file and writes the file content `complete` followed by a newline.
+
 The same principle manages vectors, strings, locks, sockets, and smart pointers.
 RAII turns every control-flow path—normal return, early return, or exception—
 into deterministic cleanup.
+
+#### Try it now [Core live] — prove cleanup on every exit (4 minutes)
+
+Trace the lifetime of `output` on normal return, open failure, and a hypothetical
+exception thrown immediately after the write. At which point is the file closed,
+and which path produces the file content shown above?
+
+<details>
+<summary>Reveal solution</summary>
+
+- Normal return: `output` is constructed, the open check succeeds, the line is
+  written, and the destructor closes the file at the closing brace.
+- Open failure: the `ofstream` object still exists in a failed state. Throwing
+  leaves the function, so its destructor runs; there may be no open handle to
+  close and no valid report content.
+- Later exception: stack unwinding destroys `output`, closing its owned file
+  before a handler outside the function runs. Data already handed to the stream
+  is finalized according to the stream's normal destruction behavior.
+
+Only the successful path is required to leave this file content:
+
+```text
+complete
+```
+
+There is no normal terminal output.
+
+</details>
 
 ---
 
@@ -464,6 +888,8 @@ Prefer automatic-duration value objects:
 ```cpp
 std::vector<std::string> names;
 ```
+
+This constructs an empty owning vector and produces no output.
 
 Before requesting manual allocation, ask whether a standard container,
 `std::string`, or an ordinary class member can own the resource. Week 12
@@ -482,11 +908,36 @@ std::vector<int> EvenValues(const std::vector<int>& input) {
 }
 ```
 
+`EvenValues` returns a vector value and prints nothing by itself.
+
 The caller receives an independent vector that owns its elements. C++ is
 designed to return such values efficiently; Week 12 explains the copy and
 resource-transfer operations that support this model. The interface should
 express the simple ownership result now without exposing those implementation
 mechanisms prematurely.
+
+#### Try it now [Core live] — return independent owned state (4 minutes)
+
+Call `EvenValues` with an input vector containing `1, 2, 3, 4`. Predict the
+returned vector, then change its first element to `20`. What remains in the
+input vector, and what would printing both vectors show?
+
+<details>
+<summary>Reveal solution</summary>
+
+The result initially contains `2, 4`. It is an independent vector value, so
+changing its first element does not modify the borrowed input.
+
+```text
+input:  1 2 3 4
+result: 20 4
+```
+
+These lines are illustrative caller output; `EvenValues` itself prints
+nothing. The core idea is returning independent owned state. Copy elision and
+move mechanics are deliberately deferred to Week 12.
+
+</details>
 
 ---
 
@@ -501,18 +952,53 @@ std::vector<std::string> ReadWords(const std::string& path) {
   for (std::string word; input >> word;) {
     words.push_back(word);
   }
-  if (!input.eof()) throw std::runtime_error{"read failure"};
+  if (input.bad()) throw std::runtime_error{"read failure"};
   return words;
 }
 ```
 
-Trace construction and destruction for `input`, each loop-local `word`, the
+`ReadWords` produces no terminal output. On success it returns the words; on
+failure it throws a `std::runtime_error`.
+
+Trace construction and destruction for `input`, the loop-local `word`, the
 vector, its elements, and the returned value on normal return and on each throw.
 No explicit cleanup appears because every owner has a destructor.
+
+#### Try it now [Core live] — order nested lifetimes (5 minutes)
+
+Trace `input`, `words`, and the loop-local `word` on normal return, open
+failure, and a hard input/output failure that sets `badbit`. Do not assume a
+particular copy-versus-move implementation for the returned vector.
+
+<details>
+<summary>Reveal solution</summary>
+
+Construction on the successful path occurs in this order:
+
+```text
+input -> words -> word
+```
+
+The `word` object is constructed once by the `for` initializer and reused for
+each extraction. Its scope ends when the loop ends, so it is destroyed before
+the later stream-state check. On normal return, a returned vector value retains
+the collected strings; whether elision or another value-transfer mechanism is
+used is a Week 12 topic. Remaining distinct local objects are destroyed in
+reverse construction order, with `input` closing the file.
+
+If opening fails, only `input` has been constructed; throwing destroys it. If a
+hard read failure sets `badbit`, `word` has already left scope, then unwinding
+destroys `words` and `input` in that order. Ordinary end of file sets `eofbit`
+and ends extraction without being treated as an error. These are lifetime
+traces; the function itself prints nothing.
+
+</details>
 
 ---
 
 ### Hour 3 integration task
+
+#### Try it now [Extension] — integrate values, failure, and lifetime (10 minutes)
 
 Build a program that reads words from an `ifstream` into a `vector<string>` and
 reports the total count and longest word. It must report open/read failures,
@@ -520,6 +1006,31 @@ avoid global state, and return collected results by value. Compare its cleanup
 proof with a C version that uses `FILE *`, allocated strings, and multiple error
 labels. Sorting, iterators, and custom comparison behavior are developed in
 Week 11.
+
+<details>
+<summary>Reveal solution</summary>
+
+A complete design should have these stages:
+
+1. `ReadWords(path)` owns the `ifstream` locally and returns a vector value.
+2. A separate query observes the vector through `const&` and computes count and
+   longest word without changing ownership.
+3. `main` catches the documented exception type, writes one diagnostic, and
+   returns failure; otherwise it prints the report.
+
+For a file containing `red green blue`, one acceptable output is:
+
+```text
+count: 3
+longest: green
+```
+
+The C++ cleanup proof names the destructors of the local stream, vector, and
+strings. The corresponding C proof must show an explicit close/free action on
+every successful and failing path. The exact implementation is intentionally
+left for the studio rather than disclosed here.
+
+</details>
 
 ---
 
@@ -538,6 +1049,33 @@ boundary: first document the actual lifetime, then consider a small RAII wrapper
 rather than rewriting the resource subsystem. Thursday's evidence is an event
 trace and resource-lifecycle table.
 
+#### Try it now [Extension] — draw one project lifetime boundary (6 minutes)
+
+Choose a display, bitmap, audio sample, or other resource actually present in
+the template. Fill in owner, acquisition, use, normal release, and partial-
+initialization failure. Do not invent a wrapper before identifying the current
+owner.
+
+<details>
+<summary>Reveal solution</summary>
+
+The exact API depends on the selected template resource, but a valid table has
+this form:
+
+| Question | Required evidence |
+|----------|-------------------|
+| Who owns it? | one object or subsystem responsible for final release |
+| When is it acquired? | the successful API call and the state established afterward |
+| Who borrows it? | update/draw or registration sites that do not release it |
+| How is it released? | the matching release call on ordinary shutdown |
+| What if later initialization fails? | cleanup of this resource before propagating failure |
+
+This is a project-specific ownership trace, not terminal output. A future RAII
+wrapper is justified only if its constructor/destructor contract matches the
+verified table.
+
+</details>
+
 ---
 
 ## Check yourself
@@ -548,6 +1086,41 @@ trace and resource-lifecycle table.
 4. Which objects are destroyed when an exception leaves two nested scopes?
 5. What resource does a vector's destructor release?
 6. Refactor a `malloc`/`free` integer array into `std::vector<int>`.
+
+<details>
+<summary>Reveal solutions</summary>
+
+1. Use `const T&` for a required read-only borrow, `T&` for a required mutable
+   borrow, and `T` for an independent local value or an intentionally consumed
+   value under the interface's contract.
+2. `std::string` removes manual capacity tracking, terminator placement,
+   resizing, and release. Input validity and domain length limits still require
+   deliberate policies.
+3. Increasing vector size may allocate a new element array and relocate the
+   elements, so references into the old storage no longer designate live
+   elements.
+4. Automatic objects in exited scopes are destroyed in reverse construction
+   order, from the inner scope outward, before a matching outer handler runs.
+5. A vector destructor releases the dynamic element storage it owns and
+   destroys its elements.
+6. Keep the size and ownership in one value, for example:
+
+   ```cpp
+   #include <cstddef>
+   #include <vector>
+
+   std::vector<int> MakeZeroes(std::size_t count) {
+     return std::vector<int>(count, 0);
+   }
+   ```
+
+   Bounds and initialization policy still belong to the program, but no
+   matching `free` call is needed.
+
+Items 1–5 are contract and lifetime explanations. Item 6 is a function
+definition and produces no output by itself.
+
+</details>
 
 ---
 

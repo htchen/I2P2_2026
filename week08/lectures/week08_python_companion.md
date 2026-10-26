@@ -16,7 +16,9 @@ must not be reduced to “Python with different syntax.”
 
 ## Coverage map
 
-Every fenced example in the Week 8 note is accounted for below.
+The map groups every substantive representation, algorithm, and lifetime model
+in the Week 8 note. Short exercise outputs and traces use the treatment named by
+the corresponding row.
 
 | Source example | Relationship | Companion treatment |
 |---|---|---|
