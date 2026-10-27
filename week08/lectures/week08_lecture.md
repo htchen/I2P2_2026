@@ -140,13 +140,17 @@ why this syntax is new here.
 operators a type-appropriate meaning. For now, read a chain from left to right:
 
 ```cpp
-int age{0};
-std::cout << "Age? ";
-if (!(std::cin >> age) || age < 0 || age > 150) {
-  std::cerr << "expected an age from 0 through 150\n";
-  return 1;
+#include <iostream>
+
+int main() {
+  int age{0};
+  std::cout << "Age? ";
+  if (!(std::cin >> age) || age < 0 || age > 150) {
+    std::cerr << "expected an age from 0 through 150\n";
+    return 1;
+  }
+  std::cout << "Next year: " << age + 1 << '\n';
 }
-std::cout << "Next year: " << age + 1 << '\n';
 ```
 
 Prefer `std::` qualification in teaching examples. A global `using namespace
@@ -207,9 +211,14 @@ expected an age from 0 through 150
 ### 2. Prefer library values over manual buffers
 
 ```cpp
-std::string name;
-std::getline(std::cin, name);
-std::cout << name << " has " << name.size() << " characters\n";
+#include <iostream>
+#include <string>
+
+int main() {
+  std::string name;
+  std::getline(std::cin, name);
+  std::cout << name << " has " << name.size() << " characters\n";
+}
 ```
 
 `std::string` manages its storage, maintains its own size, and supports value
@@ -219,15 +228,25 @@ A `std::vector<T>` is a resizable sequence of values of type `T`. It plays a
 role similar to a Python list, but every element has the same declared type:
 
 ```cpp
+#include <iostream>
 #include <vector>
 
-std::vector<int> scores{91, 82, 73};
-scores.push_back(94);
-scores.push_back(85);
+int main() {
+  std::vector<int> scores{91, 82, 73};
+  scores.push_back(94);
+  scores.push_back(85);
+
+  for (int score : scores) std::cout << score << ' ';
+  std::cout << '\n';
+}
 ```
 
-Neither vector operation prints anything. After both calls, `scores` owns five
-integers and contains `91, 82, 73, 94, 85`.
+Neither `push_back` call prints anything. After both calls, `scores` owns five
+integers, and the final loop prints them:
+
+```text
+91 82 73 94 85 
+```
 
 A vector combines a dynamic array with ownership and size information.
 
@@ -274,20 +293,26 @@ lines are an illustrative trace unless a driver explicitly prints them.
 ### Stream state and robust input
 
 ```cpp
-std::vector<int> values;
-for (int value; std::cin >> value;) {
-  values.push_back(value);
-}
+#include <iostream>
+#include <vector>
 
-if (!std::cin.eof()) {
-  std::cerr << "input contained a non-integer token\n";
-  return 1;
+int main() {
+  std::vector<int> values;
+  for (int value; std::cin >> value;) {
+    values.push_back(value);
+  }
+
+  if (!std::cin.eof()) {
+    std::cerr << "input contained a non-integer token\n";
+    return 1;
+  }
+  std::cout << "read " << values.size() << " integers\n";
 }
 ```
 
-For all-integer input, this fragment produces no output and finishes with the
-values stored in the vector. A non-integer token produces the shown diagnostic
-on standard error.
+For all-integer input such as `10 20 30`, the program stores every value and
+prints `read 3 integers`. A non-integer token produces the shown diagnostic on
+standard error and returns `1`.
 
 The stream itself is tested as a condition. Extraction either succeeds and
 updates `value`, or sets failure state. This mirrors the checked `scanf` loop
@@ -325,13 +350,30 @@ exact standard-error output.
 ### Initialization forms
 
 ```cpp
-int count{0};
-std::string title{"I2P II"};
-std::vector<int> first(5, 0);  /* five zeroes */
-std::vector<int> second{5, 0}; /* two elements: 5 and 0 */
+#include <iostream>
+#include <string>
+#include <vector>
+
+void PrintVector(const char* label, const std::vector<int>& values) {
+  std::cout << label << ".size() = " << values.size() << ", elements =";
+  for (int value : values) std::cout << ' ' << value;
+  std::cout << '\n';
+}
+
+int main() {
+  int count{0};
+  std::string title{"I2P II"};
+  std::vector<int> first(5, 0);  /* five zeroes */
+  std::vector<int> second{5, 0}; /* two elements: 5 and 0 */
+
+  std::cout << title << ' ' << count << '\n';
+  PrintVector("first", first);
+  PrintVector("second", second);
+}
 ```
 
-The declarations themselves produce no output.
+The declarations themselves produce no output; the statements after them print
+the objects' state.
 
 Brace initialization rejects many narrowing conversions, but constructor syntax
 can differ when an initializer-list overload exists. Predict `size()` for both
@@ -347,11 +389,12 @@ general rule that parentheses always mean “repeat” and braces always mean
 <summary>Reveal solution</summary>
 
 ```text
-first.size()  = 5, elements = 0 0 0 0 0
+I2P II 0
+first.size() = 5, elements = 0 0 0 0 0
 second.size() = 2, elements = 5 0
 ```
 
-These are object-state predictions, not output from the declarations. The
+This is the exact program output; the declarations alone print nothing. The
 difference comes from overload resolution: parentheses select the vector's
 count/value constructor, while braces prefer its initializer-list constructor.
 Other types and overload sets can behave differently.
@@ -401,15 +444,24 @@ output transcript.
 ### 3. References are aliases
 
 ```cpp
+#include <iostream>
+
 void SwapValues(int& left, int& right) {
   int temporary = left;
   left = right;
   right = temporary;
 }
+
+int main() {
+  int a = 1;
+  int b = 2;
+  SwapValues(a, b);
+  std::cout << a << ' ' << b << '\n'; /* 2 1 */
+}
 ```
 
 The function itself prints nothing. Its observable effect is the exchanged
-state of the two caller-owned integers.
+state of the two caller-owned integers, which `main` prints as `2 1`.
 
 A reference must refer to an object when initialized and is used with ordinary
 value syntax. It is not a reseatable, nullable handle like a pointer.
@@ -417,15 +469,19 @@ value syntax. It is not a reseatable, nullable handle like a pointer.
 The change is visible through the original variable:
 
 ```cpp
+#include <iostream>
+
 int SetToSeventeen(int& value) {
   value = 17;
   return 15;
 }
 
-int number = 13;
-std::cout << number << '\n';                 /* 13 */
-std::cout << SetToSeventeen(number) << '\n'; /* 15 */
-std::cout << number << '\n';                 /* 17 */
+int main() {
+  int number = 13;
+  std::cout << number << '\n';                 /* 13 */
+  std::cout << SetToSeventeen(number) << '\n'; /* 15 */
+  std::cout << number << '\n';                 /* 17 */
+}
 ```
 
 The function returns `15`, but its reference parameter changes `number` to
@@ -456,6 +512,8 @@ To connect the C pointer model with the new reference syntax, run the same swap
 through three parameter contracts:
 
 ```cpp
+#include <iostream>
+
 void SwapByValue(int left, int right) {
   int temporary = left;
   left = right;
@@ -473,25 +531,34 @@ void SwapByReference(int& left, int& right) {
   left = right;
   right = temporary;
 }
+
+void PrintPair(const char* label, int left, int right) {
+  std::cout << label << ": (" << left << ", " << right << ")\n";
+}
+
+int main() {
+  int x = 5;
+  int y = 7;
+  PrintPair("initial", x, y);
+  SwapByValue(x, y);     /* x == 5, y == 7 */
+  PrintPair("by value", x, y);
+  SwapByPointer(&x, &y); /* x == 7, y == 5 */
+  PrintPair("by pointer", x, y);
+  SwapByReference(x, y); /* x == 5, y == 7 */
+  PrintPair("by reference", x, y);
+}
 ```
 
 The value version changes two local copies. The pointer and reference versions
 both change the caller's objects. The pointer call must explicitly pass
 addresses; because this implementation dereferences both parameters, its
 contract requires two non-null pointers. The reference call uses ordinary
-expression syntax and requires two objects:
+expression syntax and requires two objects.
 
-```cpp
-int x = 5;
-int y = 7;
-SwapByValue(x, y);       /* x == 5, y == 7 */
-SwapByPointer(&x, &y);   /* x == 7, y == 5 */
-SwapByReference(x, y);   /* x == 5, y == 7 */
-```
-
-This call fragment itself prints nothing; its comments state the expected
-caller-visible state. The standalone example prints every stage so the three
-contracts can be predicted before compilation.
+The swap calls themselves print nothing; their comments state the expected
+caller-visible state, and `PrintPair` prints every stage so the three contracts
+can be predicted before compilation. The same calls appear in
+[the complete example](examples.cpp).
 
 #### Try it now [Core live] — compare copy, pointer, and reference parameters (5 minutes)
 
@@ -516,19 +583,49 @@ by reference: (5, 7)
 - Reference parameters are aliases for the caller's integers and swap them
   again using ordinary expression syntax.
 
-The four lines are exact output from `examples.cpp`.
+The four lines are exact output from the program above and from the first part
+of `examples.cpp`.
 
 </details>
 
 Parameter guidelines:
 
 ```cpp
+#include <algorithm>
+#include <iostream>
+#include <vector>
+
 void Print(const std::vector<int>& values);        /* borrow, read only */
 void Sort(std::vector<int>& values);               /* borrow, may modify */
 std::vector<int> Doubled(std::vector<int> values); /* local copy/value */
+
+void Print(const std::vector<int>& values) {
+  for (int value : values) std::cout << value << ' ';
+  std::cout << '\n';
+}
+
+void Sort(std::vector<int>& values) {
+  std::sort(values.begin(), values.end());
+}
+
+std::vector<int> Doubled(std::vector<int> values) {
+  for (int& value : values) value *= 2;
+  return values;
+}
+
+int main() {
+  std::vector<int> data{3, 1, 2};
+  std::vector<int> twice = Doubled(data);
+  Print(data);  /* 3 1 2 */
+  Print(twice); /* 6 2 4 */
+  Sort(data);
+  Print(data);  /* 1 2 3 */
+}
 ```
 
-These are declarations and produce no run-time output.
+The three declarations at the top state each contract; the definitions and
+`main` show the caller-visible effects. `std::sort` is used here only as a
+ready-made in-place operation; Week 11 explains the iterator arguments.
 
 Use a pointer when null is meaningful or pointer arithmetic/low-level interop is
 required. Use a reference for a required borrowed object. Small scalar values
@@ -550,7 +647,8 @@ caller's vector, and which function returns independent owned state?
 | `Sort` | required mutable borrow | may reorder the caller's vector |
 | `Doubled` | independent local value | caller's argument is unchanged; returned vector owns its elements |
 
-The table is a contract trace, not output from the declarations. Passing an
+The table is a contract trace. In the program above, `data` is unchanged by
+`Doubled` and reordered only by `Sort`. Passing an
 lvalue to `Doubled` copies it; later C++ topics explain when value transfers can
 avoid unnecessary copying.
 
@@ -561,15 +659,24 @@ avoid unnecessary copying.
 ### 4. `const` makes interfaces readable
 
 ```cpp
+#include <iostream>
+#include <vector>
+
 double Mean(const std::vector<int>& values) {
   if (values.empty()) return 0.0;
   double total = 0.0;
   for (int value : values) total += value;
   return total / static_cast<double>(values.size());
 }
+
+int main() {
+  std::cout << "Mean({2, 4, 6}) = " << Mean({2, 4, 6}) << '\n';
+  std::cout << "Mean({})        = " << Mean({}) << '\n';
+}
 ```
 
-`Mean` returns a value and produces no output itself.
+`Mean` returns a value and produces no output itself; `main` prints the
+results.
 
 The signature says the vector is required, borrowed, and not modified. The
 range loop copies each `int`, which is appropriate for a small scalar.
@@ -601,8 +708,9 @@ Mean({2, 4, 6}) = 4
 Mean({})        = 0
 ```
 
-If printed as ordinary `double` values with `std::cout`, the visible values are
-typically `4` and `0`. The function itself performs no output. The cast makes
+These are the exact lines printed by `main`: with default stream formatting,
+`4.0` and `0.0` are shown as `4` and `0`. The function itself performs no
+output. The cast makes
 the divisor a `double`, although `total` already makes the division floating
 point in this implementation.
 
@@ -611,23 +719,27 @@ point in this implementation.
 For larger elements:
 
 ```cpp
-const std::vector<std::string> words{"red", "blue"};
-for (const std::string& word : words) {
-  std::cout << word << '\n';
-}
-```
+#include <iostream>
+#include <string>
+#include <vector>
 
-`auto` can reduce repetition without removing static types:
+int main() {
+  const std::vector<std::string> words{"red", "blue"};
+  for (const std::string& word : words) {
+    std::cout << word << '\n';
+  }
 
-```cpp
-for (const auto& word : words) {
-  /* word is const std::string& */
+  /* auto can reduce repetition without removing static types */
+  for (const auto& word : words) {
+    /* word is const std::string& */
+    std::cout << word << " has " << word.size() << " letters\n";
+  }
 }
 ```
 
 The first loop prints `red` and `blue` on separate lines. The `auto` loop has
-the same traversal and borrowing behavior but, as written, its body produces no
-output.
+the same traversal and borrowing behavior and prints `red has 3 letters` and
+`blue has 4 letters`.
 
 Use `auto` when the initializer makes the type clear; spell the type when it
 communicates an important unit, conversion, or ownership decision.
@@ -640,21 +752,29 @@ A range-based loop expresses “visit every element,” but the loop variable st
 determines whether each element is copied, observed, or modified:
 
 ```cpp
-const std::vector<int> scores{91, 82};
-const std::vector<std::string> names{"Ada", "Linus"};
-std::vector<double> weights{2.0, 3.0};
-const double total_weight = 5.0;
+#include <iostream>
+#include <string>
+#include <vector>
 
-for (int score : scores) {
-  std::cout << score << '\n'; /* copy a small scalar */
-}
+int main() {
+  const std::vector<int> scores{91, 82};
+  const std::vector<std::string> names{"Ada", "Linus"};
+  std::vector<double> weights{2.0, 3.0};
+  const double total_weight = 5.0;
 
-for (const std::string& name : names) {
-  std::cout << name << '\n'; /* borrow without copying */
-}
+  for (int score : scores) {
+    std::cout << score << '\n'; /* copy a small scalar */
+  }
 
-for (double& weight : weights) {
-  weight /= total_weight; /* borrow and modify */
+  for (const std::string& name : names) {
+    std::cout << name << '\n'; /* borrow without copying */
+  }
+
+  for (double& weight : weights) {
+    weight /= total_weight; /* borrow and modify */
+  }
+
+  std::cout << "weights: " << weights.at(0) << ' ' << weights.at(1) << '\n';
 }
 ```
 
@@ -689,9 +809,11 @@ unsafe?
 82
 Ada
 Linus
+weights: 0.4 0.6
 ```
 
-The last loop prints nothing and changes `weights` to `0.4, 0.6`.
+The last loop prints nothing itself; it changes `weights` to `0.4, 0.6`, which
+the final statement prints.
 `push_back` invalidates the old past-the-end position used by the range loop. If
 it reallocates the vector's element storage, it also invalidates all element
 references, including the current `weight`.
@@ -832,6 +954,7 @@ releases them when the object's lifetime ends.
 
 ```cpp
 #include <fstream>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -842,10 +965,21 @@ void WriteReport(const std::string& path) {
   }
   output << "complete\n";
 } /* output is closed here, including during exception unwinding */
+
+int main() {
+  try {
+    WriteReport("report.txt");
+  } catch (const std::runtime_error& error) {
+    std::cerr << error.what() << '\n';
+    return 1;
+  }
+}
 ```
 
-On success, this function produces no terminal output. It creates or replaces
-the named file and writes the file content `complete` followed by a newline.
+On success, this program produces no terminal output. It creates or replaces
+`report.txt` in the current directory and writes the file content `complete`
+followed by a newline. If the file cannot be opened, `main` writes
+`cannot open report` to standard error and returns `1`.
 
 The same principle manages vectors, strings, locks, sockets, and smart pointers.
 RAII turns every control-flow path—normal return, early return, or exception—
@@ -886,10 +1020,20 @@ There is no normal terminal output.
 Prefer automatic-duration value objects:
 
 ```cpp
-std::vector<std::string> names;
+#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+  std::vector<std::string> names;
+  names.push_back("Ada");
+  names.push_back("Linus");
+  std::cout << names.size() << " names\n";
+} /* names releases both strings and its element storage here */
 ```
 
-This constructs an empty owning vector and produces no output.
+The declaration constructs an empty owning vector and produces no output. The
+program then prints `2 names`; no explicit cleanup is written.
 
 Before requesting manual allocation, ask whether a standard container,
 `std::string`, or an ordinary class member can own the resource. Week 12
@@ -899,12 +1043,29 @@ ordinary application code should prefer RAII owners.
 Returning a value is idiomatic and efficient:
 
 ```cpp
+#include <iostream>
+#include <vector>
+
 std::vector<int> EvenValues(const std::vector<int>& input) {
   std::vector<int> result;
   for (int value : input) {
     if (value % 2 == 0) result.push_back(value);
   }
   return result;
+}
+
+void PrintVector(const char* label, const std::vector<int>& values) {
+  std::cout << label;
+  for (int value : values) std::cout << ' ' << value;
+  std::cout << '\n';
+}
+
+int main() {
+  const std::vector<int> input{1, 2, 3, 4};
+  std::vector<int> result = EvenValues(input);
+  result.at(0) = 20;
+  PrintVector("input: ", input);
+  PrintVector("result:", result);
 }
 ```
 
@@ -933,8 +1094,8 @@ input:  1 2 3 4
 result: 20 4
 ```
 
-These lines are illustrative caller output; `EvenValues` itself prints
-nothing. The core idea is returning independent owned state. Copy elision and
+These lines are the exact output of the program above; `EvenValues` itself
+prints nothing. The core idea is returning independent owned state. Copy elision and
 move mechanics are deliberately deferred to Week 12.
 
 </details>
@@ -944,6 +1105,12 @@ move mechanics are deliberately deferred to Week 12.
 ### Nested RAII lifetimes
 
 ```cpp
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 std::vector<std::string> ReadWords(const std::string& path) {
   std::ifstream input{path};
   if (!input) throw std::runtime_error{"cannot open " + path};
@@ -955,10 +1122,22 @@ std::vector<std::string> ReadWords(const std::string& path) {
   if (input.bad()) throw std::runtime_error{"read failure"};
   return words;
 }
+
+int main() {
+  try {
+    std::vector<std::string> words = ReadWords("words.txt");
+    std::cout << words.size() << " words\n";
+  } catch (const std::runtime_error& error) {
+    std::cerr << error.what() << '\n';
+    return 1;
+  }
+}
 ```
 
 `ReadWords` produces no terminal output. On success it returns the words; on
-failure it throws a `std::runtime_error`.
+failure it throws a `std::runtime_error`. If `words.txt` contains
+`red green blue`, `main` prints `3 words`; if the file is missing, it writes
+`cannot open words.txt` to standard error and returns `1`.
 
 Trace construction and destruction for `input`, the loop-local `word`, the
 vector, its elements, and the returned value on normal return and on each throw.
@@ -1112,13 +1291,19 @@ verified table.
    std::vector<int> MakeZeroes(std::size_t count) {
      return std::vector<int>(count, 0);
    }
+
+   int main() {
+     std::vector<int> values = MakeZeroes(4);
+     values.at(1) = 7;
+     return values.at(1) == 7 ? 0 : 1;
+   }
    ```
 
    Bounds and initialization policy still belong to the program, but no
    matching `free` call is needed.
 
-Items 1–5 are contract and lifetime explanations. Item 6 is a function
-definition and produces no output by itself.
+Items 1–5 are contract and lifetime explanations. Item 6 is a complete program
+that produces no output; it returns success after using the vector.
 
 </details>
 
