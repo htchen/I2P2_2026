@@ -236,7 +236,8 @@ int main() {
   scores.push_back(94);
   scores.push_back(85);
 
-  for (int score : scores) std::cout << score << ' ';
+  std::cout << "scores:";
+  for (int score : scores) std::cout << ' ' << score;
   std::cout << '\n';
 }
 ```
@@ -245,7 +246,7 @@ Neither `push_back` call prints anything. After both calls, `scores` owns five
 integers, and the final loop prints them:
 
 ```text
-91 82 73 94 85 
+scores: 91 82 73 94 85
 ```
 
 A vector combines a dynamic array with ownership and size information.
