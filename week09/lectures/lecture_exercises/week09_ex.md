@@ -15,7 +15,10 @@ invariant and return `*this`. The supplied nonmember `operator+` and `operator-`
 then operate on a copy through those compound operators. Also implement unary
 minus and `==`; retain the supplied C++17 definition of `!=` in terms of `==`.
 Test negative values, reducible results, equality across different source forms,
-and that binary arithmetic does not mutate either source operand.
+and that binary arithmetic does not mutate either source operand. Preserve the
+constructor's decision to reject `INT_MIN`: compute in a sufficiently wide
+temporary, reject an unsupported result before assigning to the object, and
+leave the left operand unchanged on failure.
 
 ## Hour 3 — Header/source separation
 

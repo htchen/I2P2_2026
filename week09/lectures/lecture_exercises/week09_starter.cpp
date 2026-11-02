@@ -69,7 +69,7 @@ std::ostream& operator<<(std::ostream& stream, const Rational& value) {
   return stream << value.numerator() << '/' << value.denominator();
 }
 
-static bool check(bool condition, const char* message) {
+static bool Check(bool condition, const char* message) {
   if (!condition) {
     std::cerr << "check failed: " << message << '\n';
     return false;
@@ -84,7 +84,7 @@ int main() {
   } catch (const std::invalid_argument&) {
     rejected_zero = true;
   }
-  if (!check(rejected_zero, "zero denominator is rejected")) {
+  if (!Check(rejected_zero, "zero denominator is rejected")) {
     return 1;
   }
 
@@ -93,18 +93,30 @@ int main() {
   const Rational right{1, 3};
   const Rational sum = left + right;
   const Rational difference = right - left;
-  if (!check(normalized == Rational{-1, 2}, "normalization") ||
-      !check(sum == Rational{1, 2}, "addition") ||
-      !check(difference == Rational{1, 6}, "subtraction") ||
-      !check(-difference == Rational{-1, 6}, "unary minus") ||
-      !check(left == Rational{1, 6}, "binary operator preserves left") ||
-      !check(right == Rational{1, 3}, "binary operator preserves right")) {
+  if (!Check(normalized == Rational{-1, 2}, "normalization") ||
+      !Check(sum == Rational{1, 2}, "addition") ||
+      !Check(difference == Rational{1, 6}, "subtraction") ||
+      !Check(-difference == Rational{-1, 6}, "unary minus") ||
+      !Check(left == Rational{1, 6}, "binary operator preserves left") ||
+      !Check(right == Rational{1, 3}, "binary operator preserves right")) {
     return 1;
   }
 
   std::ostringstream output;
   output << sum;
-  if (!check(output.str() == "1/2", "stream output")) {
+  if (!Check(output.str() == "1/2", "stream output")) {
+    return 1;
+  }
+
+  bool rejected_unsupported_minimum = false;
+  try {
+    (void)(Rational{std::numeric_limits<int>::min() + 1, 1} +
+           Rational{-1, 1});
+  } catch (const std::overflow_error&) {
+    rejected_unsupported_minimum = true;
+  }
+  if (!Check(rejected_unsupported_minimum,
+             "arithmetic preserves the representation policy")) {
     return 1;
   }
 

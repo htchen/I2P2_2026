@@ -66,7 +66,7 @@ class Rational {
     const long long divisor = std::gcd(numerator, denominator);
     numerator /= divisor;
     denominator /= divisor;
-    if (numerator < std::numeric_limits<int>::min() ||
+    if (numerator <= std::numeric_limits<int>::min() ||
         numerator > std::numeric_limits<int>::max() ||
         denominator > std::numeric_limits<int>::max()) {
       throw std::overflow_error{"rational result is outside the int range"};
@@ -99,7 +99,7 @@ std::ostream& operator<<(std::ostream& stream, const Rational& value) {
   return stream << value.numerator() << '/' << value.denominator();
 }
 
-static bool check(bool condition, const char* message) {
+static bool Check(bool condition, const char* message) {
   if (!condition) {
     std::cerr << "check failed: " << message << '\n';
     return false;
@@ -112,17 +112,29 @@ int main() {
   const Rational right{1, 3};
   const Rational sum = left + right;
   const Rational difference = right - left;
-  if (!check(sum == Rational{1, 2}, "addition") ||
-      !check(difference == Rational{1, 6}, "subtraction") ||
-      !check(-difference == Rational{-1, 6}, "unary minus") ||
-      !check(left == Rational{1, 6} && right == Rational{1, 3},
+  if (!Check(sum == Rational{1, 2}, "addition") ||
+      !Check(difference == Rational{1, 6}, "subtraction") ||
+      !Check(-difference == Rational{-1, 6}, "unary minus") ||
+      !Check(left == Rational{1, 6} && right == Rational{1, 3},
              "binary arithmetic preserves operands")) {
     return 1;
   }
 
   std::ostringstream output;
   output << sum;
-  if (!check(output.str() == "1/2", "stream output")) {
+  if (!Check(output.str() == "1/2", "stream output")) {
+    return 1;
+  }
+
+  bool rejected_unsupported_minimum = false;
+  try {
+    (void)(Rational{std::numeric_limits<int>::min() + 1, 1} +
+           Rational{-1, 1});
+  } catch (const std::overflow_error&) {
+    rejected_unsupported_minimum = true;
+  }
+  if (!Check(rejected_unsupported_minimum,
+             "arithmetic preserves the representation policy")) {
     return 1;
   }
 

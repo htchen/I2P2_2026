@@ -17,7 +17,9 @@ separate compilation, and dangling references do not.
 
 ## Coverage map
 
-Every fenced example in the Week 9 note is accounted for below.
+The map groups every substantive representation, operator, creation policy, and
+lifetime model in the Week 9 note. Short exercise outputs and traces use the
+treatment named by the corresponding row.
 
 | Source example | Relationship | Companion treatment |
 |---|---|---|
@@ -32,6 +34,7 @@ Every fenced example in the Week 9 note is accounted for below.
 | Equality operators | Direct normalized-value comparison, different fallback | Implement `__eq__`; Python normally derives `!=` when `__ne__` is absent, unlike C++17 |
 | Qualified constructor declaration | No separate declaration form | `__init__` is defined once in the class/module |
 | Compile/object/link commands | No link-step equivalent | Optionally byte-compile, import, and execute modules |
+| Forward declaration | No ordinary equivalent | Python resolves imported names at run time; it has no C++ object-layout boundary |
 | `SampleWindow` named factory | Direct design goal | Use `@classmethod`; constructor privacy remains a convention |
 | Normalization test | Direct | Assert public observations, not internal mutation steps |
 | Delegating/converting constructors | No overload equivalent | Use defaults and named class methods |
